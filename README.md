@@ -4,7 +4,7 @@ The goal of this project is to participate to the iron car race.
 TODO: add more context.
 
 ![car](/AutonomousCar/docs/car.jpg)
-![car2](/AutonomousCar/docs/car2.jpg)
+![car2](/AutonomousCar/docs/P_20190309_220020.jpg)
 
 ## The project
 
