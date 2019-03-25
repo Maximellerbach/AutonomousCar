@@ -10,13 +10,13 @@ TODO: add more context.
 
 This project involve multiple aspects and is very rich:
 
-- There is an Artificial Intellignece (AI) part to capture the road with a webcam (and potentially other sensors), analyze it, and take decisions. You will find more details in [this page](ai.md). Language used for this part is Python 3.
+- There is an Artificial Intellignece (AI) part to capture the road with a webcam (and potentially other sensors), analyze it, and take decisions. You will find more details in [this page](/AutonomousCar/ai.md). Language used for this part is Python 3.
 
-- There is an Hardware part to be able to control the car. It does include batteries, power management, cooling, but as well choice of hardware to pilot the various elements like motors, servo motors. More [details here](electronic.md).
+- There is an Hardware part to be able to control the car. It does include batteries, power management, cooling, but as well choice of hardware to pilot the various elements like motors, servo motors. More [details here](/AutonomousCar/electronic.md).
 
 ![schema](/AutonomousCar/docs/schema.png)
 
-- The board used for intelligence is a RockPro64 from pine64 running a Debian 9 (Stretch) arm64 v8 (aarch64) and as there are a lot of things to install on it, you'll find [the list of the main elements (openCV, Tensorflow, Numpy) and how to compile or install them here](software.md).
+- The board used for intelligence is a RockPro64 from pine64 running a Debian 9 (Stretch) arm64 v8 (aarch64) and as there are a lot of things to install on it, you'll find [the list of the main elements (openCV, Tensorflow, Numpy) and how to compile or install them here](/AutonomousCar/software.md).
 
 ![rockpro64](/AutonomousCar/docs/ROCKPro64_slide.jpg)
 
