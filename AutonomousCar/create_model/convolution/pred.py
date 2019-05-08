@@ -11,12 +11,14 @@ from tqdm import tqdm
 
 import autolib
 
+dire = [3,5,7,9,11]
+
 
 class pred():
 
-    def __init__(self, name, path):
-        self.path = path
-        self.name = name
+    def __init__(self):
+        self.path = 'insert here path to the folder you want to predict'
+        self.name = 'AutonomousCar\\test_model\\convolution\\nofilterv2.h5' #load model
 
         self.img_rows = 120
         self.img_cols = 160
@@ -29,39 +31,27 @@ class pred():
         
         self.model = load_model(self.name)
 
-        Y_test = []
-        X_test = []
-        confidence = []
-
         dos = glob(self.path)
 
-        for i in tqdm(dos):
-            img = cv2.imread(i)
-            img = cv2.resize(img,(self.img_cols, self.img_rows))
-            pred_img = np.reshape(img,(1, self.img_rows, self.img_cols, 3))
+        X_pred = np.array([cv2.imread(i) for i in tqdm(dos)])
+        strt = time.time()
+        preds = self.model.predict(X_pred)
+        end = time.time()
+        print('pred in: '+str(end-strt)+' sec ||', str((end-strt)/len(X_pred))+' sec/img')
 
-            #pred = autolib.image_process(img, gray=False, filter='yellow')
-            pred = self.model.predict(pred_img)
-            label = np.argmax(pred)
-
-            Y_test.append(label)
-            X_test.append(img)
-            confidence.append(pred[0][label])
-
-        return X_test, Y_test, confidence
-        
-        
+        return X_pred, preds
         
 
 if __name__ == "__main__":
 
-    AI = pred(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\nofilter_42.h5', path = 'C:\\Users\\maxim\\image_raw\\*')
+    AI = pred()
 
-    X_test, Y_test, confidence= AI.get_pred()
+    X_pred, Y_pred= AI.get_pred()
 
-    for i in tqdm(range(len(X_test))):
-        img = X_test[i]
-        label = Y_test[i]
+    for i in tqdm(range(len(X_pred))):
+        img = X_pred[i]
+        pred = Y_pred[i]
+        label = dire[np.argmax(pred)]
         
         cv2.imwrite('C:\\Users\\maxim\\image_pred\\'+str(label)+'_'+str(time.time())+'.png',img)
 

@@ -3,15 +3,14 @@ import numpy as np
 import os
 from PIL import Image
 from glob import glob
-import time
+import random
 from tqdm import tqdm
-
 dicdir= [3,5,7,9,11]
 dico= [81,82,83]
-
-print(dicdir, 'type digit from 0  to '+str(len(dicdir))
+print(dicdir, 'from 0  to '+str(len(dicdir)-1))
 
 dossier = str(input("enter filename: "))
+out_dossier = str(input("enter filename: "))
 
 dos= glob(dossier+"*")
 
@@ -26,7 +25,7 @@ for img_path in dos:
         if k in dico:
             label = dicdir[dico.index(k)]
             print(label)
-            cv2.imwrite('../../new_label/'+str(label)+'_'+str(time.time())+'.png',img)
+            cv2.imwrite(out_dossier+str(label)+'_'+str(random.random())+'.png',img)
             os.remove(img_path)
             break
         else:
