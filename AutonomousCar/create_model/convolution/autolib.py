@@ -60,6 +60,7 @@ def get_label(path, os = 'win', flip=True, before=True, dico=[3,5,7,9,11], rev=[
         
     return(label)
 
+
 def get_crop(img, cut = 30, width= 160, height= 120):
     
     w,h = width,height-cut 

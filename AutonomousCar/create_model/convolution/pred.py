@@ -17,8 +17,8 @@ dire = [3,5,7,9,11]
 class pred():
 
     def __init__(self):
-        self.path = 'insert here path to the folder you want to predict'
-        self.name = 'AutonomousCar\\test_model\\convolution\\nofilterv2.h5' #load model
+        self.path = 'C:\\Users\\maxim\\image_raw\\*'
+        self.name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\nofilterv2_ironcar.h5'
 
         self.img_rows = 120
         self.img_cols = 160
@@ -47,6 +47,11 @@ if __name__ == "__main__":
     AI = pred()
 
     X_pred, Y_pred= AI.get_pred()
+
+    try:
+        os.makedirs('C:\\Users\\maxim\\image_pred\\')
+    except:
+        pass
 
     for i in tqdm(range(len(X_pred))):
         img = X_pred[i]

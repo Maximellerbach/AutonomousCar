@@ -26,19 +26,22 @@ he = 120
 
 speed = int(input('speed: '))
 
-dico = [10,6,2]
-dico_save = [3,7,11]
+dico = [10,8,6,4,2]
+dico_save = [3,5,7,9,11]
 #model= load_model(os.path.dirname(__file__) + os.path.normpath("\\vroum.h5"))
-model = load_model("nofilter.h5")
+model = load_model("nofilter_ironcar.h5")
 
 cap = cv2.VideoCapture(0)
 
 ser.ChangeMotorA(2)
 
+i = 0
 while(True):
     try:
-        _, cam= cap.read()
         
+        _, cam= cap.read()
+        i+=1
+
         ''' # color filter
         hsv = cv2.cvtColor(cam, cv2.COLOR_BGR2HSV)
         
@@ -62,20 +65,20 @@ while(True):
         
         #APPLY DIR AND SPEED
         if predicted == 0 or predicted == 4:
-            ser.ChangePWM(speed-5)
+            actual_speed = speed +5
         elif predicted == 1 or predicted == 3:
-            ser.ChangePWM(speed)
+            actual_speed = speed +3
         elif predicted == 2:
-            ser.ChangePWM(speed+5)
+            actual_speed = speed
 
-        ser.ChangePWM(speed)
+        ser.ChangePWM(actual_speed)
         ser.ChangeDirection(prediction)
          
         #SAVE FRAME
         #cv2.imwrite('../../../image_course/'+str(dico_save[predicted])+'_'+str(time.time())+'.png',img)
         
     except:
-        print("error in program's loop")
+        print("error in program's loop",i)
 
 
 cap.release()

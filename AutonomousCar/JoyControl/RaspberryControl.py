@@ -56,34 +56,43 @@ while not joy.Back():
     thespeed = speed - speed2
     
     if direction < -0.4:
-        # print("full left")
+        #print("full left")
         direc=3
-        ser.ChangeDirection(11)       
+        ser.ChangeDirection(11)  
+
     elif direction > 0.4:
-        # print("full right")
+        #print("full right")
         direc= 11
         ser.ChangeDirection(2)
+
     elif direction < -0.2:
-        # print("left")
+        #print("left")
         direc= 5
         ser.ChangeDirection(9)
+
     elif direction > 0.2:
-        # print("right")
+        #print("right")
         direc= 9
         ser.ChangeDirection(4)
+
     else:
+        #print("forward")
         direc=7
         ser.ChangeDirection(6)
+
+
     if thespeed > 0.2:
         #print("increase speed")  
         ser.ChangeMotorA(motor.MOTOR_BACKWARD)
         pwm = int(MAXSPEED * thespeed)
-        ser.ChangePWM(pwm)  
+        ser.ChangePWM(pwm)
+
     elif thespeed < -0.2:
         #print("backward")
         ser.ChangeMotorA(motor.MOTOR_FORWARD)
         pwm = -int(MAXSPEED * thespeed)
         ser.ChangePWM(pwm)
+
     else:
         ser.ChangePWM(0)
     
