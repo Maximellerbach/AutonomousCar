@@ -53,19 +53,19 @@ class classifier():
 
             x = Conv2D(2, kernel_size=(3,3), strides=1 , use_bias=False, padding='same', activation="relu", input_shape=self.img_shape)(inp)
             x = MaxPooling2D()(x)
-            x = Dropout(0.5)(x)
+            x = Dropout(0.2)(x)
 
             x = Conv2D(4, kernel_size=(3,3), strides=1, use_bias=False, padding='same', activation="relu")(x)
             x = MaxPooling2D()(x)
-            x = Dropout(0.5)(x)
+            x = Dropout(0.2)(x)
     
             x = Conv2D(8,kernel_size=(3,3), strides=1, use_bias=False, padding='same', activation="relu")(x)
             x = MaxPooling2D()(x)
-            x = Dropout(0.5)(x)
+            x = Dropout(0.2)(x)
     
             x = Conv2D(16,kernel_size=(3,3), strides=1, use_bias=False, padding='same', activation="relu")(x)
             x = MaxPooling2D()(x)
-            x = Dropout(0.5)(x)
+            x = Dropout(0.2)(x)
 
             x = Flatten()(x)
 
