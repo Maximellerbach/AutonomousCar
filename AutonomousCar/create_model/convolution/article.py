@@ -19,7 +19,7 @@ for img_path in glob(dos):
     img = cv2.imread(img_path)
     img_flip = cv2.flip(img, 1)
 
-    labels = autolib.get_label(img_path, flip=True)
+    labels = autolib.get_label(img_path, flip=True, dico=[0,1,2,3,4])
 
     X.append(img)
     X.append(img_flip)

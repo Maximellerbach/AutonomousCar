@@ -1,23 +1,13 @@
-import cv2
-import imutils
-import scipy as sp
-
-from keras.utils import to_categorical
-from keras.layers import Dense, Dropout
-from keras.optimizers import Adam
-from keras.models import Sequential, load_model
-
-import numpy as np
-import h5py
-from tqdm import tqdm
-from glob import glob
-
-import time
 import os
-import datetime
+import time
+
+import cv2
+import numpy as np
+from keras.models import load_model
+
+import SerialCommand
 
 os.system('sudo chmod 0666 /dev/ttyS0')
-import SerialCommand
 
 ser = SerialCommand.control("/dev/ttyS0")
 
@@ -54,7 +44,7 @@ while(True):
         '''
 
         #PREPARE IMAGE FOR AI's INPUT SHAPE
-        img = cv2.resize(cam,(160,120))
+        img = cv2.resize(cam,(wi,he))
         img_pred = np.expand_dims(img, axis= 0)
 
         #PREDICT
