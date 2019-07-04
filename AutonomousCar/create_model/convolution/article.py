@@ -12,7 +12,7 @@ import autolib  # custom lib
 X = []
 Y = []
 
-dos = 'C:\\Users\\maxim\\image_sorted (30-11)\\*'
+dos = 'C:\\Users\\maxim\\image_sorted\\*'
 
 for img_path in glob(dos):
 
