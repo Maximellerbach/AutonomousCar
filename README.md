@@ -24,7 +24,7 @@ This project involve multiple aspects and is very rich:
 
 ![arduino](/AutonomousCar/docs/arduino.jpg)
 
-- Classes and code to take the order from the AI and actually send it to the various electronic elements. More details can be [found in this section](/AutonomousCar/PythonSerialControl/readme.md). As for the rest of the high level code, it is written in Python, does involve Serial Port communications.
+- Classes and code to take the order from the AI and actually send it to the various electronic elements. More details can be [found in this section](/AutonomousCar/PyhonSerialControl/readme.md). As for the rest of the high level code, it is written in Python, does involve Serial Port communications.
 
 - Classes and apps including [test tools to remotely pilot the car in wifi for example](/AutonomousCar/PythonSerialControl/Webcontrol.py) and [previous versions involving controloing the electronic directly from a Raspberry Pi](/AutonomousCar/RaspberryPiControl/readme.md). All written in Python.
 
