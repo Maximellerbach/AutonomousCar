@@ -20,7 +20,7 @@ This project involve multiple aspects and is very rich:
 
 ![rockpro64](/AutonomousCar/docs/ROCKPro64_slide.jpg)
 
-- Micro controler code, in our case an Arduino mini, to take orders from a board and actually pilot the low level electronic to make the motor move forward/backward as well as the car turning. [Documentation, protocole and code available](/ArduinoControl/readme.md). All the code for the Arduino is written in C.
+- Micro controler code, in our case an Arduino mini, to take orders from a board and actually pilot the low level electronic to make the motor move forward/backward as well as the car turning. [Documentation, protocole and code available](/AutonomousCar/ArduinoControl/readme.md). All the code for the Arduino is written in C.
 
 ![arduino](/AutonomousCar/docs/arduino.jpg)
 
