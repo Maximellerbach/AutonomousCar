@@ -1,0 +1,113 @@
+<html><head>
+    <title>Pilot the autonomous car</title>
+    <script>
+    var xhr = new XMLHttpRequest();
+    var dir = 7;
+    var pwm = 0;
+    var pwminc = 15;
+    function btn(cmdSend) {
+        xhr.open('GET', cmdSend + '?_=' + Math.random());
+        xhr.send();
+    }
+    function left() {
+        if(dir>3) {
+            dir--;
+            btn("dir/"+ dir);
+        }
+    }
+    function right() {
+        if(dir<11) {
+            dir++;
+            btn("dir/"+ dir);
+        }
+    }
+    function fullleft() {
+        dir = 3;
+        btn("dir/"+ dir);
+    }
+    function fullright() {
+        dir = 11;
+        btn("dir/" +dir);
+    }
+    function straight() {
+        dir = 7;
+        btn("dir/7");
+    }
+    function incspeed() {
+        if ((pwm + pwminc) <= 255) {
+            pwm += pwminc;
+            btn("pwm/" + pwm);
+        }
+    }
+    function decspeed() {
+        if ((pwm - pwminc) >= 0) {
+            pwm -= pwminc;
+            btn("pwm/" + pwm);
+        }
+    }
+    function stop() {
+        pwm = 0;
+        dir = 7;
+        motorA = 0;
+        motorB = 0;
+        btn("/stop")
+    }
+    function motor(num, dir) {
+        if ((dir >= 0) && (dir <=3)) {
+            if ((num == "A") || (num == "B")) {
+                btn("/motor/" + num + "/" + dir)
+            } 
+        }
+    }
+    
+</script>
+</head>
+<body>
+<h1>This is a test page to pilot the car from simple REST API</h1>
+To pilot the car, use the following API:<br>
+<p><b>/motor/mt/value</b><br>
+where:
+<li>mt = A or B</li>
+<li>value is one of the following:</li>
+0 = stop the motor<br>
+1 = drive forward<br>
+2 = drive backward<br>
+3 = motor in idel position, so not blocked<br>
+</p>
+<p><b>/dir/value</b><br>
+where:
+<li>value is one of the following:</li>
+0 = extreme left
+7 = straight
+14 = extreme right
+any value between 0 and 14 will work and you'll be adjust the direction
+</p>
+<p><b>/pwm/value</b><br>
+    where value is between 0 and 255
+</p>
+<p>
+    <b>/stop</b><br>
+    this will fully stop the car, put the direction stragith, block both motors
+</p>
+<p>
+    <input onclick="fullleft()" type="button" value="<<"><input onclick="left()" type="button" value="<">
+    <input onclick="straight()" type="button" value="||">
+    <input onclick="right()" type="button" value=">"><input onclick="fullright()" type="button" value=">>">
+    <br><br>
+    <input onclick="motor('A',0)" type="button" value="Motor A Stop">
+    <input onclick="motor('A',1)" type="button" value="Motor A Forward">
+    <input onclick="motor('A',2)" type="button" value="Motor A Backward">
+    <input onclick="motor('A',3)" type="button" value="Motor A Idle">
+    <br><br>
+    <input onclick="motor('B',0)" type="button" value="Motor B Stop">
+    <input onclick="motor('B',1)" type="button" value="Motor B Forward">
+    <input onclick="motor('B',2)" type="button" value="Motor B Backward">
+    <input onclick="motor('B',3)" type="button" value="Motor B Idle">
+    <br><br>
+    <input onclick="incspeed()" type="button" value="Increase speed">
+    <input onclick="decspeed()" type="button" value="Decrease speed">
+    <br><br>
+    <input onclick="stop()" type="button" value="STOP">
+
+</p>
+</body></html>
