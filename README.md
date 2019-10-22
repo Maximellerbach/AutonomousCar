@@ -4,6 +4,7 @@ The goal of this project is to participate to the iron car race.
 TODO: add more context.
 
 ![car](/docs/car.jpg)
+![car2](/docs/car2.jpg)
 
 ## The project
 
@@ -14,6 +15,7 @@ This project involve multiple aspects and is very rich:
 - There is an Hardware part to be able to control the car. It does include batteries, power management, cooling, but as well choice of hardware to pilot the various elements like motors, servo motors. More [details here](electronic.md).
 
 ![schema](/docs/schema.png)
+![schema](/docs/schema2.png)
 
 - The board used for intelligence is a RockPro64 from pine64 running a Debian 9 (Stretch) arm64 v8 (aarch64) and as there are a lot of things to install on it, you'll find [the list of the main elements (openCV, Tensorflow, Numpy) and how to compile or install them here](software.md).
 
