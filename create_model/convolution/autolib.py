@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import random
+import skimage.exposure as sk
 
 #in this program, I make custom functions
 
@@ -8,6 +10,9 @@ up_y = np.array([50,255,255])
 
 low_w= np.array([0,0,190])
 up_w= np.array([255,10,255])
+
+dico=[3,5,7,9,11]
+rev=[11,9,7,5,3]
 
 def image_process(img, size = (160,120), shape = (160,120,1), filter = True, gray = True, color = 'yellow'):
     
@@ -36,7 +41,7 @@ def image_process(img, size = (160,120), shape = (160,120,1), filter = True, gra
 
 
 
-def get_label(path, os = 'win', flip=True, before=True, reg=False, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
+def get_label(path, os = 'win', flip=True, before=True, reg=False, index=-1, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
     label = []
 
     if os == 'win':
@@ -47,14 +52,14 @@ def get_label(path, os = 'win', flip=True, before=True, reg=False, dico=[3,5,7,9
     if reg == False:
         
         if before == True:
-            lab = path.split(slash)[-1]
+            lab = path.split(slash)[index]
             lab = int(lab.split('_')[0])
             label.append(dico.index(lab))
             if flip == True:
                 label.append(rev.index(lab))
 
         if before == False:
-            lab = path.split('_')[-1]
+            lab = path.split('_')[index]
             lab = int(lab.split('.')[0])
             label.append(dico.index(lab))
             if flip == True:
@@ -78,56 +83,51 @@ def get_label(path, os = 'win', flip=True, before=True, reg=False, dico=[3,5,7,9
             if flip == True:
                 label.append(-lab)
 
-    
     return label
 
 def cut_img(img, c):
     img = img[c:, :, :]
     return img
 
+def label_smoothing(Y, n, k):
+    smooth_y = []
+    for y in Y:
+        sy = [0]*n
+        sy[y] = 1-k
+        if y==2:
+            sy[y-1] = k/2
+            sy[y+1] = k/2
+        elif y==0:
+            sy[y+1] = k
+        elif y==n-1:
+            sy[y-1] = k
 
-def get_augm(img):
-    imgs = []
+        smooth_y.append(sy)
+    return np.array(smooth_y)
 
-    for i in [[20, False], [20, True]]:
-        n = change_brightness(img, i[0], i[1])
-        imgs.append(n)
-
-    return imgs
-
-
-def change_brightness(img, value=30, sign=True):
-
+def change_brightness(img, lab, value=30, sign=True):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
 
     if sign == True:
         lim = 255 - value
         v[v > lim] = 255
-        v[v <= lim] += value
+        v[v <= lim] = v[v <= lim]+value
     if sign == False:
         lim = 0 + value
         v[v < lim] = 0
-        v[v >= lim] -= value
+        v[v >= lim] = v[v >= lim]-value
 
     hsv = cv2.merge((h, s, v))
     img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-    return img
+    return img, lab
 
-def contrast(img, label): #increase or decrease image brightness
-    for i in range(1,3):
-        image = change_brightness(img, value= i*12, sign=True)
-        image2 = change_brightness(img, value= i*12, sign=False)
-        cv2.imwrite('C:\\Users\\maxim\\image_sorted\\'+str(label)+'_'+str(time.time())+'.png',image)
-        cv2.imwrite('C:\\Users\\maxim\\image_sorted\\'+str(label)+'_'+str(time.time())+'.png',image2)
-
-
-def add_random_shadow(image):
+def add_random_shadow(image, lab):
 
     shape = image.shape
     top_y = shape[1]*np.random.uniform()
-    top_x = 0
-    bot_x = shape[0]
+    top_x = shape[0]*np.random.uniform()
+    bot_x = shape[0]*np.random.uniform()
     bot_y = shape[1]*np.random.uniform()
 
     image_hls = cv2.cvtColor(image,cv2.COLOR_BGR2HLS)
@@ -137,9 +137,7 @@ def add_random_shadow(image):
     Y_m = np.mgrid[0:image.shape[0],0:image.shape[1]][1]
 
     shadow_mask[((X_m-top_x)*(bot_y-top_y) -(bot_x - top_x)*(Y_m-top_y) >=0)]=1
-    #random_bright = .25+.7*np.random.uniform()
-
-    random_bright = .5
+    random_bright = 0.25+0.5*np.random.uniform()
 
     cond1 = shadow_mask==1
     cond0 = shadow_mask==0
@@ -151,19 +149,186 @@ def add_random_shadow(image):
 
     image = cv2.cvtColor(image_hls,cv2.COLOR_HLS2BGR)
 
-    return image
+    return image, lab
 
 
-if __name__ == "__main__":
-    #few tests
-    from glob import glob
-    dos = glob('C:\\Users\\maxim\\image_reg\\*')
-    print(dos)
+def add_random_glow(image, lab):
+
+    shape = image.shape
+    top_y = shape[1]*np.random.uniform()
+    top_x = shape[0]*np.random.uniform()
+    bot_x = shape[0]*np.random.uniform()
+    bot_y = shape[1]*np.random.uniform()
+
+    image_hls = cv2.cvtColor(image,cv2.COLOR_BGR2HLS)
+    shadow_glow = 0*image_hls[:,:,1]
+
+    X_m = np.mgrid[0:image.shape[0],0:image.shape[1]][0]
+    Y_m = np.mgrid[0:image.shape[0],0:image.shape[1]][1]
+
+    shadow_glow[((X_m-top_x)*(bot_y-top_y) -(bot_x - top_x)*(Y_m-top_y) >=0)]=1
+    random_bright = 1+0.5*np.random.uniform()
+
+    cond1 = shadow_glow==1
+    cond0 = shadow_glow==0
+        
+    if np.random.randint(2)==1:
+        image_hls[:,:,1][cond1] = image_hls[:,:,1][cond1]*random_bright
+    else:
+        image_hls[:,:,1][cond0] = image_hls[:,:,1][cond0]*random_bright
+
+    image = cv2.cvtColor(image_hls,cv2.COLOR_HLS2BGR)
+
+    return image, lab
+
+def night_effect(img,  label, vmin=180, vmax=255):
+    limit = random.uniform(vmin,vmax)
+    low_limit = 120 
+    int_img = sk.rescale_intensity(img, in_range=(low_limit,limit), out_range='dtype')
     
-    for i in dos:
-        im = cv2.imread(i)
-        lab = get_label(i, flip=True, before=True, reg=True)
-        print(lab)
-        cv2.imshow(str(lab[0]), im)
-        cv2.waitKey(0)
+    return int_img, label
 
+def horizontal_flip(img, label):
+    lab = dico[label]
+    lab = rev.index(lab)
+    return cv2.flip(img, 1), lab
+    
+def rdm_noise(img, label):
+    img = img+np.random.uniform(-25, 25, size=img.shape)
+    return img, label
+    
+def inverse_color(img, label):
+    b = img[:,:,0]
+    g = img[:,:,1]
+    r = img[:,:,2]
+    order = [b, g, r]
+    random.shuffle(order)
+    img = cv2.merge(order)
+
+    return img, label
+
+def generate_brightness(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15,45), sign=True)
+            Y_aug.append(angle)
+            X_aug.append(im)
+
+    return X_aug, Y_aug
+
+def generate_inversed_color(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = inverse_color(X[index], Y[index])
+            Y_aug.append(angle)
+            X_aug.append(im)
+
+    return X_aug, Y_aug
+
+
+def generate_low_gamma(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15,45), sign=False)
+            Y_aug.append(angle)
+            X_aug.append(im)
+
+    return X_aug, Y_aug
+
+
+def generate_night_effect(X, Y, proportion=0.25):    
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = night_effect(X[index], Y[index])
+            Y_aug.append(angle)
+            X_aug.append(im)
+
+    return X_aug, Y_aug
+
+
+def generate_horizontal_flip(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = horizontal_flip(X[index], Y[index])
+            Y_aug.append(angle)
+            X_aug.append(im)
+
+    return X_aug, Y_aug
+
+
+def generate_random_shadows(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = add_random_shadow(X[index], Y[index])
+            Y_aug.append(angle)
+            X_aug.append(im)
+
+    return X_aug, Y_aug
+
+
+def generate_chained_transformations(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = change_brightness(X[index], Y[index])
+            im, angle =  add_random_shadow(im, angle)
+        
+            Y_aug.append(angle)
+            X_aug.append(im)
+    
+    return X_aug, Y_aug
+    
+def generate_random_noise(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = rdm_noise(X[index], Y[index])
+        
+            Y_aug.append(angle)
+            X_aug.append(im)
+    
+    return X_aug, Y_aug
+
+def generate_random_glow(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = add_random_glow(X[index], Y[index])
+        
+            Y_aug.append(angle)
+            X_aug.append(im)
+    
+    return X_aug, Y_aug

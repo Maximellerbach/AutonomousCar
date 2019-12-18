@@ -1,25 +1,31 @@
 import collections
 import os
 import random
+import threading
 import time
 from glob import glob
 from math import sqrt
 
 import cv2
 import h5py
+import keras
+import keras.backend as K
 import numpy as np
 import pandas as pd
 from keras import callbacks
+from keras.callbacks import EarlyStopping
 from keras.models import Input, Model, Sequential, load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split
+from sklearn.utils import class_weight
 from tqdm import tqdm
 
 import architectures
 import autolib
 import predlib
-
+from architectures import dir_loss
+from datagenerator import image_generator
 
 class classifier():
 
@@ -40,21 +46,22 @@ class classifier():
         self.save_interval = 5
         self.batch_size = 32
 
+        self.av = []
 
     def build_classifier(self):
-        # model = load_model(self.name)
+        # model = load_model(self.name, custom_objects={"dir_loss":dir_loss})
         # fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
         
-        # model, fe = architectures.create_light_CNN((100, 160, 3), 5)
-        # model, fe = architectures.create_DepthwiseConv2D_CNN(self.img_shape, 1)
-        model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
+        model, fe = architectures.create_light_CNN((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu")
+        # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
+        # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
         # model, fe = architectures.create_lightlatent_CNN((100, 160, 3), 5)
 
         fe.summary()
         model.summary()
         
         return model, fe
-    
+
 
     def train(self, X=np.array([]), Y=np.array([])):
         
@@ -64,201 +71,91 @@ class classifier():
         self.gdos = glob(self.path)
         np.random.shuffle(self.gdos)
         self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//10])
+        test_image = (np.expand_dims(cv2.imread(self.valdos[0]), axis=0), autolib.get_label(self.valdos[0],flip=False))
+
         print(self.gdos.shape, self.valdos.shape)
 
         # self.img_shape = cv2.imread(self.gdos[0]).shape
         self.model, self.fe = self.build_classifier()
-        
-        try: #use try to early stop training if needed
-            
-            for epoch in range(1,self.epochs+1): #using fit but saving model every epoch
 
-                print("epoch: %i / %i" % (epoch, self.epochs))
-                #self.model.fit(X_train, Y_train, batch_size= self.batch_size, validation_data = (X_test, Y_test))
-                
-                self.model.fit_generator(self.image_generator(), steps_per_epoch=self.datalen//self.batch_size*2, epochs=1, validation_data=self.image_val(), validation_steps=self.datalen//10//self.batch_size)
+        frc = self.get_frc(self.path)
 
+        earlystop = EarlyStopping(monitor = 'dir_loss', min_delta = 0, patience = 4, verbose = 0, restore_best_weights = True)
+        self.model.fit_generator(image_generator(self.gdos, self.batch_size), steps_per_epoch=self.datalen//self.batch_size, epochs=self.epochs,
+                                validation_data=image_generator(self.valdos, self.batch_size), validation_steps=self.datalen//10//self.batch_size,
+                                class_weight=frc, callbacks=[earlystop], max_queue_size=5, workers=16)
 
-                if epoch % self.save_interval == 0:
-                    self.model.save(self.name)
-                    self.fe.save('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
-        
-        except:
-            print("stoped training")
-            pass
-        
+        # try:
+        #     for epoch in range(self.epochs):
+        #         self.model.fit_generator(self.image_generator(), steps_per_epoch=self.datalen//self.batch_size, epochs=1, validation_data=self.image_val(), validation_steps=self.datalen//10//self.batch_size, class_weight=frc)
+        # except:
+        #     print("training stopped or error occured")
+        #     pass
+
         self.model.save(self.name)
+        self.fe.save('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
+            
 
-
-    def get_img(self, dos):
-
-        X = []
+    def get_frc(self, dos):
         Y = []
 
         for i in tqdm(np.sort(glob(dos))):
-            img = cv2.imread(i)/255
-            img = cv2.resize(img, (self.img_cols, self.img_rows))
-
-            imgflip = cv2.flip(img, 1)
-
-            #img = autolib.image_process(img, gray=False, filter='yellow') #yellow or white filter
             
             label = autolib.get_label(i, flip=True, before=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
 
-            X.append(img) 
             Y.append(label[0])
-            
-            X.append(imgflip)
+            # if label[1] != 2:
             Y.append(label[1])
-            
 
-        counter=collections.Counter(Y) #doing basic stat
-        lab_len = len(Y)
-        frc = counter.most_common()
-        prc = np.zeros((len(frc),2))
-        
-        for item in range(len(frc)):
-            prc[item][0] = frc[item][0]
-            prc[item][1] = frc[item][1]/lab_len*100
+        d = dict(collections.Counter(Y))
+        prc = [0]*5
+        l = len(Y)
+        for i in range(5):
+            prc[i] = d[i]/l
 
-        print(prc) #show labels frequency in percent
-        
-        return X, Y
-
-    def load_data(self):
-
-        self.X, self.y = self.get_img(self.path)
-
-        #prepare data
-        self.X = np.array(self.X)
-        self.y = np.array(self.y)
-        self.Y = to_categorical(self.y, self.number_class)
+        frc = class_weight.compute_class_weight('balanced', np.unique(Y), Y)
+        print(frc, prc)
+        return frc
     
-    def load_frames(self):
-        cap = cv2.VideoCapture('C:\\Users\\maxim\\Desktop\\fh4.mp4')
-    
-        frames = []
-        i = 0
-        it = 0
-        while(it<2000):
-            _, frame = cap.read()
-            try:
-                if it %15 == 0:
-                    frame = cv2.resize(frame, (320, 240))
-                    frame = frame[80:,:,:]
-                    frames.append(frame)
-                    i += 1
-                    print(i)
-                it+=1
-            except:
-                pass
+    def load_frames(self, path, size=(360,240), batch_len=32):
+        batch = []
+        
+        for i in range(batch_len):
+            _, frame = self.cap.read()
+            frame = cv2.resize(frame, size)
+            batch.append(frame)
 
-        return frames
+        return batch
 
-    def image_generator(self):
-
-        while(True):
-            batchfiles = np.random.choice(self.gdos, size=self.batch_size//2)
-            
-            xbatch = []
-            ybatch = []
-            
-
-            for i in batchfiles:
-                img = cv2.imread(i)
-                img = cv2.resize(img, (self.img_cols, self.img_rows))
-                img = autolib.cut_img(img, 20)
-
-                shadow = np.random.choice([True, False], p=[0.7, 0.3])
-                if shadow == True:
-                    img = autolib.add_random_shadow(img)
-
-                imgflip = cv2.flip(img, 1)
-                fimg = autolib.change_brightness(img, value=np.random.randint(10, 30), sign=np.random.choice([True, False]))
-                ffimg = autolib.change_brightness(imgflip, value=np.random.randint(10, 30), sign=np.random.choice([True, False]))
-                fimg = cv2.blur(fimg, (2,2))
-                ffimg = cv2.blur(ffimg, (2,2))
-
-                xbatch.append(fimg/255)
-                xbatch.append(ffimg/255)
-
-                label = autolib.get_label(i, flip=True, before=True, reg=False) #reg=True for [-1;1] directions
-                ybatch.append(label[0])
-                ybatch.append(label[1])
-
-            xbatch = np.array(xbatch)
-            ybatch = np.array(ybatch)
-            ybatch = to_categorical(ybatch, self.number_class)
-
-            yield (xbatch, ybatch)
-
-    def image_val(self):
-
-        while(True):
-            batchfiles = np.random.choice(self.valdos, size=self.batch_size//2)
-            
-            xbatch = []
-            ybatch = []
-
-            for i in batchfiles:
-                img = cv2.imread(i)/255
-                img = cv2.resize(img, (self.img_cols, self.img_rows))
-                img = autolib.cut_img(img, 20)
-                imgflip = cv2.flip(img, 1)
-
-                label = autolib.get_label(i, flip=True, before=True, reg=False) #reg=True for [-1;1] directions
-
-                xbatch.append(img)
-                xbatch.append(imgflip)
-
-                ybatch.append(label[0])
-                ybatch.append(label[1])
-
-
-            xbatch = np.array(xbatch)
-            ybatch = np.array(ybatch)
-            ybatch = to_categorical(ybatch, self.number_class)
-
-
-            yield (xbatch, ybatch)
-
-if __name__ == "__main__":
-
-    AI = classifier(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv2_robo.h5', path ='C:\\Users\\maxim\\image_sorted\\*')
-    #AI = classifier(name = '../../test_model/convolution/nofilterv4_ironcar.h5', path = '../../../image_raw/*')
-
-    AI.epochs = 20
-    AI.save_interval = 2
-    AI.batch_size = 96
-
-    # AI.load_data()
-    AI.train()
-    AI.model = load_model(AI.name)
-
-    AI.fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
-    AI.path = 'C:\\Users\\maxim\\wdate\\*'
-    AI.fe.summary()
-    AI.model.summary()
-
-    for it, i in enumerate(glob(AI.path)):
-        img = cv2.imread(i)
-        img = cv2.resize(img, (160, 120))
-        img = autolib.cut_img(img, 20) # cut image if needed
-
+    def pred_img(self, img , size, cut, sleeptime, n, nimg_size=(20, 15)):
+        
+        img = autolib.cut_img(img, cut) # cut image if needed
+        img = cv2.resize(img, size)
         pred = np.expand_dims(img/255, axis=0)
         nimg = AI.fe.predict(pred)
-        nimg = cv2.resize(nimg[0], (10, 2))
-        nimg = np.expand_dims(nimg, axis = 0)
-        st = time.time()
-        ny = AI.model.predict(pred)
+        nimg = np.expand_dims(cv2.resize(nimg[0], nimg_size), axis=0)
 
-        lab = np.argmax(ny[0])
+        ny = AI.model.predict(pred)[0]
+        lab = np.argmax(ny)
+        
+        # average softmax direction
+        average = 0
+        coef = [-2, -1, 0, 1, 2]
 
-        et = time.time()
-        dt = et-st # compute time
+        for it, nyx in enumerate(ny):
+            average+=nyx*coef[it]
 
-        n = 64
+        
+        if len(self.av)<30:
+            self.av.append(average)
+        else:
+            self.av.insert(0, average)
+            del self.av[-1]
 
+        avaverage = np.average(self.av)
+
+
+        ny = [round(n, 3) for n in ny]
         tot_img = np.zeros((nimg.shape[1]*int(sqrt(n)), nimg.shape[2]*int(sqrt(n))))
 
         try:
@@ -269,15 +166,57 @@ if __name__ == "__main__":
             pass
 
         c = np.copy(img)
-        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+(lab-2)*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
-        #cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+lab*60), img.shape[0]-50), color=[255, 0, 0], thickness=4)
+        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+avaverage*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
+        # cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[0, 0, 255], thickness=4)
+        c = c/255
 
-        # cv2.imshow('im', nimg[0, :, :])
-        cv2.imshow('tot', tot_img)
-        cv2.imshow('img', c/255)
+        if n==1:
+            av = nimg[0]
+            av = cv2.resize(av, size)
+            cv2.imshow('im', nimg[0, :, :])
+            
+        else:
+            av = np.sum(nimg[0], axis=-1)
+            av = cv2.resize(av/(nimg.shape[-1]/2), size)
+            cv2.imshow('tot', tot_img)
 
-        cv2.waitKey(1)
+        cv2.imshow('av', av*c[:,:,0])
+        cv2.imshow('img', c)
 
-        #cv2.imwrite('C:\\Users\\maxim\\image_reg\\'+str((lab-2)/2)+'_'+str(time.time())+'.png', img)
+        cv2.waitKey(sleeptime)
+        
 
-cv2.destroyAllWindows()
+    def after_training_test_pred(self, path, size, cut=0, n=9, from_path=True, from_vid=False, batch_vid=32, sleeptime=1):
+        if from_path==True:
+            for it, i in enumerate(glob(path)):
+                img = cv2.imread(i)
+                img = cv2.resize(img, size)
+                img, _ = autolib.rdm_noise(img, 0)
+                self.pred_img(img, size, cut, sleeptime, n)
+                
+        elif from_vid==True:
+            self.cap = cv2.VideoCapture(path)
+            print("created cap")
+
+            while(True):
+                im_batch = self.load_frames(path, batch_len=batch_vid)
+                for img in im_batch:
+                    self.pred_img(img, size, cut, sleeptime, n)
+
+
+if __name__ == "__main__":
+
+    AI = classifier(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv3_mix.h5', path ='C:\\Users\\maxim\\image_mix\\*.png')
+
+    AI.epochs = 20
+    AI.save_interval = 2
+    AI.batch_size = 48
+
+    AI.train()
+    AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
+
+    AI.fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
+    # AI.after_training_test_pred('C:\\Users\\maxim\\wdate\\*', (160,120), cut=0, from_path=True, from_vid=False, n=49, sleeptime=1)
+    AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
+
+    cv2.destroyAllWindows()
