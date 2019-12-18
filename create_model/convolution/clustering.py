@@ -8,7 +8,7 @@ import cv2
 import h5py
 import numpy as np
 from keras import callbacks
-from keras.layers import (Conv2D, Dense, Dropout, Flatten, LeakyReLU, ZeroPadding2D,
+from keras.layers import (Conv2D, Dense, Dropout, Flatten, LeakyReLU, ZeroPadding2D, Activation,
                           MaxPooling2D, BatchNormalization, Reshape, UpSampling2D, Conv2DTranspose)
 from keras.models import Sequential, load_model, Model, Input
 from keras.applications.mobilenetv2 import MobileNetV2, preprocess_input
@@ -29,8 +29,8 @@ class cluster():
         self.img_rows = 120
         self.channels = 3
         
-        self.fename = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\featuresv2.h5'
-        self.autoname = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\autoencoderv2.h5'
+        self.fename = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\features.h5'
+        self.autoname = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\autoencoder.h5'
     
     
     def get_img(self, dos):
@@ -39,10 +39,10 @@ class cluster():
 
         for i in tqdm(dos):
             img = cv2.imread(i)
-            #imgflip = cv2.flip(img, 1)
+            # imgflip = cv2.flip(img, 1)
 
             X.append(img)
-            #X.append(imgflip)
+            # X.append(imgflip)
 
         return np.array(X)
 
@@ -57,21 +57,35 @@ class cluster():
 
             inp = Input(shape=self.img_shape)
 
-            x = Conv2D(4, kernel_size=(5,5), strides=2, activation="relu", padding="same", input_shape=self.img_shape)(inp)
+            x = Conv2D(4, kernel_size=(5,5), strides=2, padding="same", input_shape=self.img_shape)(inp)
+            x = BatchNormalization()(x)
+            x = Activation('relu')(x)
 
-            x = Conv2D(8, kernel_size=(5,5), strides=2, activation="relu", padding="same")(x)
+            x = Conv2D(8, kernel_size=(5,5), strides=2, padding="same")(x)
+            x = BatchNormalization()(x)
+            x = Activation('relu')(x)
 
-            x = Conv2D(16, kernel_size=(5,5), strides=2, activation="relu", padding="same")(x)
+            x = Conv2D(16, kernel_size=(5,5), strides=2, padding="same")(x)
+            x = BatchNormalization()(x)
+            x = Activation('relu')(x)
     
-            x = Conv2D(32,kernel_size=(5,5), strides=2, activation="relu", padding="same")(x)
+            x = Conv2D(32,kernel_size=(3,3), strides=2, padding="same")(x)
+            x = BatchNormalization()(x)
+            x = Activation('relu')(x)
     
-            x = Conv2D(64,kernel_size=(5,5), strides=2, activation="relu", padding="same")(x)
+            x = Conv2D(64,kernel_size=(3,3), strides=2, padding="same")(x)
+            x = BatchNormalization()(x)
+            x = Activation('relu')(x)
             
-            x = Conv2D(128,kernel_size=(5,5), strides=2, activation="relu", padding="same")(x)
+            x = Conv2D(128,kernel_size=(3,3), strides=2, padding="same")(x)
+            x = BatchNormalization()(x)
+            x = Activation('relu')(x)
 
             x = Flatten()(x)
 
             lat = Dense(50, activation="relu")(x)
+            lat = BatchNormalization()(lat)
+            lat = Dense(50, activation="tanh")(lat)
 
             fe = Model(inp, lat)
 
@@ -121,7 +135,6 @@ class cluster():
         self.X = self.X/255
 
         self.img_shape = self.X[0].shape
-
         
         vgg = self.load_vgg(epochs=epochs)
 
@@ -166,4 +179,4 @@ if __name__ == "__main__":
     AI.save_interval = 2
     AI.batch_size = 16
 
-    AI.clustering('C:\\Users\\maxim\\labelled\\*', epochs = 0)
+    AI.clustering('C:\\Users\\maxim\\image_mix\\*', epochs = 5)

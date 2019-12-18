@@ -36,8 +36,8 @@ class pred():
 
         strt = time.time()
         preds = self.model.predict(X_pred)
-        preds = np.array([np.argmax(i) for i in preds])
         end = time.time()
+        preds = np.array([np.argmax(i) for i in preds])
         print('pred in: '+str(end-strt)+' sec ||', str((end-strt)/len(X_pred))+' sec/img')
 
         return X_pred, preds
