@@ -21,7 +21,7 @@ then:
 ![schema](/docs/schema.png)
 
 and now:
-![schema](/docs/schema2.png)
+![schema2](/docs/schema2.png)
 
 - The board used for intelligence is a RockPro64 from pine64 running a Debian 9 (Stretch) arm64 v8 (aarch64) and as there are a lot of things to install on it, you'll find [the list of the main elements (openCV, Tensorflow, Numpy) and how to compile or install them here](software.md).
 
