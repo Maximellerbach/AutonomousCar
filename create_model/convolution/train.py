@@ -29,10 +29,10 @@ from datagenerator import image_generator
 
 class classifier():
 
-    def __init__(self, name, path):
+    def __init__(self, name, impath):
         
         self.name = name
-        self.path = path
+        self.impath = impath
 
         self.img_cols = 160
         self.img_rows = 120
@@ -48,14 +48,19 @@ class classifier():
 
         self.av = []
 
-    def build_classifier(self):
-        # model = load_model(self.name, custom_objects={"dir_loss":dir_loss})
-        # fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
+    def build_classifier(self, model_type, load=False):
+        """
+        load a model using architectures program
+        """
+        if load == True:
+            model = load_model(self.name, custom_objects={"dir_loss":dir_loss})
+            fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
         
-        model, fe = architectures.create_light_CNN((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu")
-        # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
-        # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
-        # model, fe = architectures.create_lightlatent_CNN((100, 160, 3), 5)
+        else:
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu")
+            # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
+            # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
+            # model, fe = architectures.create_lightlatent_CNN((100, 160, 3), 5)
 
         fe.summary()
         model.summary()
@@ -63,28 +68,26 @@ class classifier():
         return model, fe
 
 
-    def train(self, X=np.array([]), Y=np.array([])):
-        
-        #X_train, X_test, Y_train, Y_test = train_test_split(self.X, self.Y, test_size = 0.1, shuffle=True)
+    def train(self, load=False, X=np.array([]), Y=np.array([])):
+        """
+        trains the model loaded as self.model
+        """
 
-        self.datalen = len(glob(self.path))
-        self.gdos = glob(self.path)
+        self.datalen = len(glob(self.impath))
+        self.gdos = glob(self.impath)
         np.random.shuffle(self.gdos)
         self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//10])
-        test_image = (np.expand_dims(cv2.imread(self.valdos[0]), axis=0), autolib.get_label(self.valdos[0],flip=False))
-
+        
         print(self.gdos.shape, self.valdos.shape)
+        self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
 
-        # self.img_shape = cv2.imread(self.gdos[0]).shape
-        self.model, self.fe = self.build_classifier()
-
-        frc = self.get_frc(self.path)
+        frc = self.get_frc(self.impath)
 
         earlystop = EarlyStopping(monitor = 'dir_loss', min_delta = 0, patience = 4, verbose = 0, restore_best_weights = True)
         self.model.fit_generator(image_generator(self.gdos, self.batch_size), steps_per_epoch=self.datalen//self.batch_size, epochs=self.epochs,
                                 validation_data=image_generator(self.valdos, self.batch_size), validation_steps=self.datalen//10//self.batch_size,
                                 class_weight=frc, callbacks=[earlystop], max_queue_size=5, workers=16)
-
+        
         # try:
         #     for epoch in range(self.epochs):
         #         self.model.fit_generator(self.image_generator(), steps_per_epoch=self.datalen//self.batch_size, epochs=1, validation_data=self.image_val(), validation_steps=self.datalen//10//self.batch_size, class_weight=frc)
@@ -94,11 +97,14 @@ class classifier():
 
         self.model.save(self.name)
         self.fe.save('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
-            
+
 
     def get_frc(self, dos):
+        """
+        calculate stats from labels
+        returns the weight of the classes for balanced training
+        """
         Y = []
-
         for i in tqdm(np.sort(glob(dos))):
             
             label = autolib.get_label(i, flip=True, before=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
@@ -118,9 +124,12 @@ class classifier():
         return frc
     
     def load_frames(self, path, size=(360,240), batch_len=32):
+        """
+        load a batch of frame from video
+        """
         batch = []
         
-        for i in range(batch_len):
+        for _ in range(batch_len):
             _, frame = self.cap.read()
             frame = cv2.resize(frame, size)
             batch.append(frame)
@@ -129,8 +138,13 @@ class classifier():
 
     def pred_img(self, img , size, cut, sleeptime, n, nimg_size=(20, 15)):
         
+        """
+        predict an image and visualize the prediction
+        """
+
         img = autolib.cut_img(img, cut) # cut image if needed
         img = cv2.resize(img, size)
+        img, _ = autolib.night_effect(img, 0)
         pred = np.expand_dims(img/255, axis=0)
         nimg = AI.fe.predict(pred)
         nimg = np.expand_dims(cv2.resize(nimg[0], nimg_size), axis=0)
@@ -146,7 +160,7 @@ class classifier():
             average+=nyx*coef[it]
 
         
-        if len(self.av)<30:
+        if len(self.av)<1:
             self.av.append(average)
         else:
             self.av.insert(0, average)
@@ -187,6 +201,10 @@ class classifier():
         
 
     def after_training_test_pred(self, path, size, cut=0, n=9, from_path=True, from_vid=False, batch_vid=32, sleeptime=1):
+        """
+        either predict images in a folder
+        or from a video
+        """
         if from_path==True:
             for it, i in enumerate(glob(path)):
                 img = cv2.imread(i)
@@ -206,17 +224,17 @@ class classifier():
 
 if __name__ == "__main__":
 
-    AI = classifier(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv3_mix.h5', path ='C:\\Users\\maxim\\image_mix\\*.png')
+    AI = classifier(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv3_mix.h5', impath ='C:\\Users\\maxim\\image_mix\\*.png')
 
     AI.epochs = 20
     AI.save_interval = 2
     AI.batch_size = 48
 
-    AI.train()
+    # AI.train()
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
     AI.fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
-    # AI.after_training_test_pred('C:\\Users\\maxim\\wdate\\*', (160,120), cut=0, from_path=True, from_vid=False, n=49, sleeptime=1)
-    AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
+    AI.after_training_test_pred('C:\\Users\\maxim\\wdate\\*', (160,120), cut=0, from_path=True, from_vid=False, n=49, sleeptime=1)
+    # AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

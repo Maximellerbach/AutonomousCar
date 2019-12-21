@@ -181,10 +181,10 @@ def add_random_glow(image, lab):
 
     return image, lab
 
-def night_effect(img,  label, vmin=180, vmax=255):
+def night_effect(img,  label, vmin=150, vmax=230):
     limit = random.uniform(vmin,vmax)
-    low_limit = 120 
-    int_img = sk.rescale_intensity(img, in_range=(low_limit,limit), out_range='dtype')
+    low_limit = vmin
+    int_img = sk.rescale_intensity(img, in_range=(low_limit, limit), out_range=(0,255))
     
     return int_img, label
 

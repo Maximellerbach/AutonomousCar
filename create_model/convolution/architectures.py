@@ -60,11 +60,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
 
-    y = Dense(9, use_bias=False)(y)
-    y = BatchNormalization()(y)
-    y = Activation(prev_act)(y)
-
-    z = Dense(number_class, use_bias=False, activation=last_act)(y) #  kernel_regularizer=regularizers.l2(0.0005)
+    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l2())(y) #  kernel_regularizer=l2(0.0005)
 
     model = Model(inp, z)
 
