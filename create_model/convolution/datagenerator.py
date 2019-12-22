@@ -4,8 +4,9 @@ import keras
 import cv2
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, batch_size=32, shape=(160,120,3), n_classes=5):
+    def __init__(self, img_path, batch_size=32, augm=True, shape=(160,120,3), n_classes=5):
         self.shape = shape
+        self.augm = augm
         self.img_cols = shape[0]
         self.img_rows = shape[1]
         self.batch_size = batch_size
@@ -31,17 +32,20 @@ class image_generator(keras.utils.Sequence):
         xbatch = np.concatenate((xbatch, xflip))
         ybatch = np.concatenate((ybatch, yflip))
 
-        X_bright, Y_bright = autolib.generate_brightness(xbatch, ybatch, proportion=0.25)
-        X_gamma, Y_gamma = autolib.generate_low_gamma(xbatch, ybatch, proportion=0.25)
-        X_night, Y_night = autolib.generate_night_effect(xbatch, ybatch, proportion=0.25)
-        X_shadow, Y_shadow = autolib.generate_random_shadows(xbatch, ybatch, proportion=0.25)
-        X_chain, Y_chain = autolib.generate_chained_transformations(xbatch, ybatch, proportion=0.25)
-        X_noise, Y_noise = autolib.generate_random_noise(xbatch, ybatch, proportion=0.25)
-        X_rev, Y_rev = autolib.generate_inversed_color(xbatch, ybatch, proportion=0.25)
-        X_glow, Y_glow = autolib.generate_random_glow(xbatch, ybatch, proportion=0.25)
+        if self.augm == True:
+            X_bright, Y_bright = autolib.generate_brightness(xbatch, ybatch, proportion=0.25)
+            X_gamma, Y_gamma = autolib.generate_low_gamma(xbatch, ybatch, proportion=0.25)
+            X_night, Y_night = autolib.generate_night_effect(xbatch, ybatch, proportion=0.25)
+            X_shadow, Y_shadow = autolib.generate_random_shadows(xbatch, ybatch, proportion=0.25)
+            X_chain, Y_chain = autolib.generate_chained_transformations(xbatch, ybatch, proportion=0.25)
+            X_noise, Y_noise = autolib.generate_random_noise(xbatch, ybatch, proportion=0.25)
+            X_rev, Y_rev = autolib.generate_inversed_color(xbatch, ybatch, proportion=0.25)
+            X_glow, Y_glow = autolib.generate_random_glow(xbatch, ybatch, proportion=0.25)
 
-        xbatch = np.concatenate((xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow))/255
-        ybatch = np.concatenate((ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow))
+            xbatch = np.concatenate((xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow))/255
+            ybatch = np.concatenate((ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow))
+        else:
+            xbatch = xbatch/255
 
         # ybatch = to_categorical(ybatch, self.number_class)
         ybatch = autolib.label_smoothing(ybatch, 5, 0.25)

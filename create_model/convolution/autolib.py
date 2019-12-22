@@ -201,9 +201,12 @@ def inverse_color(img, label):
     b = img[:,:,0]
     g = img[:,:,1]
     r = img[:,:,2]
-    order = [b, g, r]
+
+    rdm_c = np.random.uniform(0.6, 1.4, 3)
+    order = [b*rdm_c[0], g*rdm_c[1], r*rdm_c[2]]
     random.shuffle(order)
     img = cv2.merge(order)
+    img = img*(1/max(rdm_c))
 
     return img, label
 

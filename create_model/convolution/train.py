@@ -58,6 +58,7 @@ class classifier():
         
         else:
             model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu")
+            
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
             # model, fe = architectures.create_lightlatent_CNN((100, 160, 3), 5)
@@ -76,17 +77,17 @@ class classifier():
         self.datalen = len(glob(self.impath))
         self.gdos = glob(self.impath)
         np.random.shuffle(self.gdos)
-        self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//10])
+        self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
         
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
 
         frc = self.get_frc(self.impath)
 
-        earlystop = EarlyStopping(monitor = 'dir_loss', min_delta = 0, patience = 4, verbose = 0, restore_best_weights = True)
-        self.model.fit_generator(image_generator(self.gdos, self.batch_size), steps_per_epoch=self.datalen//self.batch_size, epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.batch_size), validation_steps=self.datalen//10//self.batch_size,
-                                class_weight=frc, callbacks=[earlystop], max_queue_size=5, workers=16)
+        earlystop = EarlyStopping(monitor = 'dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
+        self.model.fit_generator(image_generator(self.gdos, self.batch_size, augm=True), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
+                                validation_data=image_generator(self.valdos, self.batch_size, augm=False), validation_steps=self.datalen//20//(self.batch_size),
+                                class_weight=frc, callbacks=[earlystop], max_queue_size=2, workers=8)
         
         # try:
         #     for epoch in range(self.epochs):
@@ -144,7 +145,6 @@ class classifier():
 
         img = autolib.cut_img(img, cut) # cut image if needed
         img = cv2.resize(img, size)
-        img, _ = autolib.night_effect(img, 0)
         pred = np.expand_dims(img/255, axis=0)
         nimg = AI.fe.predict(pred)
         nimg = np.expand_dims(cv2.resize(nimg[0], nimg_size), axis=0)
@@ -209,7 +209,8 @@ class classifier():
             for it, i in enumerate(glob(path)):
                 img = cv2.imread(i)
                 img = cv2.resize(img, size)
-                img, _ = autolib.rdm_noise(img, 0)
+                # img, _ = autolib.rdm_noise(img, 0)
+                # img, _ = autolib.night_effect(img, 0)
                 self.pred_img(img, size, cut, sleeptime, n)
                 
         elif from_vid==True:
@@ -224,13 +225,13 @@ class classifier():
 
 if __name__ == "__main__":
 
-    AI = classifier(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv3_mix.h5', impath ='C:\\Users\\maxim\\image_mix\\*.png')
+    AI = classifier(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv4_mix.h5', impath ='C:\\Users\\maxim\\image_mix2\\*.png')
 
-    AI.epochs = 20
+    AI.epochs = 1
     AI.save_interval = 2
     AI.batch_size = 48
 
-    # AI.train()
+    AI.train(load=True)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
     AI.fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
