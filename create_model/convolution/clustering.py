@@ -7,21 +7,23 @@ from glob import glob
 import cv2
 import h5py
 import numpy as np
+import pandas as pd
 from keras import callbacks
-from keras.layers import (Conv2D, Dense, Dropout, Flatten, LeakyReLU, ZeroPadding2D, Activation,
-                          MaxPooling2D, BatchNormalization, Reshape, UpSampling2D, Conv2DTranspose)
-from keras.models import Sequential, load_model, Model, Input
 from keras.applications.mobilenetv2 import MobileNetV2, preprocess_input
+from keras.layers import (Activation, BatchNormalization, Conv2D,
+                          Conv2DTranspose, Dense, Dropout, Flatten, LeakyReLU,
+                          MaxPooling2D, Reshape, UpSampling2D, ZeroPadding2D)
+from keras.models import Input, Model, Sequential, load_model
 from keras.optimizers import SGD, Adam
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
+from sklearn.cluster import *
 from sklearn.model_selection import train_test_split
-from sklearn.cluster import Birch, KMeans, ward_tree
 from tqdm import tqdm
-import pandas as pd
-import os
 
-    
+from architectures import dir_loss
+
+
 class cluster():
     def __init__(self):
         
@@ -29,8 +31,7 @@ class cluster():
         self.img_rows = 120
         self.channels = 3
         
-        self.fename = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\features.h5'
-        self.autoname = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\autoencoder.h5'
+        self.fename = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5'
     
     
     def get_img(self, dos):
@@ -47,87 +48,17 @@ class cluster():
         return np.array(X)
 
 
-    def load_vgg(self, epochs = 10):
-
-        try:
-            fe = load_model(self.fename)
-            autoencoder = load_model(self.autoname)
-
-        except:
-
-            inp = Input(shape=self.img_shape)
-
-            x = Conv2D(4, kernel_size=(5,5), strides=2, padding="same", input_shape=self.img_shape)(inp)
-            x = BatchNormalization()(x)
-            x = Activation('relu')(x)
-
-            x = Conv2D(8, kernel_size=(5,5), strides=2, padding="same")(x)
-            x = BatchNormalization()(x)
-            x = Activation('relu')(x)
-
-            x = Conv2D(16, kernel_size=(5,5), strides=2, padding="same")(x)
-            x = BatchNormalization()(x)
-            x = Activation('relu')(x)
-    
-            x = Conv2D(32,kernel_size=(3,3), strides=2, padding="same")(x)
-            x = BatchNormalization()(x)
-            x = Activation('relu')(x)
-    
-            x = Conv2D(64,kernel_size=(3,3), strides=2, padding="same")(x)
-            x = BatchNormalization()(x)
-            x = Activation('relu')(x)
-            
-            x = Conv2D(128,kernel_size=(3,3), strides=2, padding="same")(x)
-            x = BatchNormalization()(x)
-            x = Activation('relu')(x)
-
-            x = Flatten()(x)
-
-            lat = Dense(50, activation="relu")(x)
-            lat = BatchNormalization()(lat)
-            lat = Dense(50, activation="tanh")(lat)
-
-            fe = Model(inp, lat)
-
-            lat = fe(inp)
-
-            y = Dense(2*4*64, use_bias=False, activation="relu")(lat)
-
-            y = Reshape((2,4,64))(y)
-
-            y = Conv2DTranspose(64,kernel_size=(5,5), strides=2, activation="relu", padding="same")(y)
-            y = ZeroPadding2D(padding=(1,1))(y)
-
-            y = Conv2DTranspose(32,kernel_size=(5,5), strides=2, activation="relu", padding="same")(y)
-            y = ZeroPadding2D(padding=(1,0))(y)
-
-            y = Conv2DTranspose(16,kernel_size=(5,5), strides=2, activation="relu", padding="same")(y)
-            y = ZeroPadding2D(padding=(1,0))(y)
-
-            y = Conv2DTranspose(8,kernel_size=(5,5), strides=2, activation="relu", padding="same")(y)
-
-            y = Conv2DTranspose(4,kernel_size=(5,5), strides=2, activation="relu", padding="same")(y)
-
-            z = Conv2D(3,kernel_size=(3,3), strides=1, activation="relu", padding="same")(y)
-
-            autoencoder = Model(inp, z)
-
-            fe.compile(loss="mse",optimizer=Adam() ,metrics=['accuracy'])
-            autoencoder.compile(loss="mse",optimizer=Adam() ,metrics=['accuracy'])
-
-            autoencoder.summary()
+    def load_vgg(self):
         
-            
-        for epoch in range(1,epochs+1): #using fit but saving model every epoch
+        fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5', custom_objects={"dir_loss":dir_loss})
 
-            print("epoch: %i / %i" % (epoch, epochs))
-            autoencoder.fit(self.X, self.X, batch_size= self.batch_size)
+        inp = Input(shape=(120,160,3))
+        x = fe(inp)
+        x = Flatten()(x)
 
-            if epoch % self.save_interval == 0:
-                fe.save(self.fename)
-                autoencoder.save(self.autoname)
-        
-        return fe
+        ffe = Model(inp, x)
+
+        return ffe
 
     def clustering(self, dos, epochs):
 
@@ -136,17 +67,17 @@ class cluster():
 
         self.img_shape = self.X[0].shape
         
-        vgg = self.load_vgg(epochs=epochs)
+        vgg = self.load_vgg()
 
         start = time.time()
-        x = vgg.predict(self.X)        
+        x = vgg.predict(self.X)
         end = time.time()
         inter = end-start
         print(inter)
 
 
         start = time.time()
-        method = Birch(threshold=2, n_clusters=None).fit(x)
+        method = KMeans(n_clusters=30).fit(x)
         y = method.labels_
         end = time.time()
         inter = end-start
@@ -179,4 +110,4 @@ if __name__ == "__main__":
     AI.save_interval = 2
     AI.batch_size = 16
 
-    AI.clustering('C:\\Users\\maxim\\image_mix\\*', epochs = 5)
+    AI.clustering('C:\\Users\\maxim\\image_sorted\\*', epochs = 5)

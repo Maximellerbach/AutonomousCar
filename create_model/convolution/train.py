@@ -54,7 +54,7 @@ class classifier():
         """
         if load == True:
             model = load_model(self.name, custom_objects={"dir_loss":dir_loss})
-            fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
+            fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
             model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu")
@@ -97,7 +97,7 @@ class classifier():
         #     pass
 
         self.model.save(self.name)
-        self.fe.save('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
+        self.fe.save('test_model\\convolution\\fe.h5')
 
 
     def get_frc(self, dos):
@@ -225,7 +225,7 @@ class classifier():
 
 if __name__ == "__main__":
 
-    AI = classifier(name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\lightv4_mix.h5', impath ='C:\\Users\\maxim\\image_mix2\\*.png')
+    AI = classifier(name = 'test_model\\convolution\\lightv3_mix.h5', impath ='C:\\Users\\maxim\\image_mix2\\*.png')
 
     AI.epochs = 1
     AI.save_interval = 2
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     AI.train(load=True)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
-    AI.fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5')
+    AI.fe = load_model('test_model\\convolution\\fe.h5')
     AI.after_training_test_pred('C:\\Users\\maxim\\wdate\\*', (160,120), cut=0, from_path=True, from_vid=False, n=49, sleeptime=1)
     # AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 

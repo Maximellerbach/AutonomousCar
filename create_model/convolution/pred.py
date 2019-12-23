@@ -18,7 +18,7 @@ class pred():
 
     def __init__(self):
         self.path = 'C:\\Users\\maxim\\image_raw\\*'
-        self.name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\nofilterv2_ironcar.h5'
+        self.name = 'test_model\\convolution\\nofilterv2_ironcar.h5'
 
         self.img_rows = 120
         self.img_cols = 160

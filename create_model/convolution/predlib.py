@@ -101,13 +101,13 @@ if __name__ == "__main__":
     AI = pred()
     AI.path = 'C:\\Users\\maxim\\image_sorted\\*'
 
-    AI.name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\nofilterv4_ironcar.h5'
+    AI.name = 'test_model\\convolution\\nofilterv4_ironcar.h5'
     AI.save_img()
     
     '''
     X1, Y1 = AI.get_pred()
 
-    AI.name = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\nofilterv5_ironcar.h5'
+    AI.name = 'test_model\\convolution\\nofilterv5_ironcar.h5'
     X2, Y2 = AI.get_pred() 
     
     #AI.save_difference(X1, Y1, Y2)
