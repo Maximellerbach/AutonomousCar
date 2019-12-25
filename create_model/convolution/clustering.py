@@ -25,13 +25,13 @@ from architectures import dir_loss
 
 
 class cluster():
-    def __init__(self):
+    def __init__(self, fename):
         
         self.img_cols = 160
         self.img_rows = 120
         self.channels = 3
         
-        self.fename = 'C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5'
+        self.fename = fename
     
     
     def get_img(self, dos):
@@ -50,7 +50,7 @@ class cluster():
 
     def load_vgg(self):
         
-        fe = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\convolution\\fe.h5', custom_objects={"dir_loss":dir_loss})
+        fe = load_model(self.fename, custom_objects={"dir_loss":dir_loss})
 
         inp = Input(shape=(120,160,3))
         x = fe(inp)
@@ -105,7 +105,7 @@ class cluster():
 
 if __name__ == "__main__":
 
-    AI = cluster()
+    AI = cluster('test_model\\convolution\\fe.h5')
 
     AI.save_interval = 2
     AI.batch_size = 16

@@ -89,6 +89,7 @@ def cut_img(img, c):
     img = img[c:, :, :]
     return img
 
+
 def label_smoothing(Y, n, k):
     smooth_y = []
     for y in Y:
@@ -97,10 +98,19 @@ def label_smoothing(Y, n, k):
         if y==2:
             sy[y-1] = k/2
             sy[y+1] = k/2
+
         elif y==0:
             sy[y+1] = k
-        elif y==n-1:
+        elif y==1:
             sy[y-1] = k
+
+        elif y==1:
+            sy[y-1] = k*2/3
+            sy[y+1] = k*1/3
+
+        elif y == 2:
+            sy[y-1] = k*1/3
+            sy[y+1] = k*2/3
 
         smooth_y.append(sy)
     return np.array(smooth_y)
@@ -121,6 +131,18 @@ def change_brightness(img, lab, value=30, sign=True):
     hsv = cv2.merge((h, s, v))
     img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return img, lab
+
+def rescut(image, lab):
+    rdm_cut = int(np.random.uniform(0, 20))
+    sign = np.random.choice([True, False])
+
+    if sign == True:
+        img = image[:, rdm_cut:, :]
+    else:
+        dif = image.shape[1]-rdm_cut
+        img = image[:, :dif, :]
+
+    return cv2.resize(img, (160, 120)), lab
 
 def add_random_shadow(image, lab):
 
@@ -209,6 +231,20 @@ def inverse_color(img, label):
     img = img*(1/max(rdm_c))
 
     return img, label
+
+def generate_random_cut(X, Y, proportion=0.25):
+    indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+    
+    X_aug = []
+    Y_aug = []
+    for index in range(len(X)):
+        if indexes[index] == True:
+            im, angle = rescut(X[index], Y[index])
+            Y_aug.append(angle)
+            X_aug.append(im)
+
+    return X_aug, Y_aug
+    
 
 def generate_brightness(X, Y, proportion=0.25):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])

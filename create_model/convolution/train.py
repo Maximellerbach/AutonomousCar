@@ -13,7 +13,7 @@ import keras.backend as K
 import numpy as np
 import pandas as pd
 from keras import callbacks
-from keras.callbacks import EarlyStopping
+from keras.callbacks import *
 from keras.models import Input, Model, Sequential, load_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
@@ -21,10 +21,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import class_weight
 from tqdm import tqdm
 
-import architectures
-import autolib
+from AutonomousCar import autolib
+from AutonomousCar import architectures
+
+import interface
 import predlib
-from architectures import dir_loss
+from AutonomousCar.architectures import dir_loss
 from datagenerator import image_generator
 
 class classifier():
@@ -85,8 +87,9 @@ class classifier():
         frc = self.get_frc(self.impath)
 
         earlystop = EarlyStopping(monitor = 'dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
+
         self.model.fit_generator(image_generator(self.gdos, self.batch_size, augm=True), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.batch_size, augm=False), validation_steps=self.datalen//20//(self.batch_size),
+                                validation_data=image_generator(self.valdos, self.batch_size, augm=True), validation_steps=self.datalen//20//(self.batch_size),
                                 class_weight=frc, callbacks=[earlystop], max_queue_size=2, workers=8)
         
         # try:
@@ -194,24 +197,26 @@ class classifier():
             av = cv2.resize(av/(nimg.shape[-1]/2), size)
             cv2.imshow('tot', tot_img)
 
+
         cv2.imshow('av', av*c[:,:,0])
         cv2.imshow('img', c)
 
         cv2.waitKey(sleeptime)
-        
 
-    def after_training_test_pred(self, path, size, cut=0, n=9, from_path=True, from_vid=False, batch_vid=32, sleeptime=1):
+
+    def after_training_test_pred(self, path, size, cut=0, n=9, nimg_size=(20,15), from_path=True, from_vid=False, batch_vid=32, sleeptime=1):
         """
         either predict images in a folder
         or from a video
         """
+
         if from_path==True:
             for it, i in enumerate(glob(path)):
                 img = cv2.imread(i)
                 img = cv2.resize(img, size)
                 # img, _ = autolib.rdm_noise(img, 0)
                 # img, _ = autolib.night_effect(img, 0)
-                self.pred_img(img, size, cut, sleeptime, n)
+                self.pred_img(img, size, cut, sleeptime, n, nimg_size=nimg_size)
                 
         elif from_vid==True:
             self.cap = cv2.VideoCapture(path)
@@ -224,10 +229,9 @@ class classifier():
 
 
 if __name__ == "__main__":
+    AI = classifier(name = 'test_model\\convolution\\lightv4_mix.h5', impath ='C:\\Users\\maxim\\image_mix2\\*.png')
 
-    AI = classifier(name = 'test_model\\convolution\\lightv3_mix.h5', impath ='C:\\Users\\maxim\\image_mix2\\*.png')
-
-    AI.epochs = 1
+    AI.epochs = 5
     AI.save_interval = 2
     AI.batch_size = 48
 
@@ -235,7 +239,7 @@ if __name__ == "__main__":
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\wdate\\*', (160,120), cut=0, from_path=True, from_vid=False, n=49, sleeptime=1)
+    AI.after_training_test_pred('C:\\Users\\maxim\\wdate\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1)
     # AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

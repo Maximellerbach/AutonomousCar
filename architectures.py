@@ -1,5 +1,5 @@
 import keras.backend as K
-from keras.regularizers import l2
+from keras.regularizers import l2, l1_l2
 from keras.layers import (GRU, Activation, Add, AveragePooling2D,
                           BatchNormalization, Conv2D, Conv2DTranspose,
                           CuDNNGRU, Dense, DepthwiseConv2D, Dropout, Flatten,
@@ -37,7 +37,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(256, kernel_size=(4,5), strides=(4,5), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.3)(x)
+    x = Dropout(0.25)(x)
 
     ###
 
@@ -49,7 +49,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Dense(100, use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
-    y = Dropout(0.25)(y)
+    y = Dropout(0.2)(y)
 
     y = Dense(50, use_bias=False)(y)
     y = BatchNormalization()(y)
@@ -64,11 +64,11 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
 
-    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l2(0.005))(y) #  kernel_regularizer=l2(0.0005)
+    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.01, 0.005))(y) #  kernel_regularizer=l2(0.0005)
 
     model = Model(inp, z)
 
-    model.compile(loss=loss,optimizer=Adam() ,metrics=metrics)
+    model.compile(loss=loss,optimizer=Adam(0.001) ,metrics=metrics)
 
     return model, fe
 
