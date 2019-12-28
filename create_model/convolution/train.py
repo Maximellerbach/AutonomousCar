@@ -30,12 +30,13 @@ from datagenerator import image_generator
 
 class classifier():
 
-    def __init__(self, name, impath='', dospath='', recurrence=False):
+    def __init__(self, name, impath='', dospath='', recurrence=False, memory_size=49):
         
         self.name = name
         self.impath = impath
         self.dospath = dospath
         self.recurrence = recurrence
+        self.memory_size = memory_size
 
         self.img_cols = 160
         self.img_rows = 120
@@ -60,7 +61,7 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", recurrence=self.recurrence)
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", recurrence=self.recurrence, memory=self.memory_size)
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
@@ -91,10 +92,10 @@ class classifier():
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
 
-        earlystop = EarlyStopping(monitor = 'dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
+        earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True), validation_steps=self.datalen//20//(self.batch_size),
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
+                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), validation_steps=self.datalen//20//(self.batch_size),
                                 class_weight=frc, callbacks=[earlystop], max_queue_size=2, workers=8)
         
         # try:
@@ -162,10 +163,18 @@ class classifier():
         img = autolib.cut_img(img, cut) # cut image if needed
         img = cv2.resize(img, size)
         pred = np.expand_dims(img/255, axis=0)
+
         nimg = AI.fe.predict(pred)
         nimg = np.expand_dims(cv2.resize(nimg[0], nimg_size), axis=0)
 
-        ny = AI.model.predict(pred)[0]
+        if self.recurrence == True:
+            filled = [[0, 0.125, 0.75, 0.125, 0]]*(self.memory_size-len(self.av))+self.av
+            rec = np.expand_dims(filled, axis=0)
+            # print(pred.shape, rec.shape)
+            ny = AI.model.predict([pred, rec])[0]
+        else:
+            ny = AI.model.predict(pred)[0]
+
         lab = np.argmax(ny)
         
         # average softmax direction
@@ -174,15 +183,12 @@ class classifier():
 
         for it, nyx in enumerate(ny):
             average+=nyx*coef[it]
-
         
-        if len(self.av)<1:
-            self.av.append(average)
+        if len(self.av)<self.memory_size:
+            self.av.append(ny)
         else:
-            self.av.insert(0, average)
-            del self.av[-1]
-
-        avaverage = np.average(self.av)
+            self.av.append(ny)
+            del self.av[0]
 
 
         ny = [round(n, 3) for n in ny]
@@ -196,7 +202,7 @@ class classifier():
             pass
 
         c = np.copy(img)
-        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+avaverage*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
+        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
         # cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[0, 0, 255], thickness=4)
         c = c/255
 
@@ -242,7 +248,7 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\lightv5_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\', recurrence=True) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
+    AI = classifier(name = 'test_model\\convolution\\lightv5_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\', recurrence=True, memory_size=30) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
 
     AI.epochs = 10
     AI.save_interval = 2
@@ -252,7 +258,7 @@ if __name__ == "__main__":
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\image_course\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1)
+    AI.after_training_test_pred('C:\\Users\\maxim\\image_mix2\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1)
     # AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

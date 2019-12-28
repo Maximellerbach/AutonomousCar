@@ -12,7 +12,7 @@ from keras.optimizers import SGD, Adam
 def dir_loss(y_true, y_pred):
     return K.sqrt(K.square(y_true-y_pred))
 
-def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], recurrence=False):
+def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], recurrence=False, memory=49):
     
     inp = Input(shape=img_shape)
 
@@ -67,8 +67,14 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Dropout(0.1)(y)
 
     if recurrence == True:
-        inp2 = Input((49,5))
+        inp2 = Input((memory,5))
         y2 = Flatten()(inp2)
+        y2 = Dropout(0.1)(y2)
+
+        y2 = Dense(memory//2)(y2)
+        y2 = BatchNormalization()(y2)
+        y2 = Activation(prev_act)(y2)
+
         y = concatenate([y, y2])
 
     y = Dense(25, use_bias=False)(y)
@@ -82,7 +88,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.01, 0.005))(y) #  kernel_regularizer=l2(0.0005)
 
     if recurrence == True:
-        model = Model((inp, inp2), z)
+        model = Model([inp, inp2], z)
     else:
         model = Model(inp, z)
 

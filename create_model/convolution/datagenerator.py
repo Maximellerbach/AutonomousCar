@@ -5,7 +5,7 @@ import cv2
 from glob import glob
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size=32, augm=True, shape=(160,120,3), n_classes=5):
+    def __init__(self, img_path, datalen, batch_size=32, augm=True, shape=(160,120,3), n_classes=5, memory=49):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -13,6 +13,7 @@ class image_generator(keras.utils.Sequence):
         self.batch_size = batch_size
         self.img_path = img_path
         self.n_classes = n_classes
+        self.memory_size = memory+1
         self.datalen = datalen
 
     """
@@ -57,16 +58,16 @@ class image_generator(keras.utils.Sequence):
         return xbatch, ybatch
     """
 
-    def __data_generationseq(self, dos_path):
+    def __data_generationseq(self, dos_path, memory_size):
         fold = np.random.randint(0, len(dos_path), size=self.batch_size)
         batchfiles = []
         for f in fold:
             avpath = dos_path[f]
-            x = np.random.randint(0, len(avpath))
-            if x-50>0:
-                paths = avpath[x-50:x]
+            x = np.random.randint(1, len(avpath))
+            if x-memory_size>0:
+                paths = avpath[x-memory_size:x]
             else:
-                paths = ["somekind\\7_ofdummydata.png"]*np.absolute(x-50)+avpath[0:x]
+                paths = ["somekind\\7_ofdummydata.png"]*np.absolute(x-memory_size)+avpath[:x]
             batchfiles.append(paths)
 
         x1batch = []
@@ -79,21 +80,22 @@ class image_generator(keras.utils.Sequence):
 
         for i in batchfiles:
             img = cv2.imread(i[-1])
-            img = cv2.resize(img, (self.img_cols, self.img_rows))
-            lab, rev = autolib.get_previous_label(i)
+            try:
+                img = cv2.resize(img, (self.img_cols, self.img_rows))
+                lab, rev = autolib.get_previous_label(i)
 
-            x1batch.append(img)
-            x2batch.append(cv2.flip(img, 1))
-            ys1batch.append(lab[:-1])
-            ys2batch.append(rev[:-1])
-            y1batch.append(lab[-1])
-            y2batch.append(lab[-1])
+                x1batch.append(img)
+                x2batch.append(cv2.flip(img, 1))
+                ys1batch.append(lab[:-1])
+                ys2batch.append(rev[:-1])
+                y1batch.append(lab[-1])
+                y2batch.append(lab[-1])
+            except:
+                print(i)
 
         xbatch = np.concatenate((x1batch, x2batch))
         ybatch = np.concatenate((y1batch, y2batch))
         ysbatch = np.concatenate((ys1batch, ys2batch))
-
-        print(ysbatch.shape, xbatch.shape, ybatch.shape)
         
         if self.augm == True:
             X_bright, Y_bright, ys_b = autolib.generate_brightness(xbatch, ybatch, ys=ysbatch, proportion=0.15, ysb=True)
@@ -108,7 +110,7 @@ class image_generator(keras.utils.Sequence):
 
             xbatch = np.concatenate((xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut))/255
             ybatch = np.concatenate((ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow, Y_cut))
-            ysbatch = np.concatenate((ys_b, ys_g, ys_n, ys_s, ys_c, ys_rdm, ys_r, ys_glow, ys_cut))
+            ysbatch = np.concatenate((ysbatch, ys_b, ys_g, ys_n, ys_s, ys_c, ys_rdm, ys_r, ys_glow, ys_cut))
 
         else:
             xbatch = xbatch/255
@@ -131,5 +133,5 @@ class image_generator(keras.utils.Sequence):
         # X, Y = self.__data_generation(self.img_path)
         # return X, Y
 
-        X1, X2, Y = self.__data_generationseq(self.img_path)
+        X1, X2, Y = self.__data_generationseq(self.img_path, self.memory_size)
         return [X1, X2], Y
