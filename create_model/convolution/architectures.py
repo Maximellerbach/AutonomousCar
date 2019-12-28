@@ -12,7 +12,7 @@ from keras.optimizers import SGD, Adam
 def dir_loss(y_true, y_pred):
     return K.sqrt(K.square(y_true-y_pred))
 
-def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss]):
+def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], recurrence=False):
     
     inp = Input(shape=img_shape)
 
@@ -33,10 +33,20 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='valid')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    
-    x = Conv2D(256, kernel_size=(4,5), strides=(4,5), use_bias=False, padding='same')(x)
+
+    # x = Conv2D(256, kernel_size=(4,5), strides=(4,5), use_bias=False, padding='same')(x)
+    # x = BatchNormalization()(x)
+    # x = Activation(prev_act)(x)
+
+    x = ZeroPadding2D(((1,0), 0))(x)
+    x = Conv2D(256, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    
+    x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
+    x = BatchNormalization()(x)
+    x = Activation(prev_act)(x)
+
     x = Dropout(0.25)(x)
 
     ###
@@ -56,6 +66,11 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Activation(prev_act)(y)
     y = Dropout(0.1)(y)
 
+    if recurrence == True:
+        inp2 = Input((49,5))
+        y2 = Flatten()(inp2)
+        y = concatenate([y, y2])
+
     y = Dense(25, use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
@@ -66,7 +81,11 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
 
     z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.01, 0.005))(y) #  kernel_regularizer=l2(0.0005)
 
-    model = Model(inp, z)
+    if recurrence == True:
+        model = Model((inp, inp2), z)
+    else:
+        model = Model(inp, z)
+
 
     model.compile(loss=loss,optimizer=Adam(0.001) ,metrics=metrics)
 

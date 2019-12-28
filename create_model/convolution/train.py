@@ -12,7 +12,6 @@ import keras
 import keras.backend as K
 import numpy as np
 import pandas as pd
-from keras import callbacks
 from keras.callbacks import *
 from keras.models import Input, Model, Sequential, load_model
 from keras.preprocessing.sequence import pad_sequences
@@ -21,20 +20,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import class_weight
 from tqdm import tqdm
 
-from AutonomousCar import autolib
-from AutonomousCar import architectures
-
+import architectures
+import autolib
 import interface
 import predlib
-from AutonomousCar.architectures import dir_loss
+import reorder_dataset
+from architectures import dir_loss
 from datagenerator import image_generator
 
 class classifier():
 
-    def __init__(self, name, impath):
+    def __init__(self, name, impath='', dospath='', recurrence=False):
         
         self.name = name
         self.impath = impath
+        self.dospath = dospath
+        self.recurrence = recurrence
 
         self.img_cols = 160
         self.img_rows = 120
@@ -59,7 +60,7 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu")
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", recurrence=self.recurrence)
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
@@ -75,21 +76,25 @@ class classifier():
         """
         trains the model loaded as self.model
         """
+        if self.recurrence == True:
+            self.gdos, self.datalen = reorder_dataset.load_dataset(self.dospath)
+            self.valdos = self.gdos
+            frc = self.get_frc(self.dospath+"*")
 
-        self.datalen = len(glob(self.impath))
-        self.gdos = glob(self.impath)
-        np.random.shuffle(self.gdos)
-        self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
+        else:
+            self.datalen = len(glob(self.impath))
+            self.gdos = glob(self.impath)
+            np.random.shuffle(self.gdos)
+            self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
+            frc = self.get_frc(self.impath)
         
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
 
-        frc = self.get_frc(self.impath)
-
         earlystop = EarlyStopping(monitor = 'dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.batch_size, augm=True), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.batch_size, augm=True), validation_steps=self.datalen//20//(self.batch_size),
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
+                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True), validation_steps=self.datalen//20//(self.batch_size),
                                 class_weight=frc, callbacks=[earlystop], max_queue_size=2, workers=8)
         
         # try:
@@ -106,16 +111,24 @@ class classifier():
     def get_frc(self, dos):
         """
         calculate stats from labels
-        returns the weight of the classes for balanced training
+        returns the weight of the classes for a balanced training
         """
         Y = []
-        for i in tqdm(np.sort(glob(dos))):
-            
-            label = autolib.get_label(i, flip=True, before=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
 
-            Y.append(label[0])
-            # if label[1] != 2:
-            Y.append(label[1])
+        if self.recurrence == True:
+            for d in tqdm(glob(dos)):
+                for i in glob(dos+'\\*'):
+                    label = autolib.get_label(i, flip=True, before=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+
+                    Y.append(label[0])
+                    Y.append(label[1])
+        else:
+            for i in tqdm(np.sort(glob(dos))):
+                
+                label = autolib.get_label(i, flip=True, before=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+
+                Y.append(label[0])
+                Y.append(label[1])
 
         d = dict(collections.Counter(Y))
         prc = [0]*5
@@ -229,17 +242,17 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\lightv4_mix.h5', impath ='C:\\Users\\maxim\\image_mix2\\*.png')
+    AI = classifier(name = 'test_model\\convolution\\lightv5_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\', recurrence=True) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
 
-    AI.epochs = 5
+    AI.epochs = 10
     AI.save_interval = 2
     AI.batch_size = 48
 
-    AI.train(load=True)
+    AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\wdate\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1)
+    AI.after_training_test_pred('C:\\Users\\maxim\\image_course\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1)
     # AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

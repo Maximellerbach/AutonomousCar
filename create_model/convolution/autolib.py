@@ -39,9 +39,24 @@ def image_process(img, size = (160,120), shape = (160,120,1), filter = True, gra
         
     return img
 
+def get_previous_label(paths):
+    """
+    get the label sequence,
+    return normal labels and reversed
+    """
+    labs = []
+    revs = []
+    for path in paths:
+        l, r = get_label(path)
+        labs.append(l)
+        revs.append(r)
 
+    return labs, revs
 
 def get_label(path, os = 'win', flip=True, before=True, reg=False, index=-1, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
+    """
+    get the label of an image using the patern: as follow "somepath\\lab_time.png"
+    """
     label = []
 
     if os == 'win':
@@ -145,7 +160,6 @@ def rescut(image, lab):
     return cv2.resize(img, (160, 120)), lab
 
 def add_random_shadow(image, lab):
-
     shape = image.shape
     top_y = shape[1]*np.random.uniform()
     top_x = shape[0]*np.random.uniform()
@@ -232,108 +246,149 @@ def inverse_color(img, label):
 
     return img, label
 
-def generate_random_cut(X, Y, proportion=0.25):
+def generate_random_cut(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = rescut(X[index], Y[index])
             Y_aug.append(angle)
             X_aug.append(im)
-
-    return X_aug, Y_aug
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
     
 
-def generate_brightness(X, Y, proportion=0.25):
+def generate_brightness(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15,45), sign=True)
             Y_aug.append(angle)
             X_aug.append(im)
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
 
-    return X_aug, Y_aug
-
-def generate_inversed_color(X, Y, proportion=0.25):
+def generate_inversed_color(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = inverse_color(X[index], Y[index])
             Y_aug.append(angle)
             X_aug.append(im)
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
 
-    return X_aug, Y_aug
 
-
-def generate_low_gamma(X, Y, proportion=0.25):
+def generate_low_gamma(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15,45), sign=False)
             Y_aug.append(angle)
             X_aug.append(im)
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
 
-    return X_aug, Y_aug
-
-
-def generate_night_effect(X, Y, proportion=0.25):    
+def generate_night_effect(X, Y, ys=[], proportion=0.25, ysb=False):    
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = night_effect(X[index], Y[index])
             Y_aug.append(angle)
             X_aug.append(im)
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
 
-    return X_aug, Y_aug
 
-
-def generate_horizontal_flip(X, Y, proportion=0.25):
+def generate_horizontal_flip(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
 
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = horizontal_flip(X[index], Y[index])
             Y_aug.append(angle)
             X_aug.append(im)
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
 
-    return X_aug, Y_aug
 
-
-def generate_random_shadows(X, Y, proportion=0.25):
+def generate_random_shadows(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
 
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = add_random_shadow(X[index], Y[index])
             Y_aug.append(angle)
             X_aug.append(im)
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
 
-    return X_aug, Y_aug
-
-
-def generate_chained_transformations(X, Y, proportion=0.25):
+def generate_chained_transformations(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = change_brightness(X[index], Y[index])
@@ -341,33 +396,50 @@ def generate_chained_transformations(X, Y, proportion=0.25):
         
             Y_aug.append(angle)
             X_aug.append(im)
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
     
-    return X_aug, Y_aug
-    
-def generate_random_noise(X, Y, proportion=0.25):
+def generate_random_noise(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = rdm_noise(X[index], Y[index])
         
             Y_aug.append(angle)
             X_aug.append(im)
-    
-    return X_aug, Y_aug
+            if ysb==True:
+                YS_aug.append(ys[index])
+                
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
 
-def generate_random_glow(X, Y, proportion=0.25):
+def generate_random_glow(X, Y, ys=[], proportion=0.25, ysb=False):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
     X_aug = []
     Y_aug = []
+    YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
             im, angle = add_random_glow(X[index], Y[index])
         
             Y_aug.append(angle)
             X_aug.append(im)
-    
-    return X_aug, Y_aug
+            if ysb==True:
+                YS_aug.append(ys[index])
+
+    if ysb==True:
+        return X_aug, Y_aug, YS_aug
+    else:
+        return X_aug, Y_aug
