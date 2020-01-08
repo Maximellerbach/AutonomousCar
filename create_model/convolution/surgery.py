@@ -1,5 +1,4 @@
 import collections
-import interface
 from glob import glob
 
 import cv2
@@ -44,29 +43,30 @@ def show_filters(kernels, kshape=(5,5,3), mult=1, axis=0, kn=0):
 
 def forward(model, dos, show=True, index=None):
     prev = np.zeros((256))
+    m = load_model("test_model\\convolution\\lightv5_mix.h5", custom_objects={"dir_loss":dir_loss})
 
     inp = model.input
-    if index != None:
-        outputs = [model.layers[index].output]
-    else:
-        outputs = [layer.output for layer in model.layers if "Conv" in str(layer)][:]
+    outputs = [layer.output for layer in model.layers if "Conv" in str(layer)][:]
 
     f = K.function([inp, K.learning_phase()], outputs)
 
-    for i in tqdm(glob(dos)):
-        img = np.expand_dims(cv2.imread(i), axis=0)
-        layer_outs = f([img, 1.])[-1]
-        prev+=np.absolute(np.array(layer_outs).flatten())
+    for i in glob(dos):
+        img = np.expand_dims(cv2.resize(cv2.imread(i)[320:],(160,120)), axis=0)
+        layer_outs = f([img, 1.])
+        
+        pred = m.predict(img)[0]
+        print(pred)
+        # prev+=np.absolute(np.array(layer_outs).flatten())
         # print(np.array(layer_outs).flatten())
 
         if show==True:
             mult = 1
             for it, out in enumerate(layer_outs):
-                mult += 2
+                mult += 1
                 kshape = out.shape[1:]
 
                 for j in range(out.shape[-1]):
-                    visu = np.expand_dims(cv2.resize(out[0, :, :, j], (kshape[1]*mult, kshape[0]*mult)),axis=-1)
+                    visu = np.expand_dims(cv2.resize(out[0, :, :, j], (int(kshape[1]*mult), int(kshape[0]*mult))),axis=-1)
 
                     if j == 0:
                         img2 = visu
@@ -76,8 +76,16 @@ def forward(model, dos, show=True, index=None):
                 cv2.imshow(str(it), img2/max(img2.flatten())) # /max(img2.flatten())
                 cv2.waitKey(1)
 
-            cv2.imshow("img", img[0])
-            cv2.waitKey(1)
+            img = img[0]
+            average = 0
+            coef = [-2, -1, 0, 1, 2]
+
+            for it, nyx in enumerate(pred):
+                average+=nyx*coef[it]
+            cv2.line(img, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
+
+            cv2.imshow("img", img)
+            cv2.waitKey(0)
 
     prev = prev/max(prev)
     print(prev) # magnitude of each weight over the dataset
@@ -91,7 +99,7 @@ def get_model_weights(model):
 
 if __name__ == "__main__":
     model = load_model("test_model\\convolution\\fe.h5", custom_objects={"dir_loss":dir_loss})
-    forward(model, 'C:\\Users\\maxim\\image_mix\\*', show=False, index=None)
+    forward(model, 'C:\\Users\\maxim\\archive images\\bdd100k\\images\\100k\\test\\*', show=True, index=1) # 'C:\Users\maxim\archive images\bdd100k\images\100k\test' 'C:\\Users\\maxim\\image_mix2\\*'
 
     '''
     model1 = get_model_weights(model)

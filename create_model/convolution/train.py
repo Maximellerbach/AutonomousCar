@@ -22,7 +22,6 @@ from tqdm import tqdm
 
 import architectures
 import autolib
-import interface
 import predlib
 import reorder_dataset
 from architectures import dir_loss
@@ -30,13 +29,15 @@ from datagenerator import image_generator
 
 class classifier():
 
-    def __init__(self, name, impath='', dospath='', recurrence=False, memory_size=49):
+    def __init__(self, name, impath='', dospath='', recurrence=False, dosdir=True, memory_size=49, proportion=0.15):
         
         self.name = name
         self.impath = impath
         self.dospath = dospath
         self.recurrence = recurrence
         self.memory_size = memory_size
+        self.dosdir = dosdir
+        self.proportion = proportion
 
         self.img_cols = 160
         self.img_rows = 120
@@ -82,21 +83,27 @@ class classifier():
             self.valdos = self.gdos
             frc = self.get_frc(self.dospath+"*")
 
+        elif self.recurrence == False and self.dosdir==True:
+            self.gdos, self.datalen = reorder_dataset.load_dataset(self.dospath)
+            self.gdos = np.concatenate([i for i in self.gdos])
+            np.random.shuffle(self.gdos)
+            self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
+            frc = self.get_frc(self.dospath+"*")
         else:
             self.datalen = len(glob(self.impath))
             self.gdos = glob(self.impath)
             np.random.shuffle(self.gdos)
             self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
             frc = self.get_frc(self.impath)
-        
+
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
 
-        earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
+        earlystop = EarlyStopping(monitor = 'val_dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), validation_steps=self.datalen//20//(self.batch_size),
-                                class_weight=frc, callbacks=[earlystop], max_queue_size=2, workers=8)
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, proportion=self.proportion, memory=self.memory_size, recurrence=self.recurrence), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
+                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, proportion=self.proportion, memory=self.memory_size, recurrence=self.recurrence), validation_steps=self.datalen//20//(self.batch_size),
+                                class_weight=frc, callbacks=[earlystop], max_queue_size=4, workers=16)
         
         # try:
         #     for epoch in range(self.epochs):
@@ -116,7 +123,7 @@ class classifier():
         """
         Y = []
 
-        if self.recurrence == True:
+        if self.dosdir == True:
             for d in tqdm(glob(dos)):
                 for i in glob(dos+'\\*'):
                     label = autolib.get_label(i, flip=True, before=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
@@ -233,7 +240,7 @@ class classifier():
             for it, i in enumerate(glob(path)):
                 img = cv2.imread(i)
                 img = cv2.resize(img, size)
-                # img, _ = autolib.rdm_noise(img, 0)
+                img, _ = autolib.rdm_noise(img, 0)
                 # img, _ = autolib.night_effect(img, 0)
                 self.pred_img(img, size, cut, sleeptime, n, nimg_size=nimg_size)
                 
@@ -248,17 +255,17 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\lightv5_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\', recurrence=True, memory_size=30) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
+    AI = classifier(name = 'test_model\\convolution\\lightv5_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, memory_size=30, dosdir=True, proportion=0.2) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
 
     AI.epochs = 10
     AI.save_interval = 2
     AI.batch_size = 48
 
-    AI.train(load=False)
+    # AI.train(load=True)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\image_mix2\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1)
-    # AI.after_training_test_pred('F:\\fh4.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
+    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\3\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
+    # AI.after_training_test_pred('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

@@ -9,6 +9,11 @@ import cv2
 dire = [3, 5, 7, 9, 11]
 
 def pack_datasets(dos, new_dos, d_threshold=60):
+    try:
+        os.mkdir(new_dos)
+    except:
+        pass
+    
     dates = sort_by_date(dos)
 
     gaps = []
@@ -98,6 +103,6 @@ def load_dataset(dos):
 
 
 if __name__ == "__main__":
-    # pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
+    pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
 
-    dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\')
+    # dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\')
