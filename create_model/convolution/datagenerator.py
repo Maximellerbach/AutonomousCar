@@ -5,7 +5,7 @@ import cv2
 from glob import glob
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size=32, augm=True, shape=(160,120,3), n_classes=5, memory=49):
+    def __init__(self, img_path, datalen, batch_size=32, augm=True, shape=(160,120,3), n_classes=5, memory=49, fromdir=True):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -15,8 +15,8 @@ class image_generator(keras.utils.Sequence):
         self.n_classes = n_classes
         self.memory_size = memory+1
         self.datalen = datalen
+        self.fromdir= fromdir
 
-    """
     def __data_generation(self, img_path):
         batchfiles = np.random.choice(img_path, size=self.batch_size)
         xbatch = []
@@ -56,7 +56,7 @@ class image_generator(keras.utils.Sequence):
         ybatch = autolib.label_smoothing(ybatch, 5, 0.25)
 
         return xbatch, ybatch
-    """
+
 
     def __data_generationseq(self, dos_path, memory_size):
         fold = np.random.randint(0, len(dos_path), size=self.batch_size)
@@ -67,7 +67,7 @@ class image_generator(keras.utils.Sequence):
             if x-memory_size>0:
                 paths = avpath[x-memory_size:x]
             else:
-                paths = ["somekind\\7_ofdummydata.png"]*np.absolute(x-memory_size)+avpath[:x]
+                paths = ["somekind\\"+str(np.random.choice([3, 5, 7, 9, 11]))+"_ofdummydata.png"]*np.absolute(x-memory_size)+avpath[:x]
             batchfiles.append(paths)
 
         x1batch = []
@@ -130,8 +130,8 @@ class image_generator(keras.utils.Sequence):
         return int(self.datalen/self.batch_size)
 
     def __getitem__(self, index):
-        # X, Y = self.__data_generation(self.img_path)
-        # return X, Y
+        X, Y = self.__data_generation(self.img_path)
+        return X, Y
 
-        X1, X2, Y = self.__data_generationseq(self.img_path, self.memory_size)
-        return [X1, X2], Y
+        # X1, X2, Y = self.__data_generationseq(self.img_path, self.memory_size)
+        # return [X1, X2], Y

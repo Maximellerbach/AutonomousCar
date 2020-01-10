@@ -3,7 +3,7 @@ from keras.regularizers import l2, l1_l2
 from keras.layers import (GRU, Activation, Add, AveragePooling2D,
                           BatchNormalization, Conv2D, Conv2DTranspose,
                           CuDNNGRU, Dense, DepthwiseConv2D, Dropout, Flatten,
-                          GlobalAveragePooling2D, LeakyReLU, MaxPooling2D,
+                          GlobalAveragePooling2D, LeakyReLU, MaxPooling2D, multiply,
                           Reshape, SeparableConv2D, UpSampling2D, SpatialDropout2D,
                           ZeroPadding2D, concatenate, normalization)
 from keras.models import Input, Model, Sequential, load_model
@@ -70,8 +70,8 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
         inp2 = Input((memory,5))
         y2 = Flatten()(inp2)
         y2 = Dropout(0.1)(y2)
-
-        y2 = Dense(memory//2)(y2)
+        
+        y2 = Dense(50, use_bias=False)(y2)
         y2 = BatchNormalization()(y2)
         y2 = Activation(prev_act)(y2)
 

@@ -98,6 +98,5 @@ def load_dataset(dos):
 
 
 if __name__ == "__main__":
-    # pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
-
-    dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\')
+    pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
+    # dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\')
