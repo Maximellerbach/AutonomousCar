@@ -9,6 +9,11 @@ import cv2
 dire = [3, 5, 7, 9, 11]
 
 def pack_datasets(dos, new_dos, d_threshold=60):
+    try:
+        os.mkdir(new_dos)
+    except:
+        pass
+    
     dates = sort_by_date(dos)
 
     gaps = []
