@@ -257,11 +257,11 @@ class classifier():
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv5_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, memory_size=30, dosdir=True, proportion=0.2) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
 
-    AI.epochs = 10
+    AI.epochs = 15
     AI.save_interval = 2
     AI.batch_size = 48
 
-    # AI.train(load=True)
+    # AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')

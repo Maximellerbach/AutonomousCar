@@ -99,7 +99,7 @@ def get_model_weights(model):
 
 if __name__ == "__main__":
     model = load_model("test_model\\convolution\\fe.h5", custom_objects={"dir_loss":dir_loss})
-    forward(model, 'C:\\Users\\maxim\\archive images\\bdd100k\\images\\100k\\test\\*', show=True, index=1) # 'C:\Users\maxim\archive images\bdd100k\images\100k\test' 'C:\\Users\\maxim\\image_mix2\\*'
+    forward(model, 'C:\\Users\\maxim\\bdd100k\\images\\100k\\test\\*', show=True, index=1) # 'C:\Users\maxim\archive images\bdd100k\images\100k\test' 'C:\\Users\\maxim\\image_mix2\\*'
 
     '''
     model1 = get_model_weights(model)

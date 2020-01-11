@@ -38,10 +38,11 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     # x = BatchNormalization()(x)
     # x = Activation(prev_act)(x)
 
-    x = ZeroPadding2D(((1,0), 0))(x)
     x = Conv2D(256, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+
+    x = ZeroPadding2D(((1,0), 0))(x)
     
     x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
@@ -85,7 +86,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
 
-    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.1, 0.005))(y) #  kernel_regularizer=l2(0.0005)
+    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.05, 0.005))(y) #  kernel_regularizer=l2(0.0005)
 
     if recurrence == True:
         model = Model([inp, inp2], z)
