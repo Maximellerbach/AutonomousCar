@@ -83,7 +83,6 @@ def forward(model, dos, show=True, index=None):
             for it, nyx in enumerate(pred):
                 average+=nyx*coef[it]
             cv2.line(img, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
-
             cv2.imshow("img", img)
             cv2.waitKey(0)
 

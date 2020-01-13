@@ -1,67 +1,121 @@
+import os
+
 import cv2
 import numpy as np
+import open3d
 
-import interface
+from frame import Frame
 import image_processing
+import points3D as p3D
+from skimage.measure import ransac
 
-cap = cv2.VideoCapture('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4')
-orb = cv2.ORB_create(nlevels=8, edgeThreshold=0)
-bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+cloud_points = p3D.cloud_points()
 
-s = interface.screen(np.zeros((120, 160, 3)))
-s_orb = interface.screen(np.zeros((120, 160, 3)))
-s_m = interface.screen(np.zeros((120, 160, 3)))
+cap = cv2.VideoCapture('C:\\Users\\maxim\\video-fh4\\tlCGoB9khQ_Trim.mp4')
 
-ui = interface.ui(screens=[s, s_orb, s_m], name="img", dt=1)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
+
+W = 960
+H = 540
+
+orb = cv2.ORB_create()
+bf = cv2.BFMatcher(cv2.NORM_HAMMING2)
 
 first_img = cap.read()[1]
-# first_img = cv2.resize(first_img, (960,540))
+first_img = cv2.resize(first_img, (W,H))
 
-diff = np.zeros(first_img.shape[:-1])
-orbimg = np.zeros(first_img.shape[:-1])
+F = 545
+K = np.array([[F,0,W//2],[0,F,H//2],[0,0,1]])
+Kinv = np.linalg.inv(K)
 
-diffs = []
-prevkps = []
-prevdes = []
+frames = [Frame()]
+eps_pose = np.eye(4)
 
-while(1):
-    _, img = cap.read()
-    cv2.imshow("img", img)
-    # img = cv2.resize(img, (960,540))
+grid_shape = (16,16)
 
-    if len(diffs)>5:
-        del diffs[0]
-    diffs.append(diff)
-    w = np.array([(1/i)**2 for i in range(len(diffs)+1, 1, -1)])
-    diff = np.average(diffs, axis=0, weights=w)
 
-    diff, gray = image_processing.get_diff(img, diff)
-    kps, des = image_processing.get_keypoints(orb, diff, gray)
+it = 0
+while cap.isOpened():
+    it += 1
 
-    if prevkps!=[]:
-        matches = bf.match(np.array(des), np.array(prevdes))
-        # matches = sorted(matches, key = lambda x:x.distance)
+    frames.append(Frame())
+    f1 = frames[-1]
+    f2 = frames[-2]
 
-        # g2 = cv2.drawMatches(gray, kps, diff, prevkps, matches, gray)
+    img, gray = image_processing.capture_img(cap, (H, W))
+    f1.kps, f1.des = image_processing.extractFeatures(orb, gray, gray)
+
+    if len(frames)>2:
+        f1.matches = bf.knnMatch(np.array(f1.des), np.array(f2.des), k=2)
+
         g2 = np.copy(gray)
         g2 = cv2.cvtColor(g2, cv2.COLOR_GRAY2BGR)
-        for match in matches:
-            q, t= (match.queryIdx, match.trainIdx)
-            d = image_processing.get_keypoints_distance(kps[q], prevkps[t])
 
-            if d<10:
-                x1, y1 = kps[q].pt
-                x2, y2 = prevkps[t].pt
+        idx1 = []
+        idx2 = []
+        ret = []
 
-                cv2.line(g2, (int(x1),int(y1)), (int(x2),int(y2)), [255, 0, 0], thickness=2)
+        for match, n in f1.matches:
+            if match.distance < 0.75*n.distance:
+                q, t= (match.queryIdx, match.trainIdx)
+                d = image_processing.get_kps_distance(f1.kps[q], f2.kps[t])
 
+                if 0.<d<50:
+                    f1.idx1.append(q)
+                    f1.idx2.append(t)
+                    
+                    x1, y1 = f1.kps[q].pt
+                    x2, y2 = f2.kps[t].pt
+                    
+                    f1.pts.append([[x1/W, y1/H], [x2/W, y2/H]])
+
+                    cv2.line(g2, (int(x1),int(y1)), (int(x2),int(y2)), [255, 0, 0], thickness=2)
         cv2.imshow("g2", g2/255)
+
+        f1.to_array()
+        
+        # normalized 2D points
+        f1.pts[:, 0] = image_processing.normalize(Kinv, f1.pts[:, 0])
+        f1.pts[:, 1] = image_processing.normalize(Kinv, f1.pts[:, 1])
+
+        n_sample = len(f1.pts)
+
+        #TODO: camera pose estimation + understand camera projection matrix
+        if n_sample>8:
+            model, inliers = ransac((f1.pts[:, 0], f1.pts[:, 1]), image_processing.EssentialMatrixTransform, min_samples=8, residual_threshold=0.02, max_trials=100)
+            f1.idx1 = f1.idx1[inliers]
+            f1.idx2 = f1.idx2[inliers]
+
+            Rt = image_processing.fundamentalToRt(model.params)
+            f1.pose = np.dot(Rt, f2.pose)
+            eps_pose = eps_pose+f1.pose
+
+            # cloud_points.draw_cam([eps_pose[0][-1], eps_pose[1][-1], eps_pose[2][-1]])
+
+            # print(poses[-1])
+
+            pts3D = image_processing.triangulate(f1.pose, f2.pose, f1.pts[:, 0], f1.pts[:, 1])
+            pts3D /= pts3D[:, 3:]
+
+            v3D = []
+            for pt in pts3D:
+                prpt = np.dot(K, pt[:3])
+                if 0<all(prpt)<10000:
+                    prpt[0] = prpt[0]+eps_pose[0][-1]
+                    prpt[1] = prpt[1]+eps_pose[1][-1]
+                    prpt[2] = prpt[2]+eps_pose[2][-1]
+                    x,y,z = prpt
+                    v3D.append([x, -y, z])
+                # print(prpt)
+
+        else:
+            print(n_sample)
+
+        cloud_points.add_points(v3D)
+        if it % 120 == 0:
+            cloud_points.delminmax()
+            cloud_points.display_mesh()
+            # cloud_points.set_points([])
+
         cv2.waitKey(1)
-
-
-    prevkps = np.array(kps)
-    prevdes = np.array(des)
-
-    # matches
-
-    diff = gray
