@@ -3,6 +3,7 @@ import os
 import cv2
 import numpy as np
 import open3d
+import threading
 
 from frame import Frame
 import image_processing
@@ -11,13 +12,12 @@ from skimage.measure import ransac
 
 cloud_points = p3D.cloud_points()
 
-cap = cv2.VideoCapture('C:\\Users\\maxim\\video-fh4\\tlCGoB9khQ_Trim.mp4')
+cap = cv2.VideoCapture('C:\\Users\\maxim\\vids\\YQXiMjGF4M_trim.mp4')
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
+W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+H = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-W = 960
-H = 540
+# W, H = (940, 560)
 
 orb = cv2.ORB_create()
 bf = cv2.BFMatcher(cv2.NORM_HAMMING2)
@@ -25,15 +25,12 @@ bf = cv2.BFMatcher(cv2.NORM_HAMMING2)
 first_img = cap.read()[1]
 first_img = cv2.resize(first_img, (W,H))
 
-F = 545
+F = 200
 K = np.array([[F,0,W//2],[0,F,H//2],[0,0,1]])
 Kinv = np.linalg.inv(K)
 
 frames = [Frame()]
 eps_pose = np.eye(4)
-
-grid_shape = (16,16)
-
 
 it = 0
 while cap.isOpened():
@@ -67,8 +64,10 @@ while cap.isOpened():
                     
                     x1, y1 = f1.kps[q].pt
                     x2, y2 = f2.kps[t].pt
-                    
-                    f1.pts.append([[x1/W, y1/H], [x2/W, y2/H]])
+
+                    p1 = [x1/W, y1/H]
+                    p2 = [x2/W, y2/H]
+                    f1.pts.append([p1, p2])
 
                     cv2.line(g2, (int(x1),int(y1)), (int(x2),int(y2)), [255, 0, 0], thickness=2)
         cv2.imshow("g2", g2/255)
@@ -76,8 +75,8 @@ while cap.isOpened():
         f1.to_array()
         
         # normalized 2D points
-        f1.pts[:, 0] = image_processing.normalize(Kinv, f1.pts[:, 0])
-        f1.pts[:, 1] = image_processing.normalize(Kinv, f1.pts[:, 1])
+        # f1.pts[:, 0] = image_processing.normalize(Kinv, f1.pts[:, 0])
+        # f1.pts[:, 1] = image_processing.normalize(Kinv, f1.pts[:, 1])
 
         n_sample = len(f1.pts)
 
@@ -87,35 +86,36 @@ while cap.isOpened():
             f1.idx1 = f1.idx1[inliers]
             f1.idx2 = f1.idx2[inliers]
 
+            # for idx in range(len(f1.idx1)):
+            #     id1 = f1.idx1[idx]
+            #     id2 = f1.idx2[idx]
+
             Rt = image_processing.fundamentalToRt(model.params)
             f1.pose = np.dot(Rt, f2.pose)
             eps_pose = eps_pose+f1.pose
 
-            # cloud_points.draw_cam([eps_pose[0][-1], eps_pose[1][-1], eps_pose[2][-1]])
-
             # print(poses[-1])
+            if len(frames)>5:
+                pts3D = image_processing.triangulate(f1.pose, f2.pose, f1.pts[:, 0], f1.pts[:, 1])
+                pts3D /= pts3D[:, 3:]
 
-            pts3D = image_processing.triangulate(f1.pose, f2.pose, f1.pts[:, 0], f1.pts[:, 1])
-            pts3D /= pts3D[:, 3:]
+                v3D = []
+                for pt in pts3D:
+                    x, y, z, _ = pt
+                    if 0<all(pt)<1000:
+                        x += eps_pose[0][-1]
+                        y += eps_pose[1][-1]
+                        z += eps_pose[2][-1]
+                        # print(x, y, z)
+                        v3D.append([x, -y, -z])
 
-            v3D = []
-            for pt in pts3D:
-                prpt = np.dot(K, pt[:3])
-                if 0<all(prpt)<10000:
-                    prpt[0] = prpt[0]+eps_pose[0][-1]
-                    prpt[1] = prpt[1]+eps_pose[1][-1]
-                    prpt[2] = prpt[2]+eps_pose[2][-1]
-                    x,y,z = prpt
-                    v3D.append([x, -y, z])
-                # print(prpt)
+                cloud_points.add_points(v3D)
+
+            if it % 120 == 0:
+                cloud_points.display_mesh()
+                    # cloud_points.set_points([])
 
         else:
             print(n_sample)
-
-        cloud_points.add_points(v3D)
-        if it % 120 == 0:
-            cloud_points.delminmax()
-            cloud_points.display_mesh()
-            # cloud_points.set_points([])
 
         cv2.waitKey(1)

@@ -16,6 +16,7 @@ class cloud_points():
     def __init__(self):
         self.u = (1,1,1)
         self.mesh = o3d.geometry.PointCloud()
+        self.colors = []
         self.pointcloud = []
         self.objs = [self.mesh]
 
@@ -34,22 +35,9 @@ class cloud_points():
 
     def add_points(self, points):
         self.pointcloud += points
-        self.mesh.points = o3d.utility.Vector3dVector(self.pointcloud)
 
     def set_points(self, points):
         self.pointcloud = points
-        self.mesh.points = o3d.utility.Vector3dVector(self.pointcloud)
-
-    def delminmax(self):
-        return
-
-    def draw_cam(self, pose):
-        points = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
-        lines = [[0, 1], [0, 2], [1, 3], [2, 3], [4, 5], [4, 6], [5, 7], [6, 7], [0, 4], [1, 5], [2, 6], [3, 7]]
-        line_set = o3d.geometry.LineSet()
-        line_set.points = o3d.utility.Vector3dVector(points)
-        line_set.lines = o3d.utility.Vector2iVector(lines)
-        self.objs.append(line_set)
 
     def load_mesh(self, path=""):
         self.mesh = o3d.io.read_point_cloud(path)
@@ -58,9 +46,8 @@ class cloud_points():
         o3d.io.write_point_cloud(path, self.mesh)
 
     def display_mesh(self, width=640, height=360):
-        self.objs[0]=self.mesh
+        self.mesh.points = o3d.utility.Vector3dVector(self.pointcloud)
         o3d.visualization.draw_geometries(self.objs, width=width, height=height)
-
 
 
 if __name__ == "__main__":
