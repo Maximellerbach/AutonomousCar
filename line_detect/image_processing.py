@@ -89,6 +89,12 @@ def empty_grid(y, x, item=(0.,0.)):
         g.append(h)
     return g
 
+def add_padding(img, n=(40,40)):
+    h, w, d = img.shape
+    cimg = np.zeros((h+n[0]*2, w+n[1]*2, d), dtype='uint8')
+    cimg[n[0]:-n[0], n[1]:-n[1], :] = img
+    return cimg
+
 def capture_img(cap, res, show=True):
     _, img = cap.read()
     img = cv2.resize(img, (res[1],res[0]))
@@ -100,18 +106,18 @@ def capture_img(cap, res, show=True):
     return img, gray
 
 
-def extractFeatures(orb, img, cpimg, show=True):
+def extractFeatures(orb, img, cpimg, show=True, name="0"):
     # detection
     pts = cv2.goodFeaturesToTrack(img, 1500, qualityLevel=0.01, minDistance=8)
 
     # extraction
-    kps = [cv2.KeyPoint(x=f[0][0], y=f[0][1], _size=32) for f in pts]
+    kps = [cv2.KeyPoint(x=f[0][0], y=f[0][1], _size=10) for f in pts]
     kps, des = orb.compute(img, kps)
   
     if show == True:
         cpimg = cv2.drawKeypoints(cpimg, kps, cpimg, color=(0,255,0), flags=0)
 
-        cv2.imshow('orb', cpimg/255)
+        cv2.imshow('orb'+name, cpimg/255)
 
     # return pts and des
     return kps, des
