@@ -15,7 +15,6 @@ class image_generator(keras.utils.Sequence):
         self.n_classes = n_classes
         self.memory_size = memory+1
         self.datalen = datalen
-        self.fromdir= fromdir
         self.recurrence = recurrence
         self.proportion = proportion
 
