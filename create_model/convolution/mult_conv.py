@@ -27,11 +27,11 @@ class calc_opp():
 def model_tot():
     mult = calc_opp()
 
-    m, res = mult.conv2d(kernel_size=(5,5), strides=(3,3), res=(100, 150, 3), nfilter=16)
+    m, res = mult.conv2d(kernel_size=(5,5), strides=(3,3), res=(100, 150, 3), nfilter=8)
+    m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=16)
     m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=32)
-    m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=64)
-    m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=128)
-    m, res = mult.conv2d(kernel_size=(4,6), strides=(4,6), res=res, nfilter=512)
+    m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=48)
+    m, res = mult.conv2d(kernel_size=(4,6), strides=(4,6), res=res, nfilter=128)
 
     print(res)
 

@@ -37,14 +37,13 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     # x = Conv2D(256, kernel_size=(4,5), strides=(4,5), use_bias=False, padding='same')(x)
     # x = BatchNormalization()(x)
     # x = Activation(prev_act)(x)
+    x = ZeroPadding2D(((1,0), 0))(x)
 
-    x = Conv2D(256, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
+    x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
 
-    x = ZeroPadding2D(((1,0), 0))(x)
-    
-    x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
+    x = Conv2D(128, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
 
