@@ -88,20 +88,28 @@ def sort_by_date(dos):
     dates.sort(key= lambda x: x[0])
     return dates
 
-def load_dataset(dos):
-    folds = glob(dos+"*")
+def load_dataset(dos, recursive=True):
     dataset = []
     datalen = 0
-    for folder in folds:
-        g = [[p, get_date(p)] for p in glob(folder+'\\*')]
+    if recursive:
+        folds = glob(dos+"*")
+        for folder in folds:
+            g = [[p, get_date(p)] for p in glob(folder+'\\*')]
+            g.sort(key= lambda x:x[1])
+            d = [i[0] for i in g]
+            dataset.append(d)
+            datalen+=len(d)
+    else:
+        g = [[p, get_date(p)] for p in glob(dos+'*')]
         g.sort(key= lambda x:x[1])
-        d = [i[0] for i in g]
-        dataset.append(d)
-        datalen+=len(d)
+        dataset = [i[0] for i in g]
+        datalen = len(dataset)
 
     return np.array(dataset), datalen
 
 
 if __name__ == "__main__":
-    pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
-    # dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\')
+    # pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
+    dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\2\\', recursive=False)
+    for i in range(len(dts)):
+        cv2.imwrite('C:\\Users\\maxim\\odo\\'+str(i)+'.png', cv2.imread(dts[i]))

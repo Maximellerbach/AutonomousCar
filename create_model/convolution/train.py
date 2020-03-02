@@ -12,6 +12,7 @@ import keras
 import keras.backend as K
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from keras.callbacks import *
 from keras.models import Input, Model, Sequential, load_model
 from keras.preprocessing.sequence import pad_sequences
@@ -26,6 +27,7 @@ import predlib
 import reorder_dataset
 from architectures import dir_loss
 from datagenerator import image_generator
+
 
 class classifier():
 
@@ -70,7 +72,8 @@ class classifier():
 
         fe.summary()
         model.summary()
-        
+        print(self.calculate_FLOPS(model))
+
         return model, fe
 
 
@@ -101,9 +104,9 @@ class classifier():
 
         earlystop = EarlyStopping(monitor = 'val_dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), validation_steps=self.datalen//20//(self.batch_size),
-                                class_weight=frc, callbacks=[earlystop], max_queue_size=2, workers=8)
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, recurrence=self.recurrence), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs, 
+                            validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, recurrence=self.recurrence), validation_steps=self.datalen//20//(self.batch_size),
+                            class_weight=frc, callbacks=[earlystop], max_queue_size=5, workers=8)
         
         # try:
         #     for epoch in range(self.epochs):
@@ -240,7 +243,7 @@ class classifier():
             for it, i in enumerate(glob(path)):
                 img = cv2.imread(i)
                 img = cv2.resize(img, size)
-                img, _ = autolib.rdm_noise(img, 0)
+                # img, _ = autolib.rdm_noise(img, 0)
                 # img, _ = autolib.night_effect(img, 0)
                 self.pred_img(img, size, cut, sleeptime, n, nimg_size=nimg_size)
                 
@@ -253,19 +256,28 @@ class classifier():
                 for img in im_batch:
                     self.pred_img(img, size, cut, sleeptime, n)
 
+    def calculate_FLOPS(self, model):
+
+        run_meta = tf.RunMetadata()
+        opts = tf.profiler.ProfileOptionBuilder.float_operation()
+
+        # We use the Keras session graph in the call to the profiler.
+        flops = tf.profiler.profile(graph=K.get_session().graph, run_meta=run_meta, cmd='op', options=opts)
+        return flops.total_float_ops
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\lightv5_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, dosdir=True, proportion=0.2) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
+    AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, dosdir=True, proportion=0.2) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
 
     AI.epochs = 15
     AI.save_interval = 2
-    AI.batch_size = 48
+    AI.batch_size = 80
 
-    # AI.train(load=False)
+    AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
+    print(AI.calculate_FLOPS(AI.model))
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\3\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
+    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\2\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
     # AI.after_training_test_pred('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

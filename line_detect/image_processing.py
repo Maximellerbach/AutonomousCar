@@ -14,10 +14,10 @@ def get_diff(img, prev, show=True):
     return diff, gray
 
 
-def triangulate(pose1, pose2, pts1, pts2):
-    ret = np.zeros((pts1.shape[0], 4))
+def triangulate(pose1, pose2, match):
+    ret = np.zeros((match.shape[0], 4))
 
-    for i, p in enumerate(zip(pts1, pts2)):
+    for i, p in enumerate(match):
         A = np.zeros((4,4))
         A[0] = p[0][0] * pose1[2] - pose1[0]
         A[1] = p[0][1] * pose1[2] - pose1[1]
@@ -44,7 +44,7 @@ def fundamentalToRt(F):
     if t[2] < 0:
         t *= -1
     
-    return np.linalg.inv(poseRt(R, t))
+    return np.linalg.inv(poseRt(R, t)), t
 
 def poseRt(R, t):
     ret = np.eye(4)
@@ -89,6 +89,12 @@ def empty_grid(y, x, item=(0.,0.)):
         g.append(h)
     return g
 
+def add_padding(img, n=(40,40)):
+    h, w, d = img.shape
+    cimg = np.zeros((h+n[0]*2, w+n[1]*2, d), dtype='uint8')
+    cimg[n[0]:-n[0], n[1]:-n[1], :] = img
+    return cimg
+
 def capture_img(cap, res, show=True):
     _, img = cap.read()
     img = cv2.resize(img, (res[1],res[0]))
@@ -100,24 +106,27 @@ def capture_img(cap, res, show=True):
     return img, gray
 
 
-def extractFeatures(orb, img, cpimg, show=True):
+def extractFeatures(orb, img, cpimg, show=True, name="0"):
     # detection
-    pts = cv2.goodFeaturesToTrack(img, 750, qualityLevel=0.01, minDistance=8)
+    pts = cv2.goodFeaturesToTrack(img, 1500, qualityLevel=0.01, minDistance=8)
 
     # extraction
-    kps = [cv2.KeyPoint(x=f[0][0], y=f[0][1], _size=20) for f in pts]
+    kps = [cv2.KeyPoint(x=f[0][0], y=f[0][1], _size=10) for f in pts]
     kps, des = orb.compute(img, kps)
   
     if show == True:
         cpimg = cv2.drawKeypoints(cpimg, kps, cpimg, color=(0,255,0), flags=0)
 
-        cv2.imshow('orb', cpimg/255)
+        cv2.imshow('orb'+name, cpimg/255)
 
     # return pts and des
     return kps, des
 
-def normalize(Kinv, pts):
-    return np.dot(Kinv, add_ones(pts).T).T[:, 0:2]
+def normalize(Kinv, pts, n=3):
+    if n == 3:
+        return np.dot(Kinv, pts).T[:, 0:2]
+    else:
+        return np.dot(Kinv, add_ones(pts).T).T[:, 0:2]
 
 def add_ones(x):
     if len(x.shape) == 1:
@@ -165,28 +174,30 @@ class EssentialMatrixTransform(object):
 
     def estimate(self, src, dst):
         assert src.shape == dst.shape
-        assert src.shape[0] >= 8
 
-        # Setup homogeneous linear equation as dst' * F * src = 0.
-        A = np.ones((src.shape[0], 9))
-        A[:, :2] = src
-        A[:, :3] *= dst[:, 0, np.newaxis]
-        A[:, 3:5] = src
-        A[:, 3:6] *= dst[:, 1, np.newaxis]
-        A[:, 6:8] = src
+        if src.shape[0] >= 8:
+            # Setup homogeneous linear equation as dst' * F * src = 0.
+            A = np.ones((src.shape[0], 9))
+            A[:, :2] = src
+            A[:, :3] *= dst[:, 0, np.newaxis]
+            A[:, 3:5] = src
+            A[:, 3:6] *= dst[:, 1, np.newaxis]
+            A[:, 6:8] = src
 
-        # Solve for the nullspace of the constraint matrix.
-        _, _, V = np.linalg.svd(A)
-        F = V[-1, :].reshape(3, 3)
+            # Solve for the nullspace of the constraint matrix.
+            _, _, V = np.linalg.svd(A)
+            F = V[-1, :].reshape(3, 3)
 
-        # Enforcing the internal constraint that two singular values must be
-        # non-zero and one must be zero.
-        U, S, V = np.linalg.svd(F)
-        S[0] = S[1] = (S[0] + S[1]) / 2.0
-        S[2] = 0
-        self.params = U @ np.diag(S) @ V
+            # Enforcing the internal constraint that two singular values must be
+            # non-zero and one must be zero.
+            U, S, V = np.linalg.svd(F)
+            S[0] = S[1] = (S[0] + S[1]) / 2.0
+            S[2] = 0
+            self.params = U @ np.diag(S) @ V
 
-        return True
+            return True
+        else:
+            return False
         
     def residuals(self, src, dst):
         # Compute the Sampson distance.
@@ -200,3 +211,4 @@ class EssentialMatrixTransform(object):
 
         return np.abs(dst_F_src) / np.sqrt(F_src[0] ** 2 + F_src[1] ** 2
                                         + Ft_dst[0] ** 2 + Ft_dst[1] ** 2)
+

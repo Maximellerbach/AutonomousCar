@@ -27,22 +27,22 @@ class calc_opp():
 def model_tot():
     mult = calc_opp()
 
-    m, res = mult.conv2d(kernel_size=(5,5), strides=(3,3), res=(120, 160, 3), nfilter=8)
+    m, res = mult.conv2d(kernel_size=(5,5), strides=(3,3), res=(100, 150, 3), nfilter=8)
     m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=16)
     m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=32)
     m, res = mult.conv2d(kernel_size=(3,3), strides=(2,2), res=res, nfilter=48)
-    # m, res = mult.conv2d(kernel_size=(1,1), strides=(1,1), res=res, nfilter=256)
-    m, res = mult.conv2d(kernel_size=(4,5), strides=(4,5), res=res, nfilter=256, depthwise=True)
-    # m, res = mult.conv2d(kernel_size=(4,5), strides=(4,5), res=res, nfilter=256)
+    m, res = mult.conv2d(kernel_size=(4,6), strides=(4,6), res=res, nfilter=128)
 
     print(res)
 
     dim = res[0]*res[1]*res[2]
-    m, dim = mult.dense(dim=dim, ndim=100)
-    m, dim = mult.dense(dim=dim, ndim=50)
-    m, dim = mult.dense(dim=dim, ndim=25)
-    m, dim = mult.dense(dim=dim, ndim=9)
-    m, dim = mult.dense(dim=dim, ndim=5)
+    # m, dim = mult.dense(dim=dim, ndim=100)
+    # m, dim = mult.dense(dim=dim, ndim=50)
+    # m, dim = mult.dense(dim=dim, ndim=25)
+    # m, dim = mult.dense(dim=dim, ndim=9)
+    # m, dim = mult.dense(dim=dim, ndim=5)
+    m, dim = mult.dense(dim=dim, ndim=1)
+
 
     return mult.tot_mult
 
