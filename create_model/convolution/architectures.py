@@ -38,17 +38,17 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     # x = BatchNormalization()(x)
     # x = Activation(prev_act)(x)
 
-    x = Conv2D(256, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Activation(prev_act)(x)
-
     x = ZeroPadding2D(((1,0), 0))(x)
     
     x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    
+    # x = Conv2D(128, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
+    # x = BatchNormalization()(x)
+    # x = Activation(prev_act)(x)
 
-    x = Dropout(0.25)(x)
+    # x = Dropout(0.25)(x)
 
     ###
 
@@ -57,10 +57,12 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
 
     x = fe(inp)
     y = Flatten()(x)
+    y = Dropout(0.1)(y)
+
     y = Dense(100, use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
-    y = Dropout(0.2)(y)
+    y = Dropout(0.1)(y)
 
     y = Dense(50, use_bias=False)(y)
     y = BatchNormalization()(y)
@@ -292,3 +294,12 @@ def create_lightlatent_CNN(img_shape, number_class, prev_act="relu", last_act="s
     model.compile(loss=loss,optimizer=Adam() ,metrics=metrics)
 
     return model, fe
+
+def conv_block(x, conv, args=[8, 3, 1], activation="relu", batchnorm=True): # TODO: add beter args
+    x = conv(args[0], args[1], args[2])(x)
+    if batchnorm == True:
+        x = BatchNormalization()(x)
+    x = Activation(activation)(x)
+    return x
+    
+

@@ -101,8 +101,8 @@ class classifier():
 
         earlystop = EarlyStopping(monitor = 'val_dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, fromdir=self.dosdir), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, fromdir=self.dosdir), validation_steps=self.datalen//20//(self.batch_size),
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
+                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size), validation_steps=self.datalen//20//(self.batch_size),
                                 class_weight=frc, callbacks=[earlystop], max_queue_size=2, workers=8)
         
         # try:
