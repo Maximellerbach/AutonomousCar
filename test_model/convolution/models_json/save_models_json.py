@@ -22,13 +22,18 @@ def layers_to_dict(model):
 if __name__ == "__main__":
     paths = get_models_path()
     for path in paths:
-        model = load_model(path, custom_objects={"dir_loss":dir_loss})
-        infos = layers_to_dict(model)
+        model = None
         model_name = path.split('\\')[-1].split('.h5')[0]
 
         if 'test_model\\convolution\\models_json\\'+model_name+'.json' not in glob('test_model\\convolution\\models_json\\*.json'):
+            if model == None:
+                model = load_model(path, custom_objects={"dir_loss":dir_loss})
+
             with open('test_model\\convolution\\models_json\\'+model_name+'.json', 'w') as f:
+                infos = layers_to_dict(model)
                 json.dump(infos, f)
 
         if 'test_model\\convolution\\models_json\\'+model_name+'.png' not in glob('test_model\\convolution\\models_json\\*.png'):
+            if model == None:
+                model = load_model(path, custom_objects={"dir_loss":dir_loss})
             plot_model(model, to_file='test_model\\convolution\\models_json\\'+model_name+'.png')
