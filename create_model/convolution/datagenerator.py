@@ -5,7 +5,7 @@ import cv2
 from glob import glob
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size=32, augm=True, proportion=0.15, shape=(160,120,3), n_classes=5, memory=49, recurrence=False):
+    def __init__(self, img_path, datalen, batch_size=32, augm=True, proportion=0.15, shape=(160,120,3), n_classes=5, memory=49, seq=False):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -15,7 +15,7 @@ class image_generator(keras.utils.Sequence):
         self.n_classes = n_classes
         self.memory_size = memory+1
         self.datalen = datalen
-        self.recurrence = recurrence
+        self.seq = seq
         self.proportion = proportion
 
     def __data_generation(self, img_path):
@@ -133,7 +133,7 @@ class image_generator(keras.utils.Sequence):
         return int(self.datalen/self.batch_size)
 
     def __getitem__(self, index):
-        if self.recurrence==True:
+        if self.seq==True:
             X1, X2, Y = self.__data_generationseq(self.img_path, self.memory_size)
             return [X1, X2], Y
         
