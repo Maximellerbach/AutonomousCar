@@ -14,7 +14,6 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(8, kernel_size=5, strides=3, use_bias=False, padding='valid')(inp)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.1)(x)
 
     x = Conv2D(16, kernel_size=3, strides=2, use_bias=False, padding='valid')(x)
     x = BatchNormalization()(x)
@@ -38,6 +37,10 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(64, kernel_size=1, strides=1, use_bias=False, padding='valid')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    
+    # x = Conv2D(128, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
+    # x = BatchNormalization()(x)
+    # x = Activation(prev_act)(x)
 
     x = Dropout(0.2)(x)
 
@@ -48,17 +51,17 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
 
     x = fe(inp)
     y = Flatten()(x)
-    
+    y = Dropout(0.1)(y)
+
     y = Dense(100, use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
     y = Dropout(0.1)(y)
 
-    for _ in range(2):
-        y = Dense(50, use_bias=False)(y)
-        y = BatchNormalization()(y)
-        y = Activation(prev_act)(y)
-        y = Dropout(0.1)(y)
+    y = Dense(50, use_bias=False)(y)
+    y = BatchNormalization()(y)
+    y = Activation(prev_act)(y)
+    y = Dropout(0.1)(y)
 
     if recurrence == True:
         inp2 = Input((memory,5))
@@ -285,3 +288,47 @@ def create_lightlatent_CNN(img_shape, number_class, prev_act="relu", last_act="s
     model.compile(loss=loss,optimizer=Adam() ,metrics=metrics)
 
     return model, fe
+
+def conv_block(x, conv, args=[8, 3, 1], activation="relu", batchnorm=True): # TODO: add beter args
+    x = conv(args[0], args[1], args[2])(x)
+    if batchnorm == True:
+        x = BatchNormalization()(x)
+    x = Activation(activation)(x)
+    return x
+    
+def flatten_model(path, save_path=None):
+    model = load_model(path, custom_objects={"dir_loss":dir_loss})
+    layers_dict = {"dense":Dense, "conv2d":Conv2D, "dropout":Dropout, "batch":BatchNormalization, "activation":Activation, "flatten":Flatten, "zero":ZeroPadding2D, "depthwise":DepthwiseConv2D}
+    inp = Input((120, 160, 3))
+    x = -1
+
+    for it, lay in enumerate(model.layers):
+        lay_name = lay.name
+        lay_type = lay_name.split("_")[0]
+
+        if lay_type == "model":
+            for it2, lay2 in enumerate(lay.layers):
+                lay2_name = lay2.name
+                lay2_type = lay2_name.split("_")[0]
+                if it2 == 1 and x==-1:
+                    x = layers_dict[lay2_type].from_config(lay2.get_config())(inp)
+
+                elif lay2_type in layers_dict:
+                    x = layers_dict[lay2_type].from_config(lay2.get_config())(x)
+
+        if it == 1 and x==-1:
+            x = layers_dict[lay2_type].from_config(lay2.get_config())(inp)
+
+        elif lay_type in layers_dict:
+            x = layers_dict[lay_type].from_config(lay.get_config())(x)
+        
+    new_model = Model(inp, x)
+    new_model.summary()
+            
+    if save_path != None:
+        new_model.save(str(save_path))
+    
+    return new_model
+
+if __name__ == "__main__":
+    new_model = flatten_model('test_model\\convolution\\lightv6_mix.h5')
