@@ -4,6 +4,7 @@ from glob import glob
 import keras
 import keras.backend as K
 from keras.models import load_model
+from keras.utils import plot_model
 
 def dir_loss(y_true, y_pred):
     return K.sqrt(K.square(y_true-y_pred))
@@ -24,5 +25,10 @@ if __name__ == "__main__":
         model = load_model(path, custom_objects={"dir_loss":dir_loss})
         infos = layers_to_dict(model)
         model_name = path.split('\\')[-1].split('.h5')[0]
-        with open('test_model\\convolution\\models_json\\'+model_name+'.json', 'w') as f:
-            json.dump(infos, f)
+
+        if 'test_model\\convolution\\models_json\\'+model_name+'.json' not in glob('test_model\\convolution\\models_json\\*.json'):
+            with open('test_model\\convolution\\models_json\\'+model_name+'.json', 'w') as f:
+                json.dump(infos, f)
+
+        if 'test_model\\convolution\\models_json\\'+model_name+'.png' not in glob('test_model\\convolution\\models_json\\*.png'):
+            plot_model(model, to_file='test_model\\convolution\\models_json\\'+model_name+'.png')

@@ -9,7 +9,7 @@ import image_processing
 orb = cv2.ORB_create()
 bf = cv2.BFMatcher(cv2.NORM_HAMMING2)
 
-p1dos = 'C:\\Users\\maxim\\datasets\\2\\*' # 
+p1dos = 'C:\\Users\\maxim\\datasets\\2\\*'
 p2dos = 'C:\\Users\\maxim\\datasets\\1\\*'
 
 g1dos = glob(p1dos)
