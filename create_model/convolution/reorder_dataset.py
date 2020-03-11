@@ -59,7 +59,7 @@ def get_date(p):
     name = p.split('\\')[-1]
     lab, date = name.split('_')
     date = date.split('.png')[0]
-    return date
+    return float(date)
 
 def str2float(string, ancient_str, relative_path):
     try:
@@ -94,15 +94,13 @@ def load_dataset(dos, recursive=True):
     if recursive:
         folds = glob(dos+"*")
         for folder in folds:
-            g = [[p, get_date(p)] for p in glob(folder+'\\*')]
-            g.sort(key= lambda x:x[1])
-            d = [i[0] for i in g]
+            g = glob(folder+'\\*')
+            d = sorted(g, key = get_date)
             dataset.append(d)
             datalen+=len(d)
     else:
-        g = [[p, get_date(p)] for p in glob(dos+'*')]
-        g.sort(key= lambda x:x[1])
-        dataset = [i[0] for i in g]
+        g = glob(dos+'*')
+        dataset = sorted(g, key = get_date)
         datalen = len(dataset)
 
     return np.array(dataset), datalen

@@ -11,7 +11,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     
     inp = Input(shape=img_shape)
 
-    x = Conv2D(8, kernel_size=5, strides=3, use_bias=False, padding='valid')(inp)
+    x = Conv2D(8, kernel_size=3, strides=3, use_bias=False, padding='valid')(inp)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
 
@@ -33,17 +33,11 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-
-    x = Conv2D(64, kernel_size=1, strides=1, use_bias=False, padding='valid')(x)
-    x = BatchNormalization()(x)
-    x = Activation(prev_act)(x)
+    x = Dropout(0.2)(x)
     
     # x = Conv2D(128, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
     # x = BatchNormalization()(x)
     # x = Activation(prev_act)(x)
-
-    x = Dropout(0.2)(x)
-
     ###
 
     fe = Model(inp, x)
@@ -82,7 +76,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
 
-    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.05, 0.005))(y) #  kernel_regularizer=l2(0.0005)
+    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.1, 0.005))(y) #  kernel_regularizer=l2(0.0005)
 
     if recurrence == True:
         model = Model([inp, inp2], z)

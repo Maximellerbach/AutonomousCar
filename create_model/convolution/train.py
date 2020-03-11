@@ -106,13 +106,6 @@ class classifier():
         self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, seq=self.recurrence), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
                                 validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, seq=self.recurrence), validation_steps=self.datalen//20//(self.batch_size),
                                 class_weight=frc, callbacks=[earlystop], max_queue_size=5, workers=8)
-        
-        # try:
-        #     for epoch in range(self.epochs):
-        #         self.model.fit_generator(self.image_generator(), steps_per_epoch=self.datalen//self.batch_size, epochs=1, validation_data=self.image_val(), validation_steps=self.datalen//10//self.batch_size, class_weight=frc)
-        # except:
-        #     print("training stopped or error occured")
-        #     pass
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
@@ -175,6 +168,7 @@ class classifier():
 
         nimg = AI.fe.predict(pred)
         nimg = np.expand_dims(cv2.resize(nimg[0], nimg_size), axis=0)
+        n = nimg.shape[-1]
 
         if self.recurrence == True:
             filled = [[0, 0.125, 0.75, 0.125, 0]]*(self.memory_size-len(self.av))+self.av
@@ -200,19 +194,20 @@ class classifier():
             del self.av[0]
 
 
-        ny = [round(n, 3) for n in ny]
-        tot_img = np.zeros((nimg.shape[1]*int(sqrt(n)), nimg.shape[2]*int(sqrt(n))))
+        ny = [round(i, 3) for i in ny]
+        square_root = int(sqrt(n))+1
+        tot_img = np.zeros((nimg.shape[1]*square_root, nimg.shape[2]*square_root))
 
-        try:
-            for x in range(int(sqrt(n))):
-                for y in range(int(sqrt(n))):
-                    tot_img[nimg.shape[1]*x:nimg.shape[1]*(x+1), nimg.shape[2]*y:nimg.shape[2]*(y+1)] = (nimg[0, :, :, x*int(sqrt(n))+y])
-        except:
-            pass
+        
+        # try:
+        #     for x in range(square_root):
+        #         for y in range(square_root):
+        #             tot_img[nimg.shape[1]*x:nimg.shape[1]*(x+1), nimg.shape[2]*y:nimg.shape[2]*(y+1)] = (nimg[0, :, :, x*square_root+y])
+        # except:
+        #     pass
 
         c = np.copy(img)
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
-        # cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[0, 0, 255], thickness=4)
         c = c/255
 
         if n==1:
@@ -264,16 +259,30 @@ class classifier():
         flops = tf.profiler.profile(graph=K.get_session().graph, run_meta=run_meta, cmd='op', options=opts)
         return flops.total_float_ops
 
+    def evaluate_speed(self, data_path='C:\\Users\\maxim\\image_mix\\*'):
+        paths = glob(data_path)
+        X = np.array([cv2.resize(cv2.imread(i), (160,120)) for i in tqdm(paths[:5000])])
+
+        st = time.time()
+        preds = self.model.predict(X/255)
+        et = time.time()
+        dt = et-st
+        pred_dt = dt/len(X)
+        frc = 1/pred_dt
+
+        return (dt, pred_dt, frc)
+
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, dosdir=True, proportion=0.2) #   impath ='C:\\Users\\maxim\\image_mix2\\*.png'
+    AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, dosdir=True, proportion=0.2) # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
     AI.epochs = 15
     AI.save_interval = 2
-    AI.batch_size = 80
+    AI.batch_size = 64
 
-    AI.train(load=False)
+    # AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
-    print(AI.calculate_FLOPS(AI.model))
+    print(AI.calculate_FLOPS(AI.model), "total ops")
+    print(AI.evaluate_speed())
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
     AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\2\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
