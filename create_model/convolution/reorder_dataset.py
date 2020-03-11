@@ -74,7 +74,6 @@ def str2float(string, ancient_str, relative_path):
         im = cv2.imread(ancient_str)
         cv2.imwrite(relative_path+str(lab)+"_"+str(reconstructed)+'.png', im)
         os.remove(ancient_str)
-
         print(ancient_str)
 
     return f
@@ -82,7 +81,7 @@ def str2float(string, ancient_str, relative_path):
 def sort_by_date(dos):
     dates = []
     for p in tqdm(glob(dos+'*')):
-        date = get_date(p)
+        date = str(get_date(p))
         dates.append([str2float(date, p, dos), p])
 
     dates.sort(key= lambda x: x[0])
