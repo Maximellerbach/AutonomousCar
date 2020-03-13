@@ -8,7 +8,7 @@ from keras.models import load_model
 
 import architectures
 
-model = load_model('test_model\\convolution\\fe.h5', custom_objects={"dir_loss":architectures.dir_loss})
+model = load_model('test_model\\convolution\\lightv6_mix.h5', custom_objects={"dir_loss":architectures.dir_loss})
 img = cv2.imread('C:\\Users\\maxim\\image_sorted\\3_1570868367.5653734.png')
 img = cv2.resize(img, (160,120))
 img = np.expand_dims(img, axis=0)
@@ -16,7 +16,7 @@ img = np.expand_dims(img, axis=0)
 for it, i in enumerate(model.layers):
     print(i.name, it)
 
-layer_to_study = 19
+layer_to_study = 17
 n_filter = get_num_filters(model.layers[layer_to_study])
 preds = model.predict(img)[0]
 print(preds.shape)

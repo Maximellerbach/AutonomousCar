@@ -11,26 +11,26 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     
     inp = Input(shape=img_shape)
 
-    x = Conv2D(8, kernel_size=3, strides=3, use_bias=False, padding='valid')(inp)
+    x = Conv2D(8, kernel_size=3, strides=2, use_bias=False, padding='same')(inp)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
 
-    x = Conv2D(16, kernel_size=3, strides=2, use_bias=False, padding='valid')(x)
+    x = Conv2D(16, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
 
-    x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='valid')(x)
+    x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.1)(x)
     
-    x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='valid')(x)
+    x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
 
-    x = ZeroPadding2D(((1,0), 0))(x)
+    # x = ZeroPadding2D(((1,0), 0))(x)
+    # x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
 
-    x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
+    x = Conv2D(48, kernel_size=(8,2), strides=(8,2), use_bias=False, padding='valid')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(0.2)(x)
@@ -45,7 +45,6 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
 
     x = fe(inp)
     y = Flatten()(x)
-    y = Dropout(0.1)(y)
 
     y = Dense(100, use_bias=False)(y)
     y = BatchNormalization()(y)
@@ -325,4 +324,5 @@ def flatten_model(path, save_path=None):
     return new_model
 
 if __name__ == "__main__":
-    new_model = flatten_model('test_model\\convolution\\lightv6_mix.h5')
+    # new_model = flatten_model('test_model\\convolution\\lightv6_mix.h5')
+    new_model = create_light_CNN((120,160,3), 5)
