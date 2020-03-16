@@ -18,7 +18,11 @@ class pos_map():
         self.dt = 1/self.its
         self.steer_coef = steer_coef
 
+        self.segment_map = []
         self.angle = 0
+
+    def clear_pmap(self):
+        self.pmap = np.zeros_like(self.pmap)
 
     def normalize_pt(self, p, maxp, minp, entier=True, shape=(512, 512)):
         h, w = shape
@@ -69,7 +73,7 @@ class pos_map():
         return pos_list, minpos_list, vect_list, degs
 
 
-    def boundaries(self, pos_list):
+    def boundaries(self, pos_list, r=1):
         iner = []
         outer = []
 
@@ -78,7 +82,7 @@ class pos_map():
             x1, y1 = p1[:2]
             x2, y2 = p2[:2]
 
-            way = 1 if x2-x1>0 else -1
+            way = r if x2-x1>0 else -r
 
             if (x2-x1) != 0:
                 a = (y2-y1)/(x2-x1)
@@ -111,19 +115,19 @@ class pos_map():
                 if average[it]>=th:
                     if turning == False:
                         way = 1
-                        x, y = pos_list[it]
+                        x, y = pos_list[it-look_back//2]
                         turn.append((x,y,it,way))
                         turning = True
 
                 elif average[it]<=-th:
                     if turning == False:
                         way = -1
-                        x, y = pos_list[it]
+                        x, y = pos_list[it-look_back//2]
                         turn.append((x,y,it,way))
                         turning = True
 
                 elif turning == True:
-                    x, y = pos_list[it]
+                    x, y = pos_list[it-look_back//2]
                     turn.append((x,y,it,way))
                     thresholded.append(turn)
                     turning = False
@@ -132,10 +136,10 @@ class pos_map():
 
         return thresholded, average
 
-    def count_segments(self, pos_list):
+    def match_segments(self, pos_list):
         return
-        
-    def draw(self, pos_list, degs=[]):
+
+    def draw_points(self, pos_list, degs=[]):
         maxp = np.max(pos_list)
         minp = np.min(pos_list)
 
@@ -163,11 +167,15 @@ class pos_map():
             cv2.circle(self.pmap, (int(rpx), int(rpy)), 1, color, thickness=th)
     
 
-    def draw_segments(self, segments):
+    def draw_segments(self, segments, min_max=True):
         segments = np.array(segments)
         segments_points = segments[:, :, :2]
-        maxp = np.max(segments_points)
-        minp = np.min(segments_points)
+        if min_max==True:
+            maxp = np.max(segments_points)
+            minp = np.min(segments_points)
+        else:
+            maxp = np.max(min_max)
+            minp = np.min(min_max)
 
         for segm in segments:
             p1 = self.normalize_pt(segm[0], maxp, minp)
@@ -179,17 +187,17 @@ class pos_map():
             elif way<0:
                 color = (0, 0, 1)
 
-            cv2.line(self.pmap, p1, p2, color, thickness=1)
+            cv2.line(self.pmap, p1, p2, color, thickness=3)
 
 if __name__ == "__main__":
     dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\datasets\\1\\', recursive=False)
     
-    ts = date = reorder_dataset.get_date(dts[0])
-    te = date = reorder_dataset.get_date(dts[-1])
-    dt = te-ts
+    # ts = date = reorder_dataset.get_date(dts[0])
+    # te = date = reorder_dataset.get_date(dts[-1])
 
-    datalen = len(dts)
-    its = datalen/dt
+    its = [(reorder_dataset.get_date(i)-reorder_dataset.get_date(j)) for i, j in zip(dts[1:], dts[:2000]) if (reorder_dataset.get_date(i)-reorder_dataset.get_date(j))<1]
+    av_its = 1/np.average(its)
+    print(av_its)
 
     Y = []
     for d in dts:
@@ -199,25 +207,22 @@ if __name__ == "__main__":
 
     Y = autolib.label_smoothing(Y, 5, 0) # to categorical
 
-    pmap = pos_map(its=its, steer_coef=35)
-    pos_list, minpos_list, vect_list, deg_list = pmap.get_pos(dts, Y[:])
+    pmap = pos_map(its=av_its, steer_coef=47)
+    pos_list, minpos_list, vect_list, deg_list = pmap.get_pos(dts, Y[:2000])
 
     turns_segments, average = pmap.segment_track(pos_list, deg_list, look_back=60)
     plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
-    plt.plot([i for i in range(len(average))], average, linewidth=1)
+    plt.plot(average, linewidth=1)
+    plt.plot(its, linewidth=1)
     plt.show()
 
-
-    pmap.draw_segments(turns_segments)
-    cv2.imshow('pmap', pmap.pmap)
-    cv2.waitKey(0)
-    pmap.pmap = np.zeros_like(pmap.pmap)
-
-
-    iner, outer = pmap.boundaries(pos_list)
+    iner, outer = pmap.boundaries(pos_list, r=0.8)
     diner = [1 for i in range(len(iner))]
     douter = [-1 for i in range(len(outer))]
-    pmap.draw(pos_list+iner+outer, degs=deg_list+diner+douter)
+    pmap.draw_points(pos_list+iner+outer, degs=deg_list+diner+douter)
+    # cv2.imshow('pmap', pmap.pmap)
+    # cv2.waitKey(0)
+
+    pmap.draw_segments(turns_segments, min_max=iner+outer)
     cv2.imshow('pmap', pmap.pmap)
     cv2.waitKey(0)
-
