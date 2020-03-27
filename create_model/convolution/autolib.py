@@ -105,8 +105,10 @@ def cut_img(img, c):
     return img
 
 
-def label_smoothing(Y, n, k):
+def label_smoothing(Y, n, k, random=0):
     smooth_y = []
+    if random != 0:
+        k = k+np.random.random()*random 
     for y in Y:
         sy = [0]*n
         sy[y] = 1-k

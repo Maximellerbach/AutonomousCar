@@ -210,7 +210,8 @@ class pos_map():
     def create_colors(self, classes):
         return [np.random.random(3) for _ in range(classes)]
 
-    def draw_points(self, pos_list, degs=[]):
+
+    def draw_points(self, pos_list, degs=[], colors=[(1, 0, 0), (0, 1, 0), (0, 0, 1)]):
         maxp = np.max(pos_list)
         minp = np.min(pos_list)
 
@@ -223,13 +224,15 @@ class pos_map():
                     color = (0, 0, 1)
                     th = 3
                 elif degs[it]>0:
-                    color = (1, 0, 0)
+                    color = colors[0]
                     th = 1
                 elif degs[it]<0:
-                    color = (0, 0, 1)
+                    color = colors[2]
                     th = 1
                 else:
-                    color = (0, 1, 0)
+                    color = colors[1]
+                    th = 1
+                    
             except:
                 color = (0, 1, 0)
                 th = 1
@@ -237,11 +240,11 @@ class pos_map():
 
             cv2.circle(self.pmap, (int(rpx), int(rpy)), 1, color, thickness=th)
     
-
-    def draw_segments(self, segments, min_max=[], colors=[]):
+    def draw_segments(self, segments, matches=[], min_max=[]):
         segments = np.array(segments)
         assert (len(segments.shape)==3) # There is no points in there !
         segments_points = segments[:, :, :2]
+
         if min_max==[]:
             maxp = np.max(segments_points)
             minp = np.min(segments_points)
@@ -249,12 +252,19 @@ class pos_map():
             maxp = np.max(min_max)
             minp = np.min(min_max)
 
-        for segm in segments:
+        if matches != []:
+            colors = self.create_colors(max(matches)+1)
+
+        for i, segm in enumerate(segments):
             p1 = self.map_pt(segm[0], maxp, minp, size=self.pmap.shape[:2])
             p2 = self.map_pt(segm[1], maxp, minp, size=self.pmap.shape[:2])
             way = segm[0][-1]
 
-            if colors != []:
+            if matches != []:
+                match_number = matches[i]
+                color = colors[match_number]
+                
+            else:
                 if way>0:
                     color = (1, 0, 0)
                 elif way<0:
@@ -283,6 +293,7 @@ if __name__ == "__main__":
     pos_list, lightpos_list, vect_list, deg_list = pmap.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
 
     turns_segments, average = pmap.segment_track(pos_list, deg_list, th=0.007, look_back=60)
+    
     # plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
     # plt.plot(average, linewidth=1)
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves 
@@ -294,10 +305,9 @@ if __name__ == "__main__":
     iner_list, outer_list = pmap.boundaries(pos_list, radius=0.8)
     diner = [1 for i in range(len(iner_list))]
     douter = [-1 for i in range(len(outer_list))]
-    pmap.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter) # basic concatenation
-    # cv2.imshow('pmap', pmap.pmap)
-    # cv2.waitKey(0)
 
-    pmap.draw_segments(turns_segments, min_max=iner_list+outer_list)
+    pmap.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (0.75, 0.75, 0.75), (0, 0, 0.75)])
+    pmap.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
+
     cv2.imshow('pmap', pmap.pmap)
     cv2.waitKey(0)
