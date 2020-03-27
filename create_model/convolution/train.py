@@ -182,7 +182,7 @@ class classifier():
         
         # average softmax direction
         average = 0
-        coef = [-2, -1, 0, 1, 2]
+        coef = [-1, -0.5, 0, 0.5, 1]
 
         for it, nyx in enumerate(ny):
             average+=nyx*coef[it]
@@ -195,6 +195,8 @@ class classifier():
 
 
         ny = [round(i, 3) for i in ny]
+        print(ny, average)
+
         square_root = int(sqrt(n))+1
         tot_img = np.zeros((nimg.shape[1]*square_root, nimg.shape[2]*square_root))
 
@@ -272,7 +274,7 @@ class classifier():
         return (dt, pred_dt, frc)
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\fe.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, dosdir=True, proportion=0.2) # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
+    AI = classifier(name = 'test_model\\convolution\\lightv2_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, dosdir=True, proportion=0.2) # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
     AI.epochs = 9
     AI.save_interval = 2
@@ -280,7 +282,7 @@ if __name__ == "__main__":
 
     # AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
-    print(AI.calculate_FLOPS(), "total ops")
+    # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
