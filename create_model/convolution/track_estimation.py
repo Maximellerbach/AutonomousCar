@@ -124,48 +124,59 @@ class pos_map():
 
 
     def segment_track(self, pos_list, deg_list, th=0.005, look_back=30):
+        '''
+        Function to detect turns in the trajectory according to the average rotation of the car (look_back is the number of iterations averaged) by applying a threshold.
+        After that, storing the [x,y,it,sign] of the start and the end of the turn, returning this array of shape (n, 2, 4) and averaged rotation
+        '''
+        
         turning = False
         way = 0
         average = [0]*len(deg_list)
         thresholded = []
         turn = []
 
-        for it in range(len(deg_list)):
-            if it>=look_back:
-                average[it] = np.average(deg_list[it-look_back:it])
+        for it in range(look_back, len(deg_list)):
+            average[it] = np.average(deg_list[it-look_back:it])
 
-                if average[it]>=th:
-                    if turning == False:
-                        way = 1
-                        x, y = pos_list[it-look_back//2]
-                        turn.append((x,y,it,way))
-                        turning = True
-
-                elif average[it]<=-th:
-                    if turning == False:
-                        way = -1
-                        x, y = pos_list[it-look_back//2]
-                        turn.append((x,y,it,way))
-                        turning = True
-
-                elif turning == True:
+            if average[it]>=th:
+                if turning == False:
+                    way = 1
                     x, y = pos_list[it-look_back//2]
                     turn.append((x,y,it,way))
-                    thresholded.append(turn)
-                    turning = False
-                    turn = []
-                    way = 0
+                    turning = True
+
+            elif average[it]<=-th:
+                if turning == False:
+                    way = -1
+                    x, y = pos_list[it-look_back//2]
+                    turn.append((x,y,it,way))
+                    turning = True
+
+            elif turning == True:
+                x, y = pos_list[it-look_back//2]
+                turn.append((x,y,it,way))
+                thresholded.append(turn)
+                turning = False
+                turn = []
+                way = 0
 
         return np.array(thresholded), np.array(average)
 
     def optimize_n_segments(self, segments):
-        def point_distance(pt1, pt2):
-            d = math.sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)
-            return d
+        '''
+        Function to find the ideal number of turns in a lap using distance between points
+        ([[x, y, it, sign]*2]) -> (n_turns)
+        ([[float, float, int, int]*2]) -> (int)
+        '''
 
+        assert (len(segments.shape)==3) # There is no points in there !
         segments_points = segments[:, :, :2]
         maxp = np.max(segments_points)
         minp = np.min(segments_points)
+
+        def point_distance(pt1, pt2):
+            d = math.sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)
+            return d
 
         def transform(pts):
             pt1, pt2 = pts
@@ -175,8 +186,8 @@ class pos_map():
             return av * pt1[-1] # multiply positive coords with sign (- or +) to separate left turns from right turns -> output coords [-1; 1]
 
         X = [transform(pts) for pts in segments] # set of turns segments, len(segments) should be greater then the number of turns in a lap
-        best = [2, 2]
-        for n_turns in range(2, len(X)+1):
+        best = [2, 2] # 2 -> number of turns and 2 of distance (max distance for [-1; 1])
+        for n_turns in tqdm(range(2, len(X)+1)):
             pattern = [i%n_turns for i in range(len(X))]
             pattern_points = [[] for i in range(n_turns)]
             distance_turns = [[] for i in range(n_turns)]
@@ -202,10 +213,60 @@ class pos_map():
 
         return best
 
-    def match_segments(self, segments, n=8): # TODO: use K-means cluster or threshold
-        n, loss = self.optimize_n_segments(segments)
-        matchs = [i%n for i in range(len(segments))]
-        return matchs, n, 1-loss
+    def evaluate_n_turns(self, segments, n_turns):
+        '''
+        evaluate loss for n_turns
+        '''
+        assert (len(segments.shape)==3) # There is no points in there !
+        segments_points = segments[:, :, :2]
+        maxp = np.max(segments_points)
+        minp = np.min(segments_points)
+
+        def point_distance(pt1, pt2):
+            d = math.sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)
+            return d
+
+        def transform(pts):
+            pt1, pt2 = pts
+            p1 = self.map_pt(pt1[:2], maxp, minp, integer=False, size=(1, 1))
+            p2 = self.map_pt(pt2[:2], maxp, minp, integer=False, size=(1, 1))
+            av = np.average([p1, p2], axis=-1)
+            return av * pt1[-1] # multiply positive coords with sign (- or +) to separate left turns from right turns -> output coords [-1; 1]
+
+        X = [transform(pts) for pts in segments] # set of turns segments, len(segments) should be greater then the number of turns in a lap
+        pattern = [i%n_turns for i in range(len(X))]
+        pattern_points = [[] for i in range(n_turns)]
+        distance_turns = [[] for i in range(n_turns)]
+        loss_list = [0]*n_turns
+        loss_n_list = [0]*n_turns
+
+        for i in range(len(pattern)):
+            pattern_points[pattern[i]].append(X[i])
+
+        for it, pts in enumerate(pattern_points):
+            for i in range(len(pts)):
+                for pt in pts:
+                    d = point_distance(pt, pts[i])
+                    distance_turns[it].append(d)
+                    loss_list[it] += d
+                    loss_n_list[it] += 1
+
+        loss = [i/j for i, j in zip(loss_list, loss_n_list)]
+        if loss != [0]*len(loss):# avoid best score to be n_turn (1 match per turn)
+            av = np.average([i for i in loss if i!= 0])
+
+        return av
+
+    def match_segments(self, segments, n_turns=0):
+        '''
+        returns pattern, n_turn and accuracy. if n_turns is not precised or < 2, process ideal n_turns with optimize_n_segments
+        '''
+        if n_turns < 2:
+            n_turns, loss = self.optimize_n_segments(segments)
+        else:
+            loss = self.evaluate_n_turns(segments, n_turns)
+        matchs = [i%n_turns for i in range(len(segments))]
+        return matchs, n_turns, 1-loss
     
     def create_colors(self, classes):
         return [np.random.random(3) for _ in range(classes)]
@@ -299,14 +360,14 @@ if __name__ == "__main__":
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves 
     # plt.show()
 
-    matchs, n_turns, accuracy = pmap.match_segments(turns_segments)
+    matchs, n_turns, accuracy = pmap.match_segments(turns_segments, n=i)
     print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
 
     iner_list, outer_list = pmap.boundaries(pos_list, radius=0.8)
     diner = [1 for i in range(len(iner_list))]
     douter = [-1 for i in range(len(outer_list))]
 
-    pmap.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (0.75, 0.75, 0.75), (0, 0, 0.75)])
+    pmap.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (1, 1, 1), (0, 0, 0.75)])
     pmap.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
 
     cv2.imshow('pmap', pmap.pmap)
