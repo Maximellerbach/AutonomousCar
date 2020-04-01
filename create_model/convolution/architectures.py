@@ -1,13 +1,21 @@
 import keras.backend as K
 from keras.regularizers import l2, l1_l2
 from keras.layers import *
+from keras.losses import mse
 from keras.models import Input, Model, Sequential, load_model
 from keras.optimizers import SGD, Adam
 
-def dir_loss(y_true, y_pred):
-    return K.sqrt(K.square(y_true-y_pred))
+def dir_loss(y_true, y_pred, wheights=np.array([-1, -0.5, 0, 0.5, 1])):
+    """
+    custom loss function for the models 
+    (only use if you have the same models as me)
+    """
+    yt_dir = K.mean(wheights*y_true, axis=-1)
+    yp_dir = K.mean(wheights*y_pred, axis=-1)
+    
+    return K.square(yt_dir-yp_dir) + mse(y_true, y_pred)/2
 
-def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], recurrence=False, memory=49):
+def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], recurrence=False, memory=49):
     
     inp = Input(shape=img_shape)
 
@@ -34,22 +42,13 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(0.2)(x)
-    
-    # x = Conv2D(128, kernel_size=1, strides=1, use_bias=False, padding='same')(x)
-    # x = BatchNormalization()(x)
-    # x = Activation(prev_act)(x)
-    ###
+    ####
 
     fe = Model(inp, x)
     inp = Input(shape=img_shape)
 
     x = fe(inp)
     y = Flatten()(x)
-
-    # y = Dense(100, use_bias=False)(y)
-    # y = BatchNormalization()(y)
-    # y = Activation(prev_act)(y)
-    # y = Dropout(0.1)(y)
 
     y = Dense(50, use_bias=False)(y)
     y = BatchNormalization()(y)
@@ -75,7 +74,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
 
-    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(0.05, 0.05))(y) #  kernel_regularizer=l2(0.0005)
+    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
 
     if recurrence == True:
         model = Model([inp, inp2], z)

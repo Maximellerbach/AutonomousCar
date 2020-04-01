@@ -104,7 +104,6 @@ def cut_img(img, c):
     img = img[c:, :, :]
     return img
 
-
 def label_smoothing(Y, n, k, random=0):
     smooth_y = []
     if random != 0:
@@ -112,20 +111,21 @@ def label_smoothing(Y, n, k, random=0):
     for y in Y:
         sy = [0]*n
         sy[y] = 1-k
-        if y==2:
+        if y == 2:
             sy[y-1] = k/2
             sy[y+1] = k/2
 
         elif y==0:
             sy[y+1] = k
-        elif y==1:
+
+        elif y==-1:
             sy[y-1] = k
 
         elif y==1:
             sy[y-1] = k*2/3
             sy[y+1] = k*1/3
 
-        elif y == 2:
+        elif y == 3:
             sy[y-1] = k*1/3
             sy[y+1] = k*2/3
 

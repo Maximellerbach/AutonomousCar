@@ -25,12 +25,12 @@ import architectures
 import autolib
 import predlib
 import reorder_dataset
-from architectures import dir_loss
+# from architectures import dir_loss
 from datagenerator import image_generator
 
 
 class classifier():
-    def __init__(self, name, impath='', dospath='', recurrence=False, dosdir=True, memory_size=49, proportion=0.15):
+    def __init__(self, name, impath='', dospath='', recurrence=False, dosdir=True, memory_size=49, proportion=0.15, to_cat=True, smoothing=0, label_rdm=0):
         
         self.name = name
         self.impath = impath
@@ -38,7 +38,6 @@ class classifier():
         self.recurrence = recurrence
         self.memory_size = memory_size
         self.dosdir = dosdir
-        self.proportion = proportion
 
         self.img_cols = 160
         self.img_rows = 120
@@ -47,6 +46,10 @@ class classifier():
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
         
         self.number_class = 5
+        self.proportion = proportion
+        self.to_cat = to_cat
+        self.smoothing = smoothing
+        self.label_rdm = label_rdm
         
         self.epochs = 10
         self.save_interval = 5
@@ -59,11 +62,13 @@ class classifier():
         load a model using architectures program
         """
         if load == True:
-            model = load_model(self.name, custom_objects={"dir_loss":dir_loss})
+            model = load_model(self.name, custom_objects={"dir_loss":architectures.dir_loss})
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", recurrence=self.recurrence, memory=self.memory_size)
+            model, fe = model_type((120, 160, 3), 5, loss=architectures.dir_loss, prev_act="relu", last_act="relu", regularizer=(0, 0), recurrence=self.recurrence, memory=self.memory_size, metrics=["binary_crossentropy", "mse"])
+            # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.05, 0.05), recurrence=self.recurrence, memory=self.memory_size)
+
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
@@ -101,10 +106,10 @@ class classifier():
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
 
-        earlystop = EarlyStopping(monitor = 'val_dir_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
+        earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, seq=self.recurrence), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, seq=self.recurrence), validation_steps=self.datalen//20//(self.batch_size),
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(self.batch_size), epochs=self.epochs,
+                                validation_data=image_generator(self.valdos, self.datalen, self.batch_size, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(self.batch_size),
                                 class_weight=frc, callbacks=[earlystop], max_queue_size=5, workers=8)
 
         self.model.save(self.name)
@@ -274,19 +279,21 @@ class classifier():
         return (dt, pred_dt, frc)
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*', recurrence=False, dosdir=True, proportion=0.2) # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
+    AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
+                    recurrence=False, dosdir=True, proportion=0.1, to_cat=True, smoothing=0.1, label_rdm=0) 
+                    # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 9
+    AI.epochs = 2
     AI.save_interval = 2
-    AI.batch_size = 64
+    AI.batch_size = 16
 
-    # AI.train(load=False)
-    AI.model = load_model(AI.name, custom_objects={"dir_loss":dir_loss})
+    AI.train(load=False)
+    AI.model = load_model(AI.name, custom_objects={"dir_loss":architectures.dir_loss})
     # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\2\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
+    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\1\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
     # AI.after_training_test_pred('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

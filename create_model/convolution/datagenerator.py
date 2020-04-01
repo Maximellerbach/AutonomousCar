@@ -5,7 +5,7 @@ import cv2
 from glob import glob
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size=32, augm=True, proportion=0.15, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False):
+    def __init__(self, img_path, datalen, batch_size=32, augm=True, proportion=0.15, cat=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -18,6 +18,10 @@ class image_generator(keras.utils.Sequence):
         self.seq = seq
         self.reconstruction = reconstruction
         self.proportion = proportion
+        self.smoothing = smoothing
+        self.label_rdm = label_rdm
+        self.cat = cat
+
 
     def __data_generation(self, img_path):
         batchfiles = np.random.choice(img_path, size=self.batch_size)
@@ -52,13 +56,18 @@ class image_generator(keras.utils.Sequence):
             X_glow, Y_glow = autolib.generate_random_glow(xbatch, ybatch, proportion=self.proportion)
             X_cut, Y_cut = autolib.generate_random_cut(xbatch, ybatch, proportion=self.proportion)
 
-            xbatch = np.concatenate((xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut))/255
-            ybatch = np.concatenate((ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow, Y_cut))
+            not_emptyX = [i for i in (xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut) if len(i)!=0]
+            not_emptyY = [i for i in (ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow, Y_cut) if len(i)!=0]
+
+            xbatch = np.concatenate(not_emptyX)/255
+            ybatch = np.concatenate(not_emptyY)
         else:
             xbatch = xbatch/255
 
-        # ybatch = to_categorical(ybatch, self.number_class)
-        ybatch = autolib.label_smoothing(ybatch, 5, 0.12, random=0.1)
+        # ybatch = to_categorical(ybatch, self.n_classes)
+        if self.cat == True: #TODO: do autolib function for -1 / 1 range
+            ybatch = autolib.label_smoothing(ybatch, self.n_classes, self.smoothing, random=self.label_rdm)
+        
 
         return xbatch, ybatch
 
@@ -111,22 +120,30 @@ class image_generator(keras.utils.Sequence):
             X_rev, Y_rev, ys_r = autolib.generate_inversed_color(xbatch, ybatch, ys=ysbatch, proportion=self.proportion, ysb=True)
             X_glow, Y_glow, ys_glow = autolib.generate_random_glow(xbatch, ybatch, ys=ysbatch, proportion=self.proportion, ysb=True)
             X_cut, Y_cut, ys_cut = autolib.generate_random_cut(xbatch, ybatch, ys=ysbatch, proportion=self.proportion, ysb=True)
+            
+            not_emptyX = [i for i in (xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut) if len(i)!=0]
+            not_emptyY = [i for i in (ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow, Y_cut) if len(i)!=0]
+            not_emptyYs = [i for i in (ysbatch, ys_b, ys_g, ys_n, ys_s, ys_c, ys_rdm, ys_r, ys_glow, ys_cut) if len(i)!=0]
 
-            xbatch = np.concatenate((xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut))/255
-            ybatch = np.concatenate((ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow, Y_cut))
-            ysbatch = np.concatenate((ysbatch, ys_b, ys_g, ys_n, ys_s, ys_c, ys_rdm, ys_r, ys_glow, ys_cut))
+            xbatch = np.concatenate(not_emptyX)/255
+            ybatch = np.concatenate(not_emptyY)
+            ysbatch = np.concatenate(not_emptyYs)
 
         else:
             xbatch = xbatch/255
 
-        # ybatch = to_categorical(ybatch, self.number_class)
-        ybatch = autolib.label_smoothing(ybatch, 5, 0.25)
+        # ybatch = to_categorical(ybatch, self.n_classes)
+        # ybatch = autolib.label_smoothing(ybatch, self.n_classes, self.smoothing, random=self.label_rdm)
+
         yss = []
         for ysb in ysbatch:
-            yss.append(autolib.label_smoothing(ysb, 5, 0.25))
-
+            # yss.append(autolib.label_smoothing(ysb, 5, 0.25))
+            
+            if self.cat == True: #TODO: do autolib function for -1 / 1 range
+                ysbatch = autolib.label_smoothing(ysb, self.n_classes, self.smoothing, random=self.label_rdm)
+        
+            yss.append(ysbatch)
         yss = np.array(yss)
-
         return xbatch, yss, ybatch
 
     def __data_generation_reconstruction(self, img_path):
@@ -162,9 +179,12 @@ class image_generator(keras.utils.Sequence):
             X_glow, _ = autolib.generate_random_glow(xbatch, ybatch, proportion=self.proportion)
             X_cut, _ = autolib.generate_random_cut(xbatch, ybatch, proportion=self.proportion)
 
-            xbatch = np.concatenate((xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut))/255
+            not_emptyX = [i for i in (xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut) if len(i)!=0]
+            xbatch = np.concatenate(not_emptyX)/255
+
         else:
             xbatch = xbatch/255
+
         return xbatch
 
     def __len__(self):

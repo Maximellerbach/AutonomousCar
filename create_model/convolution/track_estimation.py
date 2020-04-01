@@ -268,6 +268,24 @@ class pos_map():
         matchs = [i%n_turns for i in range(len(segments))]
         return matchs, n_turns, 1-loss
     
+    def speed_segments(self, segments, speed, n_turns):# TODO: calculate speed using dt or it/s between segments
+        speed_turns = [1]*n_turns
+        distance_turns = [0]*n_turns
+
+        for it, segm in enumerate(segments):
+            match_number = it%n_turns
+            start = segm[0]
+            end = segm[1]
+
+            sit = start[2]
+            eit = end[2]
+            dit = eit - sit
+
+            dt = dit*self.dt
+            distance_turns[match_number] = dt*speed_turns[match_number]
+
+        return
+        
     def create_colors(self, classes):
         return [np.random.random(3) for _ in range(classes)]
 
@@ -335,7 +353,7 @@ class pos_map():
 
 if __name__ == "__main__":
     dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\datasets\\1\\', recursive=False)
-    sequence_to_study = (0, 2500)
+    sequence_to_study = (0, len(dts))
 
     dates = [reorder_dataset.get_date(i) for i in dts]
     its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1], dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j<0.1] # remove images where dt >= 0.1
@@ -360,7 +378,9 @@ if __name__ == "__main__":
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves 
     # plt.show()
 
-    matchs, n_turns, accuracy = pmap.match_segments(turns_segments, n=i)
+    matchs, n_turns, accuracy = pmap.match_segments(turns_segments)
+    ret = pmap.speed_segments(turns_segments, [], 8)
+
     print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
 
     iner_list, outer_list = pmap.boundaries(pos_list, radius=0.8)
