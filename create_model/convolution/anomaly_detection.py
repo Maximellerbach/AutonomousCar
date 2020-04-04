@@ -13,20 +13,26 @@ import architectures
 from datagenerator import image_generator
 import reorder_dataset
 
+def custom_loss(y_true, y_pred):
+    return mse(y_true, y_pred) + mae(y_true, y_pred)
 
 class anomaly_AE():
-    def __init__(self, name, dospath='', load=True):
+    def __init__(self, name, dospath, load=True):
         self.name = name
         self.dospath = dospath
 
         if load == True:
             try:
-                self.decoder = load_model(self.name)
+                self.decoder = load_model(self.name, compile=False)
             except:
                 print('cannot load model, creating it.')
                 self.encoder, self.decoder = self.create_model()
+                self.encoder = load_model('test_model\\convolution\\fe.h5')
+                self.encoder.trainable = False
         else:
             self.encoder, self.decoder = self.create_model()
+            self.encoder = load_model('test_model\\convolution\\fe.h5')
+            self.encoder.trainable = False
 
     def create_model(self):
         input_shape = (120,160,3)
@@ -34,7 +40,7 @@ class anomaly_AE():
         inp = Input(input_shape)
         y = encoder(inp)
 
-        y = Conv2DTranspose(48, kernel_size=(3,3), strides=(8,2), use_bias=False, padding='same')(y)
+        y = Conv2DTranspose(48, kernel_size=(8,2), strides=(8,2), use_bias=False, padding='same')(y)
         y = BatchNormalization()(y)
         y = Activation("relu")(y)
 
@@ -58,7 +64,7 @@ class anomaly_AE():
         y = Conv2D(3, kernel_size=1, strides=1, use_bias=False, padding='same', activation='sigmoid')(y)
 
         decoder = Model(inp, y)
-        decoder.compile('adam', mse+mae, metrics=['mae', 'binary_crossentropy'])
+        decoder.compile('adam', custom_loss, metrics=['mse', 'mae', 'binary_crossentropy'])
         decoder.summary()
 
         return encoder, decoder
@@ -107,7 +113,7 @@ class anomaly_AE():
         print(len(paths), len(anomalies))
 
 if __name__ == "__main__":
-    AE = anomaly_AE("anomaly.h5", dospath='C:\\Users\\maxim\\datasets\\*', load=True)
-    # AE.train_model(batch_size=8, epochs=2)
+    AE = anomaly_AE("anomaly.h5", 'C:\\Users\\maxim\\datasets\\*', load=False)
+    AE.train_model(batch_size=8, epochs=3)
     AE.detect_anomaly('C:\\Users\\maxim\\datasets\\4\\*')
-    AE.detect_anomaly('C:\\Users\\maxim\\datasets\\2\\*')zdq
+    # AE.detect_anomaly('C:\\Users\\maxim\\datasets\\2\\*')
