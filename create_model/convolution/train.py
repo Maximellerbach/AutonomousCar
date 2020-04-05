@@ -52,7 +52,6 @@ class classifier():
         self.label_rdm = label_rdm
         
         self.epochs = 10
-        self.save_interval = 5
         self.batch_size = 32
 
         self.av = []
@@ -186,11 +185,10 @@ class classifier():
         lab = np.argmax(ny)
         
         # average softmax direction
-        average = 0
-        coef = [-1, -0.5, 0, 0.5, 1]
+        average = architectures.cat2linear(ny)
+        ny = [round(i, 3) for i in ny]
+        print(ny, average)
 
-        for it, nyx in enumerate(ny):
-            average+=nyx*coef[it]
         
         if len(self.av)<self.memory_size:
             self.av.append(ny)
@@ -198,20 +196,15 @@ class classifier():
             self.av.append(ny)
             del self.av[0]
 
-
-        ny = [round(i, 3) for i in ny]
-        print(ny, average)
-
         square_root = int(sqrt(n))+1
         tot_img = np.zeros((nimg.shape[1]*square_root, nimg.shape[2]*square_root))
 
-        
-        # try:
-        #     for x in range(square_root):
-        #         for y in range(square_root):
-        #             tot_img[nimg.shape[1]*x:nimg.shape[1]*(x+1), nimg.shape[2]*y:nimg.shape[2]*(y+1)] = (nimg[0, :, :, x*square_root+y])
-        # except:
-        #     pass
+        try:
+            for x in range(square_root):
+                for y in range(square_root):
+                    tot_img[nimg.shape[1]*x:nimg.shape[1]*(x+1), nimg.shape[2]*y:nimg.shape[2]*(y+1)] = (nimg[0, :, :, x*square_root+y])
+        except:
+            pass
 
         c = np.copy(img)
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
@@ -234,7 +227,7 @@ class classifier():
         cv2.waitKey(sleeptime)
 
 
-    def after_training_test_pred(self, path, size, cut=0, n=9, nimg_size=(20,15), from_path=True, from_vid=False, batch_vid=32, sleeptime=1):
+    def after_training_test_pred(self, path, size, cut=0, n=9, nimg_size=(15,15), from_path=True, from_vid=False, batch_vid=32, sleeptime=1):
         """
         either predict images in a folder
         or from a video
@@ -255,7 +248,7 @@ class classifier():
             while(True):
                 im_batch = self.load_frames(path, batch_len=batch_vid)
                 for img in im_batch:
-                    self.pred_img(img, size, cut, sleeptime, n)
+                    self.pred_img(img, size, cut, sleeptime, n, nimg_size=nimg_size)
 
     def calculate_FLOPS(self):
         run_meta = tf.RunMetadata()
@@ -283,9 +276,8 @@ if __name__ == "__main__":
                     recurrence=False, dosdir=True, proportion=0.3, to_cat=True, smoothing=0.2, label_rdm=0) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 2
-    AI.save_interval = 2
-    AI.batch_size = 16
+    AI.epochs = 1
+    AI.batch_size = 32 # without augm
 
     # AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":architectures.dir_loss})

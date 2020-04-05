@@ -14,7 +14,6 @@ import autolib
 
 dire = [3,5,7,9,11]
 
-
 class pred():
 
     def __init__(self):

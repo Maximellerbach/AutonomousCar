@@ -28,6 +28,23 @@ class track_estimation():
         '''
         self.pmap = np.zeros_like(self.pmap)
 
+    def point_distance(self, pt1, pt2):
+        '''
+        function to process distance between 2 points
+        '''
+        d = math.sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)
+        return d
+
+    def max_min(self, segments):
+        '''
+        function to return maximum and minimum of points in a "segments" array of shape (n, 2, 4)
+        '''
+        segments_points = segments[:, :, :2]
+        maxp = np.max(segments_points)
+        minp = np.min(segments_points)
+
+        return maxp, minp
+
     def map_pt(self, p, maxp, minp, integer=True, size=(512, 512)):
         '''
         Function to remap a point with a given max and min and a desired final size, precise integer=False if you want your point to be (float, float)
@@ -44,6 +61,16 @@ class track_estimation():
             y = int(y)
 
         return (x, y)
+
+    def normalize_pts(self, pts_segm, maxp, minp):
+        '''
+        function to normalize two segment points according to their position and turn angle
+        '''
+        pt1, pt2 = pts_segm
+        p1 = self.map_pt(pt1[:2], maxp, minp, integer=False, size=(1, 1))
+        p2 = self.map_pt(pt2[:2], maxp, minp, integer=False, size=(1, 1))
+        av = np.average([p1, p2], axis=-1)
+        return av * pt1[-1] # multiply positive coords with sign (- or +) to separate left turns from right turns -> output coords [-1; 1]
 
     def get_pos(self, Y, speed=1):
         '''
@@ -168,24 +195,8 @@ class track_estimation():
         ([[x, y, it, sign]*2]) -> (n_turns)
         ([[float, float, int, int]*2]) -> (int)
         '''
-
-        assert (len(segments.shape)==3) # There is no points in there !
-        segments_points = segments[:, :, :2]
-        maxp = np.max(segments_points)
-        minp = np.min(segments_points)
-
-        def point_distance(pt1, pt2):
-            d = math.sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)
-            return d
-
-        def transform(pts):
-            pt1, pt2 = pts
-            p1 = self.map_pt(pt1[:2], maxp, minp, integer=False, size=(1, 1))
-            p2 = self.map_pt(pt2[:2], maxp, minp, integer=False, size=(1, 1))
-            av = np.average([p1, p2], axis=-1)
-            return av * pt1[-1] # multiply positive coords with sign (- or +) to separate left turns from right turns -> output coords [-1; 1]
-
-        X = [transform(pts) for pts in segments] # set of turns segments, len(segments) should be greater then the number of turns in a lap
+        maxp, minp = self.max_min(segments)
+        X = [self.normalize_pts(pts, maxp, minp) for pts in segments] # set of turns segments, len(segments) should be greater then the number of turns in a lap
         best = [2, 2] # 2 -> number of turns and 2 of distance (max distance for [-1; 1])
         for n_turns in tqdm(range(2, len(X)+1)):
             pattern = [i%n_turns for i in range(len(X))]
@@ -200,7 +211,7 @@ class track_estimation():
             for it, pts in enumerate(pattern_points):
                 for i in range(len(pts)):
                     for pt in pts:
-                        d = point_distance(pt, pts[i])
+                        d = self.point_distance(pt, pts[i])
                         distance_turns[it].append(d)
                         loss_list[it] += d
                         loss_n_list[it] += 1
@@ -217,23 +228,9 @@ class track_estimation():
         '''
         evaluate loss for n_turns
         '''
-        assert (len(segments.shape)==3) # There is no points in there !
-        segments_points = segments[:, :, :2]
-        maxp = np.max(segments_points)
-        minp = np.min(segments_points)
 
-        def point_distance(pt1, pt2):
-            d = math.sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)
-            return d
-
-        def transform(pts):
-            pt1, pt2 = pts
-            p1 = self.map_pt(pt1[:2], maxp, minp, integer=False, size=(1, 1))
-            p2 = self.map_pt(pt2[:2], maxp, minp, integer=False, size=(1, 1))
-            av = np.average([p1, p2], axis=-1)
-            return av * pt1[-1] # multiply positive coords with sign (- or +) to separate left turns from right turns -> output coords [-1; 1]
-
-        X = [transform(pts) for pts in segments] # set of turns segments, len(segments) should be greater then the number of turns in a lap
+        maxp, minp = self.max_min(segments)
+        X = [self.normalize_pts(pts, maxp, minp) for pts in segments] # set of turns segments, len(segments) should be greater then the number of turns in a lap
         pattern = [i%n_turns for i in range(len(X))]
         pattern_points = [[] for i in range(n_turns)]
         distance_turns = [[] for i in range(n_turns)]
@@ -246,7 +243,7 @@ class track_estimation():
         for it, pts in enumerate(pattern_points):
             for i in range(len(pts)):
                 for pt in pts:
-                    d = point_distance(pt, pts[i])
+                    d = self.point_distance(pt, pts[i])
                     distance_turns[it].append(d)
                     loss_list[it] += d
                     loss_n_list[it] += 1
@@ -268,23 +265,59 @@ class track_estimation():
         matchs = [i%n_turns for i in range(len(segments))]
         return matchs, n_turns, 1-loss
     
-    def speed_segments(self, segments, speed, n_turns):# TODO: calculate speed using dt or it/s between segments
-        speed_turns = [1]*n_turns
-        distance_turns = [0]*n_turns
+    def distance_from_speed_segments(self, segments, n_turns, ref_speed_segment=[]):# TODO: calculate speed using distance between segments
+        distance_segment = np.array([[1., 1.]]*n_turns)
 
-        for it, segm in enumerate(segments):
+        prev = 0
+
+        if ref_speed_segment == []:
+            ref_speed_segment = np.array([[1., 1.]]*n_turns)
+        assert (ref_speed_segment.shape == (n_turns, 2))
+
+        for it, segm in enumerate(segments): # initialize distance with speed == 1 or ref speed    
             match_number = it%n_turns
-            start = segm[0]
-            end = segm[1]
+            start = segm[0][2]
+            end = segm[1][2]
 
-            sit = start[2]
-            eit = end[2]
-            dit = eit - sit
+            if it != 0:
+                # straight line (actual-prev)
+                straight_dit = start-prev
+                distance_segment[match_number, 0] = ref_speed_segment[match_number, 0]*straight_dit*self.dt
 
-            dt = dit*self.dt
-            distance_turns[match_number] = dt*speed_turns[match_number]
+                # in the turn (end-start)
+                turn_dit = end-start
+                distance_segment[match_number, 1] = ref_speed_segment[match_number, 1]*turn_dit*self.dt
 
-        return
+            prev = end
+
+        return distance_segment
+
+    def speed_from_distance_segments(self, segments, n_turns, ref_distance_segment=[]):# TODO: calculate speed using distance between segments
+        speed_segment = np.array([[1., 1.]]*n_turns)
+
+        prev = 0
+
+        if ref_distance_segment == []:
+            ref_distance_segment = np.array([[1., 1.]]*n_turns)
+        assert (ref_distance_segment.shape == (n_turns, 2))
+
+        for it, segm in enumerate(segments): # initialize distance with speed == 1 or ref speed
+            match_number = it%n_turns
+            start = segm[0][2]
+            end = segm[1][2]
+
+            if it != 0:
+                # straight line (actual-prev)
+                straight_dit = start-prev
+                speed_segment[match_number, 0] = ref_distance_segment[match_number, 0]/(straight_dit*self.dt)
+
+                # in the turn (end-start)
+                turn_dit = end-start
+                speed_segment[match_number, 1] = ref_distance_segment[match_number, 1]/(turn_dit*self.dt)
+
+            prev = end
+
+        return speed_segment
         
     def create_colors(self, classes):
         return [np.random.random(3) for _ in range(classes)]
@@ -368,20 +401,23 @@ if __name__ == "__main__":
 
     Y = autolib.label_smoothing(Y, 5, 0) # to categorical
 
-    estimation = track_estimation(its=av_its, steer_coef=47)
-    pos_list, lightpos_list, vect_list, deg_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
+    pmap = pos_map(its=av_its, steer_coef=48)
+    pos_list, lightpos_list, vect_list, deg_list = pmap.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
 
-    turns_segments, average = estimation.segment_track(pos_list, deg_list, th=0.007, look_back=60)
+    turns_segments, average = pmap.segment_track(pos_list, deg_list, th=0.007, look_back=60)
+    matchs, n_turns, accuracy = pmap.match_segments(turns_segments)
+    print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
     
     # plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
     # plt.plot(average, linewidth=1)
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves 
     # plt.show()
 
-    matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
-    ret = estimation.speed_segments(turns_segments, [], 8)
+    distances = pmap.distance_from_speed_segments(turns_segments, 8)
+    speeds = pmap.speed_from_distance_segments(turns_segments, 8)
 
-    print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
+    print(distances)
+    print(speeds)
 
     iner_list, outer_list = estimation.boundaries(pos_list, radius=0.8)
     diner = [1 for i in range(len(iner_list))]

@@ -10,16 +10,23 @@ def dir_loss(y_true, y_pred, wheights=np.array([-1, -0.5, 0, 0.5, 1])):
     custom loss function for the models 
     (only use if you have the same models as me)
     """
-    yt_dir = K.mean(wheights*y_true, axis=-1)
-    yp_dir = K.mean(wheights*y_pred, axis=-1)
-    
-    return K.square(yt_dir-yp_dir) + mse(y_true, y_pred)/2
+    return K.square(y_true-y_pred) + mse(y_true, y_pred)
 
-def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], recurrence=False, memory=49):
+
+def cat2linear(ny):
+    average = 0
+    coef = [-1.4, -1, 0, 1, 1.4]
+
+    for it, nyx in enumerate(ny):
+        average+=nyx*coef[it]
+
+    return average
+
+def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
     
     inp = Input(shape=img_shape)
 
-    x = Conv2D(8, kernel_size=5, strides=2, use_bias=False, padding='same')(inp)
+    x = Conv2D(12, kernel_size=5, strides=2, use_bias=False, padding='same')(inp)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
 
@@ -74,7 +81,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
 
-    z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
+    z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
 
     if recurrence == True:
         model = Model([inp, inp2], z)
