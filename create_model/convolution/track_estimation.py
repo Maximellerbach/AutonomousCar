@@ -401,11 +401,11 @@ if __name__ == "__main__":
 
     Y = autolib.label_smoothing(Y, 5, 0) # to categorical
 
-    pmap = pos_map(its=av_its, steer_coef=48)
-    pos_list, lightpos_list, vect_list, deg_list = pmap.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
+    estimation = track_estimation(its=av_its, steer_coef=48)
+    pos_list, lightpos_list, vect_list, deg_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
 
-    turns_segments, average = pmap.segment_track(pos_list, deg_list, th=0.007, look_back=60)
-    matchs, n_turns, accuracy = pmap.match_segments(turns_segments)
+    turns_segments, average = estimation.segment_track(pos_list, deg_list, th=0.007, look_back=60)
+    matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
     print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
     
     # plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
@@ -413,8 +413,8 @@ if __name__ == "__main__":
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves 
     # plt.show()
 
-    distances = pmap.distance_from_speed_segments(turns_segments, 8)
-    speeds = pmap.speed_from_distance_segments(turns_segments, 8)
+    distances = estimation.distance_from_speed_segments(turns_segments, 8)
+    speeds = estimation.speed_from_distance_segments(turns_segments, 8)
 
     print(distances)
     print(speeds)
