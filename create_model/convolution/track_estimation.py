@@ -12,7 +12,7 @@ from tqdm import tqdm
 import reorder_dataset
 
 
-class pos_map():
+class track_estimation():
     def __init__(self, size=(512, 512), its=30, steer_coef=30):
         self.pmap = np.zeros((size[0], size[1], 3))
         self.its = its
@@ -368,27 +368,27 @@ if __name__ == "__main__":
 
     Y = autolib.label_smoothing(Y, 5, 0) # to categorical
 
-    pmap = pos_map(its=av_its, steer_coef=47)
-    pos_list, lightpos_list, vect_list, deg_list = pmap.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
+    estimation = track_estimation(its=av_its, steer_coef=47)
+    pos_list, lightpos_list, vect_list, deg_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
 
-    turns_segments, average = pmap.segment_track(pos_list, deg_list, th=0.007, look_back=60)
+    turns_segments, average = estimation.segment_track(pos_list, deg_list, th=0.007, look_back=60)
     
     # plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
     # plt.plot(average, linewidth=1)
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves 
     # plt.show()
 
-    matchs, n_turns, accuracy = pmap.match_segments(turns_segments)
-    ret = pmap.speed_segments(turns_segments, [], 8)
+    matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
+    ret = estimation.speed_segments(turns_segments, [], 8)
 
     print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
 
-    iner_list, outer_list = pmap.boundaries(pos_list, radius=0.8)
+    iner_list, outer_list = estimation.boundaries(pos_list, radius=0.8)
     diner = [1 for i in range(len(iner_list))]
     douter = [-1 for i in range(len(outer_list))]
 
-    pmap.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (1, 1, 1), (0, 0, 0.75)])
-    pmap.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
+    estimation.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (1, 1, 1), (0, 0, 0.75)])
+    estimation.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
 
-    cv2.imshow('pmap', pmap.pmap)
+    cv2.imshow('pmap', estimation.pmap)
     cv2.waitKey(0)
