@@ -84,15 +84,18 @@ class track_estimation():
         pos_list = []
         lightpos_list = []
         deg_list = []
+        lab_list = []
         pos = [0, 0]
         angle = 0
 
         for it, ny in enumerate(Y):
             average = 0
-            coef = [1, 0.5, 0, -0.5, -1]
+            coef = [-1, -0.5, 0, 0.5, 1]
 
             for ait, nyx in enumerate(ny):
                 average += nyx*coef[ait]
+
+            lab_list.append(average)
 
             degree_angle = average*self.steer_coef*self.dt
             rad = math.radians(degree_angle)
@@ -114,7 +117,7 @@ class track_estimation():
                 lightpos_list.append((pos[0], pos[1], it))
             
 
-        return pos_list, lightpos_list, vect_list, deg_list
+        return pos_list, lightpos_list, vect_list, deg_list, lab_list
 
 
     def boundaries(self, pos_list, radius=1):
@@ -162,25 +165,25 @@ class track_estimation():
         thresholded = []
         turn = []
 
-        for it in range(look_back, len(deg_list)):
-            average[it] = np.average(deg_list[it-look_back:it])
+        for it in range(look_back//2, len(deg_list)-look_back//2):
+            average[it] = np.average(deg_list[it-look_back//2:it+look_back//2])
 
             if average[it]>=th:
                 if turning == False:
                     way = 1
-                    x, y = pos_list[it-look_back//2]
+                    x, y = pos_list[it]
                     turn.append((x,y,it,way))
                     turning = True
 
             elif average[it]<=-th:
                 if turning == False:
                     way = -1
-                    x, y = pos_list[it-look_back//2]
+                    x, y = pos_list[it]
                     turn.append((x,y,it,way))
                     turning = True
 
             elif turning == True:
-                x, y = pos_list[it-look_back//2]
+                x, y = pos_list[it]
                 turn.append((x,y,it,way))
                 thresholded.append(turn)
                 turning = False
@@ -401,20 +404,20 @@ if __name__ == "__main__":
 
     Y = autolib.label_smoothing(Y, 5, 0) # to categorical
 
-    estimation = track_estimation(its=av_its, steer_coef=48)
-    pos_list, lightpos_list, vect_list, deg_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
+    estimation = track_estimation(its=av_its, steer_coef=47)
+    pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
 
-    turns_segments, average = estimation.segment_track(pos_list, deg_list, th=0.007, look_back=60)
+    turns_segments, average = estimation.segment_track(pos_list, lab_list, th=0.2, look_back=30) # TODO: refactoring to use labels instead of deg_list
     matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
     print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
     
-    # plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
-    # plt.plot(average, linewidth=1)
-    # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves 
-    # plt.show()
+    plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
+    plt.plot(average, linewidth=1)
+    # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves
+    plt.show()
 
-    distances = estimation.distance_from_speed_segments(turns_segments, 8)
-    speeds = estimation.speed_from_distance_segments(turns_segments, 8)
+    distances = estimation.distance_from_speed_segments(turns_segments, n_turns)
+    speeds = estimation.speed_from_distance_segments(turns_segments, n_turns)
 
     print(distances)
     print(speeds)

@@ -12,10 +12,16 @@ def dir_loss(y_true, y_pred, wheights=np.array([-1, -0.5, 0, 0.5, 1])):
     """
     return K.square(y_true-y_pred) + mse(y_true, y_pred)
 
+def linear2dir(linear, dir_range=(3, 11), to_int=True):
+    delta_range = dir_range[1]-dir_range[0]
+    direction = (((linear+1)/2)*delta_range)+dir_range[0]
+    if to_int:
+        direction = round(direction)
+    return direction
 
 def cat2linear(ny):
     average = 0
-    coef = [-1.4, -1, 0, 1, 1.4]
+    coef = [-1, -0.5, 0, 0.5, 1]
 
     for it, nyx in enumerate(ny):
         average+=nyx*coef[it]

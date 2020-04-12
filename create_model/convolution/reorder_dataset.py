@@ -1,4 +1,4 @@
-# %%
+
 import json
 import os
 from glob import glob
@@ -9,7 +9,6 @@ from tqdm import tqdm
 
 import autolib
 
-# %%
 dire = [3, 5, 7, 9, 11]
 
 def pack_datasets(dos, new_dos, d_threshold=60):
@@ -122,17 +121,15 @@ def json2angles(dirpath):
 
     return angles
 
+if __name__ == "__main__":
+    # pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
 
-# %%
-pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
 
-# %%
-dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\2\\', recursive=False)
-for i in range(len(dts)):
-    cv2.imwrite('C:\\Users\\maxim\\odo\\'+str(i)+'.png', cv2.imread(dts[i]))
+    # dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\2\\', recursive=False)
+    # for i in range(len(dts)):
+    #     cv2.imwrite('C:\\Users\\maxim\\odo\\'+str(i)+'.png', cv2.imread(dts[i]))
 
-# %%
-angles = json2angles('C:\\Users\\maxim\\gen_track_user_drv_right_lane\\')
-print(angles)
 
-# %%
+    angles = json2angles('C:\\Users\\maxim\\gen_track_user_drv_right_lane\\')
+    print(angles)
+
