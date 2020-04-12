@@ -65,7 +65,7 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            model, fe = model_type((120, 160, 3), 5, loss=architectures.dir_loss, prev_act="relu", last_act="relu", regularizer=(0, 0), lr=0.001, recurrence=self.recurrence, memory=self.memory_size, metrics=["binary_crossentropy", "mse"])
+            model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["binary_crossentropy", "mse"])
             # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.05, 0.05), recurrence=self.recurrence, memory=self.memory_size)
 
             
@@ -75,7 +75,7 @@ class classifier():
 
         fe.summary()
         model.summary()
-        print(self.calculate_FLOPS())
+        # print(self.calculate_FLOPS())
 
         return model, fe
 
@@ -276,16 +276,16 @@ if __name__ == "__main__":
                     recurrence=False, dosdir=True, proportion=0.3, to_cat=True, smoothing=0.2, label_rdm=0) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 1
+    AI.epochs = 2
     AI.batch_size = 32 # without augm
 
-    # AI.train(load=False)
+    AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":architectures.dir_loss})
     # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\gen_track_user_drv_right_lane\\*', (160,120), cut=0, from_path=True, from_vid=False, n=256, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
+    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\7\\*', (160,120), cut=0, from_path=True, from_vid=False, n=64, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
     # AI.after_training_test_pred('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()
