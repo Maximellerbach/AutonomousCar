@@ -5,7 +5,7 @@ from keras.losses import mse
 from keras.models import Input, Model, Sequential, load_model
 from keras.optimizers import SGD, Adam
 
-def dir_loss(y_true, y_pred, wheights=np.array([-1, -0.5, 0, 0.5, 1])):
+def dir_loss(y_true, y_pred, wheights=np.array([-1, -0.5, 0, 0.5, 1])): # TODO: not working for the moment, need to see why (problem of shape)
     """
     custom loss function for the models 
     (only use if you have the same models as me)
