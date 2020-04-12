@@ -12,7 +12,7 @@ from tqdm import tqdm
 import reorder_dataset
 
 
-class pos_map():
+class track_estimation():
     def __init__(self, size=(512, 512), its=30, steer_coef=30):
         self.pmap = np.zeros((size[0], size[1], 3))
         self.its = its
@@ -419,13 +419,12 @@ if __name__ == "__main__":
     print(distances)
     print(speeds)
 
-
-    iner_list, outer_list = pmap.boundaries(pos_list, radius=0.8)
+    iner_list, outer_list = estimation.boundaries(pos_list, radius=0.8)
     diner = [1 for i in range(len(iner_list))]
     douter = [-1 for i in range(len(outer_list))]
 
-    pmap.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (1, 1, 1), (0, 0, 0.75)])
-    pmap.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
+    estimation.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (1, 1, 1), (0, 0, 0.75)])
+    estimation.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
 
-    cv2.imshow('pmap', pmap.pmap)
+    cv2.imshow('pmap', estimation.pmap)
     cv2.waitKey(0)

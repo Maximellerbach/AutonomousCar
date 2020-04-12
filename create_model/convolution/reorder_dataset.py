@@ -1,11 +1,15 @@
-import autolib
+# %%
+import json
 import os
 from glob import glob
 
+import cv2
 import numpy as np
 from tqdm import tqdm
-import cv2
 
+import autolib
+
+# %%
 dire = [3, 5, 7, 9, 11]
 
 def pack_datasets(dos, new_dos, d_threshold=60):
@@ -104,9 +108,31 @@ def load_dataset(dos, recursive=True):
 
     return np.array(dataset), datalen
 
+def json2angles(dirpath):
+    angles = []
+    img_paths = glob(dirpath+'*.jpg')
+    dir_p = dirpath.split('*')[0]
+    for path in img_paths:
+        number = path.split('\\')[-1].split('_')[0]
+        json_path = dir_p+'record_'+number+'.json'
+        with open(json_path) as j:
+            data = json.load(j)
+            angle = data["user/angle"]
+        angles.append(angle)
 
-if __name__ == "__main__":
-    # pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
-    dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\2\\', recursive=False)
-    for i in range(len(dts)):
-        cv2.imwrite('C:\\Users\\maxim\\odo\\'+str(i)+'.png', cv2.imread(dts[i]))
+    return angles
+
+
+# %%
+pack_datasets('C:\\Users\\maxim\\image_mix2\\', 'C:\\Users\\maxim\\datasets\\', 1000)
+
+# %%
+dts, datalen = load_dataset('C:\\Users\\maxim\\datasets\\2\\', recursive=False)
+for i in range(len(dts)):
+    cv2.imwrite('C:\\Users\\maxim\\odo\\'+str(i)+'.png', cv2.imread(dts[i]))
+
+# %%
+angles = json2angles('C:\\Users\\maxim\\gen_track_user_drv_right_lane\\')
+print(angles)
+
+# %%

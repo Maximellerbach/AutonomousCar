@@ -22,7 +22,7 @@ def cat2linear(ny):
 
     return average
 
-def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
+def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
     
     inp = Input(shape=img_shape)
 
@@ -45,7 +45,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     # x = ZeroPadding2D(((1,0), 0))(x)
     # x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
 
-    x = Conv2D(48, kernel_size=(8,2), strides=(8,2), use_bias=False, padding='valid')(x)
+    x = Conv2D(48, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='valid')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(0.2)(x)
@@ -89,8 +89,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
         model = Model(inp, z)
 
 
-    model.compile(loss=loss,optimizer=Adam(0.001) ,metrics=metrics)
-
+    model.compile(loss=loss,optimizer=optimizer(lr=lr) ,metrics=metrics)
     return model, fe
 
 
