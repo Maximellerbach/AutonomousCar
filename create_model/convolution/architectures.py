@@ -7,7 +7,7 @@ from keras.optimizers import SGD, Adam
 
 def dir_loss(y_true, y_pred, wheights=np.array([-1, -0.5, 0, 0.5, 1])): # TODO: not working for the moment, need to see why (problem of shape)
     """
-    custom loss function for the models 
+    custom loss function for the models
     (only use if you have the same models as me)
     """
     return K.square(y_true-y_pred) + mse(y_true, y_pred)
