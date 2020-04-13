@@ -283,9 +283,9 @@ if __name__ == "__main__":
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
     AI.epochs = 2
-    AI.batch_size = 32 # without augm; normally, high batch_size = better comprehension
+    AI.batch_size = 64 # without augm; normally, high batch_size = better comprehension
 
-    # AI.train(load=False)
+    AI.train(load=True)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
     # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
