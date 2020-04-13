@@ -276,7 +276,7 @@ if __name__ == "__main__":
                     recurrence=False, dosdir=True, proportion=0.3, to_cat=True, smoothing=0.2, label_rdm=0) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 2
+    AI.epochs = 1
     AI.batch_size = 32 # without augm
 
     AI.train(load=False)
