@@ -28,6 +28,11 @@ import reorder_dataset
 # from architectures import dir_loss
 from datagenerator import image_generator
 
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True # dynamically grow the memory used on the GPU
+sess = tf.Session(config=config)
+config.log_device_placement = True  # to log device placement (on which device the operation ran)
+set_session(sess) # set this TensorFlow session as the default
 
 class classifier():
     def __init__(self, name, impath='', dospath='', recurrence=False, dosdir=True, memory_size=49, proportion=0.15, to_cat=True, smoothing=0, label_rdm=0):
@@ -277,7 +282,7 @@ if __name__ == "__main__":
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
     AI.epochs = 2
-    AI.batch_size = 16 # without augm
+    AI.batch_size = 64 # without augm
 
     AI.train(load=False)
     AI.model = load_model(AI.name, custom_objects={"dir_loss":architectures.dir_loss})
