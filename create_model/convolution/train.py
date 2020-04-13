@@ -273,7 +273,7 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.3, to_cat=True, smoothing=0.2, label_rdm=0) 
+                    recurrence=False, dosdir=True, proportion=0.5, to_cat=True, smoothing=0.2, label_rdm=0.1) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
     AI.epochs = 2
