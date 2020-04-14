@@ -282,8 +282,8 @@ if __name__ == "__main__":
                     recurrence=False, dosdir=True, proportion=0.5, to_cat=True, smoothing=0.2, label_rdm=0.) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 1
-    AI.batch_size = 64 # without augm; normally, high batch_size = better comprehension
+    AI.epochs = 2
+    AI.batch_size = 32 # without augm; normally, high batch_size = better comprehension
 
     AI.train(load=False)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
