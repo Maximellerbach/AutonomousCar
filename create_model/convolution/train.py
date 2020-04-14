@@ -71,7 +71,7 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"])
+            model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "binary_accuracy"])
             # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0, 0), recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
 
             
@@ -282,7 +282,7 @@ if __name__ == "__main__":
                     recurrence=False, dosdir=True, proportion=0.5, to_cat=True, smoothing=0.2, label_rdm=0.) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 4
+    AI.epochs = 1
     AI.batch_size = 64 # without augm; normally, high batch_size = better comprehension
 
     AI.train(load=False)
