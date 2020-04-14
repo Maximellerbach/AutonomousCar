@@ -39,6 +39,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    x = Dropout(0.1)(x)
 
     x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
@@ -82,6 +83,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Dense(25, use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
+    y = Dropout(0.1)(y)
 
     y = Dense(9, use_bias=False)(y)
     y = BatchNormalization()(y)
