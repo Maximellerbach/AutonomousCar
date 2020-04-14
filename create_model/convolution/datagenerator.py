@@ -41,9 +41,6 @@ class image_generator(keras.utils.Sequence):
             except:
                 print(i)
 
-        xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
-        xbatch = np.concatenate((xbatch, xflip))
-        ybatch = np.concatenate((ybatch, yflip))
 
         if self.augm == True:
             X_bright, Y_bright = autolib.generate_brightness(xbatch, ybatch, proportion=self.proportion)
@@ -59,10 +56,12 @@ class image_generator(keras.utils.Sequence):
             not_emptyX = [i for i in (xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut) if len(i)!=0]
             not_emptyY = [i for i in (ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow, Y_cut) if len(i)!=0]
 
-            xbatch = np.concatenate(not_emptyX)/255
+            xbatch = np.concatenate(not_emptyX)
             ybatch = np.concatenate(not_emptyY)
-        else:
-            xbatch = xbatch/255
+        
+        xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
+        xbatch = np.concatenate((xbatch, xflip))/255
+        ybatch = np.concatenate((ybatch, yflip))
 
         # ybatch = to_categorical(ybatch, self.n_classes)
         if self.cat == True: #TODO: do autolib function for -1 / 1 range
