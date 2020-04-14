@@ -279,11 +279,11 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.5, to_cat=True, smoothing=0.2, label_rdm=0.) 
+                    recurrence=False, dosdir=True, proportion=0.2, to_cat=True, smoothing=0.2, label_rdm=0.) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 3
-    AI.batch_size = 64 # without augm; normally, high batch_size = better comprehension
+    AI.epochs = 6
+    AI.batch_size = 128 # without augm; normally, high batch_size = better comprehension
 
     AI.train(load=False)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
