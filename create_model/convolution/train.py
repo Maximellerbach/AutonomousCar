@@ -72,7 +72,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "binary_accuracy"])
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.1, 0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.1), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
