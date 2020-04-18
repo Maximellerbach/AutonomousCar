@@ -24,7 +24,6 @@ from tqdm import tqdm
 
 import architectures
 import autolib
-import predlib
 import reorder_dataset
 # from architectures import dir_loss
 from datagenerator import image_generator
@@ -281,19 +280,19 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.2, to_cat=True, smoothing=0.3, label_rdm=0.) 
+                    recurrence=False, dosdir=True, proportion=0.3, to_cat=True, smoothing=0.5, label_rdm=0.) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
     AI.epochs = 4
-    AI.batch_size = 32 # without augm; normally, high batch_size = better comprehension
+    AI.batch_size = 16 # without augm; normally, high batch_size = better comprehension
 
-    AI.train(load=False)
+    # AI.train(load=False)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
     # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\9 sim fast2\\*', (160,120), cut=0, from_path=True, from_vid=False, n=64, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
+    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\8 sim correction\\*', (160,120), cut=0, from_path=True, from_vid=False, n=64, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
     # AI.after_training_test_pred('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

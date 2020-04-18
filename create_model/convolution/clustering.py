@@ -35,20 +35,16 @@ class cluster():
     
     
     def get_img(self, dos):
-
         X = []
-
         for i in tqdm(dos):
             img = cv2.imread(i)
-            # imgflip = cv2.flip(img, 1)
-
-            X.append(img)
+            imgflip = cv2.flip(img, 1)
+            X.append(img/255)
             # X.append(imgflip)
+        return X
 
-        return np.array(X)
 
-
-    def load_vgg(self):
+    def load_fe(self):
         
         fe = load_model(self.fename, custom_objects={"dir_loss":dir_loss})
 
@@ -56,51 +52,42 @@ class cluster():
         x = fe(inp)
         x = Flatten()(x)
 
-        ffe = Model(inp, x)
+        flat_fe = Model(inp, x)
 
-        return ffe
+        return flat_fe
 
-    def clustering(self, dos, epochs):
+    def clustering(self, doss, max_img=2000):
+        paths = []
+        for dos in doss:
+            paths+=glob(dos)
 
-        self.X = self.get_img(glob(dos))
-        self.X = self.X/255
+        batchs = []
+        for i in range(len(paths)//max_img):
+            batchs.append(paths[i*max_img:(i+1)*max_img])
 
-        self.img_shape = self.X[0].shape
-        
-        vgg = self.load_vgg()
+        fe = self.load_fe()
+        for i, batch in tqdm(enumerate(batchs)):
+            X = self.get_img(batch)
+       
+            x = fe.predict(np.array(X))
 
-        start = time.time()
-        x = vgg.predict(self.X)
-        end = time.time()
-        inter = end-start
-        print(inter)
+            if i == 0:
+                method = KMeans(n_clusters=15).fit(x)
+                y = method.labels_
+            else:
+                y = method.predict(x)
 
+            for it in range(len(x)):
+                img = X[0] # as you delete imgs, the last img will be [0]
+                label = y[it]
+                try:
+                    os.makedirs('C:\\Users\\maxim\\clustering\\'+str(label))
+                except:
+                    pass
+                cv2.imwrite('C:\\Users\\maxim\\clustering\\'+str(label)+'\\'+str(time.time())+'.png', img*255)
 
-        start = time.time()
-        method = KMeans(n_clusters=30).fit(x)
-        y = method.labels_
-        end = time.time()
-        inter = end-start
-        print(inter)
-        
-        #Y = pd.Series(np.reshape(self.y,(len(x))), name='ground_truth')
-        #y = pd.Series(y, name='pred')
+                del X[0] # clear memory
 
-        #df_confusion = pd.crosstab(Y, y, rownames=['ground_truth'], colnames=['pred'], margins=True)
-
-        #print(df_confusion)
-        
-        for i in tqdm(range(len(x))):
-            
-            img = self.X[i]
-            label = y[i]
-
-            try:
-                os.makedirs('C:\\Users\\maxim\\clustering\\'+str(label))
-            except:
-                pass
-
-            cv2.imwrite('C:\\Users\\maxim\\clustering\\'+str(label)+'\\'+str(time.time())+'.png', img*255)
 
 
 if __name__ == "__main__":
@@ -110,4 +97,4 @@ if __name__ == "__main__":
     AI.save_interval = 2
     AI.batch_size = 16
 
-    AI.clustering('C:\\Users\\maxim\\image_sorted\\*', epochs = 5)
+    AI.clustering(['C:\\Users\\maxim\\datasets\\7 sim slow+normal\\*', 'C:\\Users\\maxim\\datasets\\2 donkeycar driving\\*'])# 'C:\\Users\\maxim\\recorded_imgs\\0_1587212272.138425\\*'
