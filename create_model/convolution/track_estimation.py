@@ -89,15 +89,20 @@ class track_estimation():
         angle = 0
 
         for it, ny in enumerate(Y):
-            average = 0
-            coef = [-1, -0.5, 0, 0.5, 1]
+            cat = False
 
-            for ait, nyx in enumerate(ny):
-                average += nyx*coef[ait]
+            if cat == True:
+                st = 0
+                coef = [-1, -0.5, 0, 0.5, 1]
 
-            lab_list.append(average)
+                for ait, nyx in enumerate(ny):
+                    st += nyx*coef[ait]
+            else:
+                st = ny
 
-            degree_angle = average*self.steer_coef*self.dt
+            st = -st # transform [-1, 1] to [1, -1]
+            lab_list.append(st)
+            degree_angle = st*self.steer_coef*self.dt
             rad = math.radians(degree_angle)
 
             angle += rad
@@ -388,23 +393,25 @@ class track_estimation():
             cv2.line(self.pmap, p1, p2, color, thickness=3)
 
 if __name__ == "__main__":
-    dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\datasets\\1\\', recursive=False)
-    sequence_to_study = (0, len(dts))
+    dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\recorded_imgs\\0\\', recursive=False) # 'C:\\Users\\maxim\\recorded_imgs\\0\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
+    sequence_to_study = (100, 800)
 
     dates = [reorder_dataset.get_date(i) for i in dts]
-    its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1], dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j<0.1] # remove images where dt >= 0.1
+    its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1], dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j<0.2] # remove images where dt >= 0.1
     av_its = 1/np.average(its)
     print("average img/sec:", av_its, "| images removed:", (sequence_to_study[1]-sequence_to_study[0])-len(its))
 
     Y = []
     for d in dts:
-        lab = autolib.get_label(d, flip=False)[0]
-        date = reorder_dataset.get_date(d)
+        # lab = autolib.get_label(d, flip=False)[0]
+        # date = reorder_dataset.get_date(d)
+
+        lab = float(d.split('\\')[-1].split('_')[0])
         Y.append(lab)
 
-    Y = autolib.label_smoothing(Y, 5, 0) # to categorical
-
-    estimation = track_estimation(its=av_its, steer_coef=47)
+    # Y = autolib.label_smoothing(Y, 5, 0) # to categorical
+    max_steer_angle = 16
+    estimation = track_estimation(its=av_its, steer_coef=max_steer_angle*(3/2*math.pi)) # don't know why but this is what works xD
     pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1)
 
     turns_segments, average = estimation.segment_track(pos_list, lab_list, th=0.2, look_back=30) # TODO: refactoring to use labels instead of deg_list
@@ -422,7 +429,7 @@ if __name__ == "__main__":
     print(distances)
     print(speeds)
 
-    iner_list, outer_list = estimation.boundaries(pos_list, radius=0.8)
+    iner_list, outer_list = estimation.boundaries(pos_list, radius=0.6)
     diner = [1 for i in range(len(iner_list))]
     douter = [-1 for i in range(len(outer_list))]
 
