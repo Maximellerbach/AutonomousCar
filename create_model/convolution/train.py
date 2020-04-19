@@ -71,7 +71,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "binary_accuracy"])
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.3, 0.0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.7, 0.0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -194,7 +194,7 @@ class classifier():
         # average softmax direction
         average = architectures.cat2linear(ny)
         ny = [round(i, 3) for i in ny]
-        print(ny, average)
+        # print(ny, average)
 
         
         if len(self.av)<self.memory_size:
@@ -280,13 +280,13 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=1, to_cat=True, smoothing=0.3, label_rdm=0.) 
+                    recurrence=False, dosdir=True, proportion=0.5, to_cat=True, smoothing=0.1, label_rdm=0.) 
                     # name of the model, path to dir dataset, set reccurence for data loading, set dosdir for data loading, set proportion of upscaled/function
 
-    AI.epochs = 4
+    AI.epochs = 2
     AI.batch_size = 16 # without augm; normally, high batch_size = better comprehension
 
-    AI.train(load=False)
+    AI.train(load=True)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
     # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
