@@ -27,6 +27,8 @@ sess = tf.Session(config=config)
 config.log_device_placement = True  # to log device placement (on which device the operation ran)
 set_session(sess) # set this TensorFlow session as the default
 
+# TODO: OPTICS/DBSCAN clustering for anomaly detection
+
 class data_visualization():
     def __init__(self, fename):
         
@@ -61,7 +63,7 @@ class data_visualization():
 
     def load_model(self):
         model = load_model('test_model\\convolution\\lightv6_mix.h5')
-        return Model(model.layers[0].input, model.layers[-7].output)
+        return Model(model.layers[0].input, model.layers[-5].output)
 
     def get_batchs(self, doss, max_img=2000, scramble=True):
         paths = []
@@ -87,20 +89,22 @@ class data_visualization():
 
     def clustering(self, doss, max_img=2000):
         batchs = self.get_batchs(doss, max_img=max_img)
-        fe = self.load_fe()
+        # fe = self.load_fe()
+        model = self.load_model()
+
 
         for i, batch in tqdm(enumerate(batchs)):
             X = self.get_img(batch)
-       
-            x = fe.predict(np.array(X))
+            X_encoded = self.get_pred(model, X)
+            X_encoded = self.normalize(X_encoded)
 
             if i == 0:
-                method = KMeans(n_clusters=15).fit(x)
+                method = KMeans(n_clusters=3).fit(X_encoded)
                 y = method.labels_
             else:
-                y = method.predict(x)
+                y = method.predict(X_encoded)
 
-            for it in range(len(x)):
+            for it in range(len(X_encoded)):
                 img = X[0] # as you delete imgs, the last img will be [0]
                 label = y[it]
                 try:
@@ -129,7 +133,6 @@ class data_visualization():
     def computeTSNEProjectionOfLatentSpace(self, doss, display=True): # X is here the latent representation
         batchs = self.get_batchs(doss, max_img=1000)
         model = self.load_model()
-        model.summary()
         # fe = self.load_fe()
 
         for batch in batchs:
@@ -155,6 +158,5 @@ if __name__ == "__main__":
 
     vis = data_visualization('test_model\\convolution\\fe.h5')
     doss = [i+"\\*" for i in glob('C:\\Users\\maxim\\datasets\\*')]
-    vis.computeTSNEProjectionOfLatentSpace(doss, display=True)
-
-    # AI.clustering(['C:\\Users\\maxim\\datasets\\7 sim slow+normal\\*', 'C:\\Users\\maxim\\datasets\\2 donkeycar driving\\*'])# 'C:\\Users\\maxim\\recorded_imgs\\0_1587212272.138425\\*'
+    # vis.computeTSNEProjectionOfLatentSpace(doss, display=True)
+    vis.clustering(doss)
