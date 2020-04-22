@@ -158,5 +158,5 @@ if __name__ == "__main__":
 
     vis = data_visualization('test_model\\convolution\\fe.h5')
     doss = [i+"\\*" for i in glob('C:\\Users\\maxim\\datasets\\*')]
-    # vis.computeTSNEProjectionOfLatentSpace(doss, display=True)
-    vis.clustering(doss)
+    vis.computeTSNEProjectionOfLatentSpace(doss, display=True)
+    # vis.clustering(doss)

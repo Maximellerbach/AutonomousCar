@@ -71,7 +71,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "binary_accuracy"])
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.0005, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -101,11 +101,11 @@ class classifier():
             self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
             frc = self.get_frc(self.dospath+"*")
         else:
-            self.datalen = len(glob(self.impath))
-            self.gdos = glob(self.impath)
+            self.datalen = len(glob(self.dospath))
+            self.gdos = glob(self.dospath)
             np.random.shuffle(self.gdos)
             self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
-            frc = self.get_frc(self.impath)
+            frc = self.get_frc(self.dospath)
         
         # frc = [1]*5 # temporary to test some stuff
 
@@ -280,19 +280,20 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.5, to_cat=True, smoothing=0.4, label_rdm=0.) 
+                    recurrence=False, dosdir=True, proportion=0.3, to_cat=True, smoothing=0.3, label_rdm=0.) 
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
     AI.epochs = 4
-    AI.batch_size = 64 # without augm; normally, high batch_size = better comprehension but converge less
+    AI.batch_size = 128
+     # without augm; normally, high batch_size = better comprehension but converge less
 
-    AI.train(load=False)
+    AI.train(load=True)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
     # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
 
     AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\datasets\\1 ironcar driving\\*', (160,120), cut=0, from_path=True, from_vid=False, n=64, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
+    AI.after_training_test_pred('C:\\Users\\maxim\\random_data\\4 trackmania A04\\*', (160,120), cut=0, from_path=True, from_vid=False, n=64, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
     # AI.after_training_test_pred('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
 
     cv2.destroyAllWindows()

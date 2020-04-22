@@ -5,8 +5,8 @@ from glob import glob
 from tqdm import tqdm
 import numpy as np
 
-dataset_name = "7 sim slow+normal"
-base_dir = 'C:\\Users\\maxim\\datasets\\'
+dataset_name = "9 sim fast"
+base_dir = 'C:\\Users\\maxim\\random_data\\'
 save_name = "temp"
 
 os.mkdir(base_dir+save_name)

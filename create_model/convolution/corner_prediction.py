@@ -1,6 +1,7 @@
 import numpy as np
-from glob import glob
 import cv2
+import matplotlib.pyplot as plt
+import reorder_dataset
 
 class data(): # TODO: clean data class (could be used elsewhere)
     def __init__(self, dos, is_float=True):
@@ -8,9 +9,10 @@ class data(): # TODO: clean data class (could be used elsewhere)
         self.is_float = is_float
 
     def load_lab(self):
-        X_lab = []
-        for path in glob(self.dos+"*"):
-            print(path)
+        X = []
+        labs = []
+        dts, datalen = reorder_dataset.load_dataset(self.dos, recursive=False)
+        for path in dts:
             lab = path.split('\\')[-1].split('_')[0]
             if self.is_float:
                 lab = float(lab)
@@ -18,32 +20,57 @@ class data(): # TODO: clean data class (could be used elsewhere)
                 lab = int(lab)
                 lab = self.transform_lab(lab)
 
-            X_lab.append([path, lab])
-        return X_lab
+            X.append(path)
+            labs.append(lab)
+        return np.array(X), np.array(labs)
 
     def transform_lab(self, lab, dico=[3, 5, 7, 9, 11]):
         return (dico.index(lab)-2)/2
 
-    def average_data(self, X_lab, index=1, window_size=10):
+    def average_data(self, X, labs, window_size=10):
         averaged = []
-        for i in range(window_size//2, len(X_lab)-window_size//2):
-            averaged.append(np.average(X_lab[i-window_size//2: i+window_size//2, 1], axis=-1))
+        for i in range(window_size//2, len(labs)-window_size//2):
+            averaged.append(np.average(labs[i-window_size//2: i+window_size//2], axis=-1))
 
-        for i in range(len(X_lab)):
-            if i<=window_size//2 or i>=len(X_lab)-window_size//2:
-                del X_lab[i]
-            else:
-                X_lab[i, index] = averaged[i]
+        index_modifier = 0
+        labs[window_size//2:-window_size//2] = averaged
+
+        return X, labs
+
+    def detect_spike(self, labs, th=0.5, window_size=10):
+        spikes = []
+        spike = []
+        is_spike = False
+        for it, lab in enumerate(labs):
+            if lab>=th and is_spike == False:
+                spike.append(it-window_size//2)
+                is_spike = True
+
+            elif lab<th and is_spike == True:
+                spike.append(it+window_size//2)
+                is_spike = False
+                spikes.append(spike)
+                spike = []
+
+        return spikes
             
 
 class make_labels(data): # TODO: look further in the data to make labels
-    def __init__(self, dos="C:\\Users\\maxim\\recorded_imgs\\0\\"):
-        super().__init__(dos, is_float=False)
-        self.X_lab = self.load_lab()
-        self.average_data(self.X_lab, window_size=10)
-        
-        print(len(self.X_lab))
+    def __init__(self, dos="C:\\Users\\maxim\\recorded_imgs\\0\\", is_float=True):
+        super().__init__(dos, is_float=is_float)
+        window_size = 20
+
+        self.X, self.labs = self.load_lab()
+        original_labs = self.labs
+
+        self.X, self.labs = self.average_data(self.X, self.labs, window_size=window_size)
+        self.detect_spike(self.labs, th=0.5, window_size=window_size)
+
+        plt.plot([i for i in range(len(self.labs))], self.labs, linewidth=1)
+        plt.plot([i for i in range(len(original_labs))], original_labs, linewidth=1)
+
+        plt.show()
 
 
 if __name__ == "__main__":
-    labs = make_labels(dos="")
+    labs = make_labels(dos="C:\\Users\\maxim\\recorded_imgs\\0_0_1587469658.7638354\\", is_float=True)

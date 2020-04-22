@@ -6,7 +6,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.distance import euclidean
-from sklearn.cluster import DBSCAN
 from tqdm import tqdm
 
 import reorder_dataset
