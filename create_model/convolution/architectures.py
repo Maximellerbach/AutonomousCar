@@ -20,13 +20,15 @@ def linear2dir(linear, dir_range=(3, 11), to_int=True):
     return direction
 
 def cat2linear(ny):
-    average = 0
-    coef = [-1, -0.5, 0, 0.5, 1]
+    averages=[]
+    for n in ny:
+        average = 0
+        coef = [-1, -0.5, 0, 0.5, 1]
 
-    for it, nyx in enumerate(ny):
-        average+=nyx*coef[it]
-
-    return average
+        for it, nyx in enumerate(n):
+            average+=nyx*coef[it]
+        averages.append(average)
+    return averages
 
 def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
     
@@ -39,6 +41,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    x = Dropout(0.1)(x)
 
     x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
@@ -54,7 +57,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(64, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.2)(x)
+    x = Dropout(0.3)(x)
     ####
 
     fe = Model(inp, x)
@@ -66,7 +69,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Dense(50, use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
-    y = Dropout(0.2)(y)
+    y = Dropout(0.3)(y)
 
     if recurrence == True:
         inp2 = Input((memory, 5))

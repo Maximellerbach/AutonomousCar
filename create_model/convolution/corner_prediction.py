@@ -53,6 +53,9 @@ class data(): # TODO: clean data class (could be used elsewhere)
                 spike = []
 
         return spikes
+
+    def get_timetoclosestturn(self, X, spikes):
+        return
             
 
 class make_labels(data): # TODO: look further in the data to make labels

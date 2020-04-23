@@ -10,6 +10,7 @@ import cv2
 import h5py
 import keras
 import keras.backend as K
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -71,7 +72,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "binary_accuracy"])
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.0005, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -192,7 +193,7 @@ class classifier():
         lab = np.argmax(ny)
         
         # average softmax direction
-        average = architectures.cat2linear(ny)
+        average = architectures.cat2linear([ny])[0] # here you convert a list of cat to a list of linear
         ny = [round(i, 3) for i in ny]
         # print(ny, average)
 
@@ -278,17 +279,57 @@ class classifier():
 
         return (dt, pred_dt, frc)
 
+    def average_data(self, labs, window_size=10):
+        averaged = []
+        for i in range(window_size//2, len(labs)-window_size//2):
+            averaged.append(np.average(labs[i-window_size//2: i+window_size//2], axis=-1))
+
+        index_modifier = 0
+        labs[window_size//2:-window_size//2] = averaged
+
+        return labs
+
+    def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\7 sim slow+normal\\', dt_range=(0, -1)):
+        paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False)
+        paths = paths[dt_range[0]:dt_range[1]]
+        dts_len = len(paths)
+
+        X = []
+        Y = []
+        for path in tqdm(paths):
+            lab = autolib.get_label(path, flip=False)[0]
+
+            Y.append(lab)
+            X.append(cv2.imread(path)/255)
+
+        X = np.array(X)
+        Y = autolib.label_smoothing(Y, 5, 0)
+        Y = architectures.cat2linear(Y)
+
+        averaged_Y = self.average_data(Y, window_size=30)
+
+        pred_Y = self.model.predict(X)
+        pred_Y = architectures.cat2linear(pred_Y)
+
+        plt.plot([i for i in range(dts_len)], averaged_Y, pred_Y)
+        plt.show()
+        
+
+
+
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.3, to_cat=True, smoothing=0.3, label_rdm=0.) 
+                    recurrence=False, dosdir=True, proportion=0.1, to_cat=True, smoothing=0.3, label_rdm=0.2) 
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
-    AI.epochs = 4
+    AI.epochs = 1
     AI.batch_size = 128
-     # without augm; normally, high batch_size = better comprehension but converge less
+    # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=True)
+    AI.train(load=False)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
+    AI.compare_pred(dt_range=(0, 4000))
+
     # print(AI.calculate_FLOPS(), "total ops")
     # print(AI.evaluate_speed())
 
