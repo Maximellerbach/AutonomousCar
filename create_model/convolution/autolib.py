@@ -53,15 +53,15 @@ def get_previous_label(paths):
 
     return labs, revs
 
-def get_label(path, os = 'win', flip=True, before=True, reg=False, index=-1, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
+def get_label(path, os_type = 'win', flip=True, before=True, reg=False, index=-1, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
     """
     get the label of an image using the patern: as follow "somepath\\lab_time.png"
     """
     label = []
 
-    if os == 'win':
+    if os_type == 'win':
         slash ='\\'
-    elif os == 'linux':
+    elif os_type == 'linux':
         slash ='/'
 
     if reg == False:

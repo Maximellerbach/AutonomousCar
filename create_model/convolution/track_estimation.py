@@ -391,8 +391,9 @@ class track_estimation():
             cv2.line(self.pmap, p1, p2, color, thickness=3)
 
 if __name__ == "__main__":
-    dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\datasets\\1 ironcar driving\\', recursive=False) # 'C:\\Users\\maxim\\recorded_imgs\\0\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
-    sequence_to_study = (0, len(dts))
+    dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\datasets\\1 ironcar driving\\', recursive=False) # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
+    sequence_to_study = (0, 3000)
+    cat = True
 
     dates = [reorder_dataset.get_date(i) for i in dts]
     its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1], dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j<0.2] # remove images where dt >= 0.1
@@ -401,18 +402,22 @@ if __name__ == "__main__":
 
     Y = []
     for d in dts:
-        lab = autolib.get_label(d, flip=False)[0]
-        # date = reorder_dataset.get_date(d)
+        if cat:
+            lab = autolib.get_label(d, flip=False)[0]
+        else:
+            lab = float(d.split('\\')[-1].split('_')[0])
 
-        # lab = float(d.split('\\')[-1].split('_')[0])
+        # date = reorder_dataset.get_date(d)
         Y.append(lab)
 
-    Y = autolib.label_smoothing(Y, 5, 0) # to categorical
+    if cat:
+        Y = autolib.label_smoothing(Y, 5, 0) # to categorical
+
     max_steer_angle = 10
     estimation = track_estimation(its=av_its, steer_coef=max_steer_angle*(3/2*math.pi)) # don't know why but this is what works xD
-    pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1, cat=True)
+    pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1, cat=cat)
 
-    turns_segments, average = estimation.segment_track(pos_list, lab_list, th=0.1, look_back=30) # TODO: refactoring to use labels instead of deg_list
+    turns_segments, average = estimation.segment_track(pos_list, lab_list, th=0.2, look_back=30) # TODO: refactoring to use labels instead of deg_list
     matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
     print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
     

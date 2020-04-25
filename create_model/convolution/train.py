@@ -10,7 +10,6 @@ import cv2
 import h5py
 import keras
 import keras.backend as K
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -26,6 +25,7 @@ from tqdm import tqdm
 import architectures
 import autolib
 import reorder_dataset
+import pred_function
 # from architectures import dir_loss
 from datagenerator import image_generator
 
@@ -71,8 +71,7 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            # model, fe = model_type((120, 160, 3), 5, loss="mse", prev_act="relu", last_act="relu", regularizer=(0, 0), last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "binary_accuracy"])
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"])
+            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -86,7 +85,7 @@ class classifier():
         return model, fe
 
 
-    def train(self, load=False, X=np.array([]), Y=np.array([])):
+    def train(self, load=False, epochs=5, batch_size=64):
         """
         trains the model loaded as self.model
         """
@@ -155,108 +154,6 @@ class classifier():
         print(frc, prc)
         return frc
     
-    def load_frames(self, path, size=(360,240), batch_len=32):
-        """
-        load a batch of frame from video
-        """
-        batch = []
-        
-        for _ in range(batch_len):
-            _, frame = self.cap.read()
-            frame = cv2.resize(frame, size)
-            batch.append(frame)
-
-        return batch
-
-    def pred_img(self, img, size, cut, sleeptime, n, nimg_size=(20, 15)):
-        
-        """
-        predict an image and visualize the prediction
-        """
-
-        img = autolib.cut_img(img, cut) # cut image if needed
-        img = cv2.resize(img, size)
-        pred = np.expand_dims(img/255, axis=0)
-
-        nimg = AI.fe.predict(pred)
-        nimg = np.expand_dims(cv2.resize(nimg[0], nimg_size), axis=0)
-        n = nimg.shape[-1]
-
-        if self.recurrence == True:
-            filled = [[0, 0.125, 0.75, 0.125, 0]]*(self.memory_size-len(self.av))+self.av
-            rec = np.expand_dims(filled, axis=0)
-            # print(pred.shape, rec.shape)
-            ny = AI.model.predict([pred, rec])[0]
-        else:
-            ny = AI.model.predict(pred)[0]
-
-        lab = np.argmax(ny)
-        
-        # average softmax direction
-        average = architectures.cat2linear([ny])[0] # here you convert a list of cat to a list of linear
-        ny = [round(i, 3) for i in ny]
-        # print(ny, average)
-
-        
-        if len(self.av)<self.memory_size:
-            self.av.append(ny)
-        else:
-            self.av.append(ny)
-            del self.av[0]
-
-        square_root = int(sqrt(n))+1
-        tot_img = np.zeros((nimg.shape[1]*square_root, nimg.shape[2]*square_root))
-
-        try:
-            for x in range(square_root):
-                for y in range(square_root):
-                    tot_img[nimg.shape[1]*x:nimg.shape[1]*(x+1), nimg.shape[2]*y:nimg.shape[2]*(y+1)] = (nimg[0, :, :, x*square_root+y])
-        except:
-            pass
-
-        c = np.copy(img)
-        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+average*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
-        c = c/255
-
-        if n==1:
-            av = nimg[0]
-            av = cv2.resize(av, size)
-            cv2.imshow('im', nimg[0, :, :])
-            
-        else:
-            av = np.sum(nimg[0], axis=-1)
-            av = cv2.resize(av/(nimg.shape[-1]/2), size)
-            cv2.imshow('tot', tot_img)
-
-
-        cv2.imshow('av', av*c[:,:,0])
-        cv2.imshow('img', c)
-
-        cv2.waitKey(sleeptime)
-
-
-    def after_training_test_pred(self, path, size, cut=0, n=9, nimg_size=(15,15), from_path=True, from_vid=False, batch_vid=32, sleeptime=1):
-        """
-        either predict images in a folder
-        or from a video
-        """
-
-        if from_path==True:
-            for it, i in enumerate(glob(path)):
-                img = cv2.imread(i)
-                img = cv2.resize(img, size)
-                # img, _ = autolib.rdm_noise(img, 0)
-                # img, _ = autolib.night_effect(img, 0)
-                self.pred_img(img, size, cut, sleeptime, n, nimg_size=nimg_size)
-                
-        elif from_vid==True:
-            self.cap = cv2.VideoCapture(path)
-            print("created cap")
-
-            while(True):
-                im_batch = self.load_frames(path, batch_len=batch_vid)
-                for img in im_batch:
-                    self.pred_img(img, size, cut, sleeptime, n, nimg_size=nimg_size)
 
     def calculate_FLOPS(self):
         run_meta = tf.RunMetadata()
@@ -266,77 +163,22 @@ class classifier():
         flops = tf.profiler.profile(graph=K.get_session().graph, run_meta=run_meta, cmd='op', options=opts)
         return flops.total_float_ops
 
-    def evaluate_speed(self, data_path='C:\\Users\\maxim\\image_mix\\*'):
-        paths = glob(data_path)
-        X = np.array([cv2.resize(cv2.imread(i), (160,120)) for i in tqdm(paths[:5000])])
-
-        st = time.time()
-        preds = self.model.predict(X/255)
-        et = time.time()
-        dt = et-st
-        pred_dt = dt/len(X)
-        frc = 1/pred_dt
-
-        return (dt, pred_dt, frc)
-
-    def average_data(self, labs, window_size=10):
-        averaged = []
-        for i in range(window_size//2, len(labs)-window_size//2):
-            averaged.append(np.average(labs[i-window_size//2: i+window_size//2], axis=-1))
-
-        index_modifier = 0
-        labs[window_size//2:-window_size//2] = averaged
-
-        return labs
-
-    def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\7 sim slow+normal\\', dt_range=(0, -1)):
-        paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False)
-        paths = paths[dt_range[0]:dt_range[1]]
-        dts_len = len(paths)
-
-        X = []
-        Y = []
-        for path in tqdm(paths):
-            lab = autolib.get_label(path, flip=False)[0]
-
-            Y.append(lab)
-            X.append(cv2.imread(path)/255)
-
-        X = np.array(X)
-        Y = autolib.label_smoothing(Y, 5, 0)
-        Y = architectures.cat2linear(Y)
-
-        averaged_Y = self.average_data(Y, window_size=10)
-
-        pred_Y = self.model.predict(X)
-        pred_Y = architectures.cat2linear(pred_Y)
-
-        plt.plot([i for i in range(dts_len)], averaged_Y, pred_Y)
-        plt.show()
-
-    def process_trajectory_error(self): # TODO: evaluate long term precision of the model 
-        return
-
-
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\lightv6_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
                     recurrence=False, dosdir=True, proportion=0.1, to_cat=True, smoothing=0.3, label_rdm=0.0) 
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
-    AI.epochs = 1
-    AI.batch_size = 128
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=True)
-    AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
-    AI.compare_pred(dt_range=(0, 4000))
+    # AI.train(load=True, epochs=1, batch_size=128)
+    AI.model = load_model(AI.name) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
 
     # print(AI.calculate_FLOPS(), "total ops")
-    # print(AI.evaluate_speed())
+    iteration_speed = pred_function.evaluate_speed(AI)
+    print(iteration_speed)
 
-    AI.fe = load_model('test_model\\convolution\\fe.h5')
-    AI.after_training_test_pred('C:\\Users\\maxim\\random_data\\4 trackmania A04\\*', (160,120), cut=0, from_path=True, from_vid=False, n=64, nimg_size=(4,4), sleeptime=1) # 'C:\\Users\\maxim\\datasets\\2\\*' 'C:\\Users\\maxim\\image_mix2\\*'
-    # AI.after_training_test_pred('F:\\video-fh4\\FtcBrYpjnA_Trim.mp4', (160,120), cut=100, from_path=False, from_vid=True, n=49, batch_vid=1)
+    pred_function.compare_pred(AI, dos='C:\\Users\\maxim\\datasets\\8 sim normal\\', dt_range=(0, 4000))
+    # pred_function.after_training_test_pred(AI, 'C:\\Users\\maxim\\random_data\\4 trackmania A04\\*', nimg_size=(5,5), sleeptime=1)
 
     cv2.destroyAllWindows()

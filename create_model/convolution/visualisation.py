@@ -12,11 +12,11 @@ from vis.visualization import (get_num_filters, visualize_activation,
 
 import architectures
 
-model = load_model('test_model\\convolution\\lightv2_mix.h5', compile=False) # , custom_objects={"dir_loss":architectures.dir_loss})
+model = load_model('test_model\\convolution\\lightv6_mix.h5') # , custom_objects={"dir_loss":architectures.dir_loss})
 for it, i in enumerate(model.layers):
     print(i.name, it)
 
-paths = glob('C:\\Users\\maxim\\img_trackmania\\*')
+paths = glob('C:\\Users\\maxim\\datasets\\7 sim slow+normal\\*')
 shuffle(paths)
 
 for path in paths:
@@ -37,8 +37,9 @@ for path in paths:
     # final_hp = np.expand_dims(final_hp, axis=-1)
     # final_hp = np.concatenate((final_hp, final_hp, final_hp), axis=-1)
     # img = img*final_hp
-    average = architectures.cat2linear(preds)
+    average = architectures.cat2linear([preds])[0]
     print(average, preds)
+
     cv2.line(img, (final_hp.shape[1]//2, final_hp.shape[0]), (int(final_hp.shape[1]/2+average*30), final_hp.shape[0]-50), color=[1, 0, 0], thickness=4)
     cv2.imshow("hmp", final_hp)
     cv2.imshow("img", img)
