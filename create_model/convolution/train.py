@@ -306,14 +306,16 @@ class classifier():
         Y = autolib.label_smoothing(Y, 5, 0)
         Y = architectures.cat2linear(Y)
 
-        averaged_Y = self.average_data(Y, window_size=30)
+        averaged_Y = self.average_data(Y, window_size=10)
 
         pred_Y = self.model.predict(X)
         pred_Y = architectures.cat2linear(pred_Y)
 
         plt.plot([i for i in range(dts_len)], averaged_Y, pred_Y)
         plt.show()
-        
+
+    def process_trajectory_error(self): # TODO: evaluate long term precision of the model 
+        return
 
 
 
@@ -326,7 +328,7 @@ if __name__ == "__main__":
     AI.batch_size = 128
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False)
+    AI.train(load=True)
     AI.model = load_model(AI.name) # custom_objects={"dir_loss":architectures.dir_loss}
     AI.compare_pred(dt_range=(0, 4000))
 
