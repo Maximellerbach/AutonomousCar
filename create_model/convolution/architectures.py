@@ -33,7 +33,7 @@ def cat2linear(ny):
 def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
     
     inp = Input(shape=img_shape)
-
+    # x = GaussianNoise(0.2)(inp)
     x = Conv2D(12, kernel_size=5, strides=2, use_bias=False, padding='same')(inp)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
@@ -41,15 +41,16 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.1)(x)
 
     x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    x = Dropout(0.1)(x)
     
     x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    x = Dropout(0.1)(x)
 
     # x = ZeroPadding2D(((1,0), 0))(x)
     # x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
@@ -57,7 +58,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(64, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.3)(x)
+    x = Dropout(0.2)(x)
     ####
 
     fe = Model(inp, x)
@@ -69,7 +70,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Dense(50, use_bias=False)(y)
     y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
-    y = Dropout(0.3)(y)
+    y = Dropout(0.1)(y)
 
     if recurrence == True:
         inp2 = Input((memory, 5))
@@ -82,10 +83,9 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
 
         y = concatenate([y, y2])
 
-    y = Dense(25, use_bias=False)(y)
-    y = BatchNormalization()(y)
-    y = Activation(prev_act)(y)
-    y = Dropout(0.2)(y)
+    # y = Dense(25, use_bias=False)(y)
+    # y = BatchNormalization()(y)
+    # y = Activation(prev_act)(y)
 
     y = Dense(9, use_bias=False)(y)
     y = BatchNormalization()(y)

@@ -70,7 +70,7 @@ def pred_img(self, img, size, sleeptime, nimg_size=(5, 5)):
     img = cv2.resize(img, size)
     pred = np.expand_dims(img/255, axis=0)
 
-    nimg = AI.fe.predict(pred)[0]
+    nimg = self.fe.predict(pred)[0]
     nimg = np.expand_dims(cv2.resize(nimg, nimg_size), axis=0)
     n = nimg.shape[-1]
 
@@ -78,9 +78,9 @@ def pred_img(self, img, size, sleeptime, nimg_size=(5, 5)):
         filled = [[0, 0.125, 0.75, 0.125, 0]]*(self.memory_size-len(self.av))+self.av
         rec = np.expand_dims(filled, axis=0)
         # print(pred.shape, rec.shape)
-        ny = AI.model.predict([pred, rec])[0]
+        ny = self.model.predict([pred, rec])[0]
     else:
-        ny = AI.model.predict(pred)[0]
+        ny = self.model.predict(pred)[0]
 
     lab = np.argmax(ny)
     
@@ -141,9 +141,9 @@ def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackm
         """
 
         if from_path==True:
-            for i in enumerate(glob(path)):
+            for i in glob(path):
                 img = cv2.imread(i)
-                self.pred_img(img, size, sleeptime, nimg_size=nimg_size)
+                pred_img(self, img, size, sleeptime, nimg_size=nimg_size)
                 
         else:
             self.cap = cv2.VideoCapture(path)
@@ -152,7 +152,7 @@ def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackm
             while(True):
                 im_batch = self.load_frames(path, batch_len=batch_vid)
                 for img in im_batch:
-                    self.pred_img(img, size, sleeptime, nimg_size=nimg_size)
+                    pred_img(self, img, size, sleeptime, nimg_size=nimg_size)
 
 
 

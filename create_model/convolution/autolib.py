@@ -39,7 +39,7 @@ def image_process(img, size = (160,120), shape = (160,120,1), filter = True, gra
         
     return img
 
-def get_previous_label(paths):
+def get_previous_label(paths, cat=True):
     """
     get the label sequence,
     return normal labels and reversed
@@ -47,13 +47,13 @@ def get_previous_label(paths):
     labs = []
     revs = []
     for path in paths:
-        l, r = get_label(path)
+        l, r = get_label(path, cat=True)
         labs.append(l)
         revs.append(r)
 
     return labs, revs
 
-def get_label(path, os_type = 'win', flip=True, before=True, reg=False, index=-1, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
+def get_label(path, os_type = 'win', flip=True, cat=True, index=-1, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
     """
     get the label of an image using the patern: as follow "somepath\\lab_time.png"
     """
@@ -64,39 +64,17 @@ def get_label(path, os_type = 'win', flip=True, before=True, reg=False, index=-1
     elif os_type == 'linux':
         slash ='/'
 
-    if reg == False:
-        
-        if before == True:
-            lab = path.split(slash)[index]
-            lab = int(lab.split('_')[0])
-            label.append(dico.index(lab))
-            if flip == True:
-                label.append(rev.index(lab))
+    name = path.split(slash)[index].split('_')[0]
+    if cat:
+        lab = dico.index(int(name))
+    else:
+        lab = float(name)
 
-        if before == False:
-            lab = path.split('_')[index]
-            lab = int(lab.split('.')[0])
-            label.append(dico.index(lab))
-            if flip == True:
-                label.append(rev.index(lab))
-    
-    elif reg == True:
-
-        if before == True:
-            lab = path.split(slash)[-1]
-            lab = lab.split('_')[0]
-            lab = float(lab)
-            label.append(lab)
-            if flip == True:
-                label.append(-lab)
-
-        if before == False:
-            lab = path.split('_')[-1]
-            lab = lab.split('.')[0]
-            lab = float(lab)
-            label.append(lab)
-            if flip == True:
-                label.append(-lab)
+    label.append(lab)
+    if flip and cat:
+        label.append(rev.index(int(name)))
+    elif flip and not cat:
+        label.append(-lab)
 
     return label
 

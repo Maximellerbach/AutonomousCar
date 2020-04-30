@@ -63,7 +63,7 @@ class data_visualization():
 
     def load_model(self):
         model = load_model('test_model\\convolution\\lightv6_mix.h5')
-        return Model(model.layers[0].input, model.layers[-5].output)
+        return Model(model.layers[0].input, model.layers[-11].output)
 
     def get_batchs(self, doss, max_img=2000, scramble=True):
         paths = []
