@@ -204,9 +204,12 @@ def night_effect(img,  label, vmin=150, vmax=230):
     
     return int_img, label
 
-def horizontal_flip(img, label):
-    lab = dico[label]
-    lab = rev.index(lab)
+def horizontal_flip(img, label, cat=True):
+    if cat:
+        lab = dico[label]
+        lab = rev.index(lab)
+    else:
+        lab = -label
     return cv2.flip(img, 1), lab
     
 def rdm_noise(img, label):
@@ -324,7 +327,7 @@ def generate_night_effect(X, Y, ys=[], proportion=0.25, ysb=False):
         return X_aug, Y_aug
 
 
-def generate_horizontal_flip(X, Y, ys=[], proportion=0.25, ysb=False):
+def generate_horizontal_flip(X, Y, ys=[], proportion=0.25, ysb=False, cat=True):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
 
     X_aug = []
@@ -332,7 +335,7 @@ def generate_horizontal_flip(X, Y, ys=[], proportion=0.25, ysb=False):
     YS_aug = []
     for index in range(len(X)):
         if indexes[index] == True:
-            im, angle = horizontal_flip(X[index], Y[index])
+            im, angle = horizontal_flip(X[index], Y[index], cat=cat)
             Y_aug.append(angle)
             X_aug.append(im)
             if ysb==True:

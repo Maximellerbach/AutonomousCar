@@ -30,19 +30,21 @@ def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
     X = []
     Y = []
     for path in tqdm(paths):
-        lab = autolib.get_label(path, flip=False)[0]
+        lab = autolib.get_label(path, flip=False, cat=self.to_cat)[0]
 
         Y.append(lab)
         X.append(cv2.imread(path)/255)
 
     X = np.array(X)
-    Y = to_categorical(Y)
-    Y = architectures.cat2linear(Y)
+    if self.to_cat:
+        Y = to_categorical(Y)
+        Y = architectures.cat2linear(Y)
 
     # Y = average_data(Y, window_size=10)
 
     pred_Y = self.model.predict(X)
-    pred_Y = architectures.cat2linear(pred_Y)
+    if self.to_cat:
+        pred_Y = architectures.cat2linear(pred_Y)
 
     plt.plot([i for i in range(dts_len)], Y, pred_Y)
     plt.show()
@@ -82,12 +84,15 @@ def pred_img(self, img, size, sleeptime, nimg_size=(5, 5)):
     else:
         ny = self.model.predict(pred)[0]
 
-    lab = np.argmax(ny)
-    
-    # average softmax direction
-    average = architectures.cat2linear([ny])[0] # here you convert a list of cat to a list of linear
-    ny = [round(i, 3) for i in ny]
-    # print(ny, average)
+    if self.to_cat:
+        lab = np.argmax(ny)
+        
+        # average softmax direction
+        average = architectures.cat2linear([ny])[0] # here you convert a list of cat to a list of linear
+        ny = [round(i, 3) for i in ny]
+        # print(ny, average)
+    else:
+        average = ny[0]
 
     
     if len(self.av)<self.memory_size:
@@ -134,14 +139,14 @@ def load_frames(self, path, size=(160, 120), batch_len=32):
 
     return batch
 
-def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackmania A04\\*', size=(160,120), nimg_size=(5,5), from_path=True, batch_vid=32, sleeptime=1):
+def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackmania A04\\', size=(160,120), nimg_size=(5,5), from_path=True, batch_vid=32, sleeptime=1):
         """
         either predict images in a folder
         or from a video
         """
 
         if from_path==True:
-            for i in glob(path):
+            for i in glob(path+"*"):
                 img = cv2.imread(i)
                 pred_img(self, img, size, sleeptime, nimg_size=nimg_size)
                 

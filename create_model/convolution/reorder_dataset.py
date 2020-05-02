@@ -59,10 +59,13 @@ def pack_datasets(dos, new_dos, d_threshold=60):
             cv2.imwrite(tmp_save+str(lab)+"_"+str(i[0])+'.png', im)
             
 def get_date(p):
-    name = p.split('\\')[-1]
-    lab, date = name.split('_')
-    date = date.split('.png')[0]
-    return float(date)
+    try:
+        name = p.split('\\')[-1]
+        lab, date = name.split('_')
+        date = date.split('.png')[0]
+        return float(date)
+    except Exception as e:
+        print(p, e)
 
 def str2float(string, ancient_str, relative_path):
     try:

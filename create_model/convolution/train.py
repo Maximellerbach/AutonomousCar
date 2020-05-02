@@ -68,7 +68,8 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
+            # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
+            model, fe = model_type((120, 160, 3), 1, loss="mse", prev_act="relu", last_act="linear", regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"]) # model used for the race
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -85,24 +86,8 @@ class classifier():
         """
         trains the model loaded as self.model
         """
-        if self.recurrence == True:
-            self.gdos, self.datalen = reorder_dataset.load_dataset(self.dospath)
-            self.valdos = self.gdos
-            frc = self.get_frc(self.dospath, flip=flip)
 
-        elif self.recurrence == False and self.dosdir == True:
-            self.gdos, self.datalen = reorder_dataset.load_dataset(self.dospath)
-            self.gdos = np.concatenate([i for i in self.gdos])
-            np.random.shuffle(self.gdos)
-            self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
-            frc = self.get_frc(self.dospath+"*", flip=flip)
-        else:
-            self.datalen = len(glob(self.dospath))
-            self.gdos = glob(self.dospath)
-            np.random.shuffle(self.gdos)
-            self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
-            frc = self.get_frc(self.dospath, flip=flip)
-        
+        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat) # TODO: add folder weights
         # frc = [1]*5 # temporary to test some stuff
 
         print(self.gdos.shape, self.valdos.shape)
@@ -117,10 +102,49 @@ class classifier():
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
 
+    def get_gdos(self, flip=True, cat=True):
+        if self.recurrence == True:
+            gdos, datalen = reorder_dataset.load_dataset(self.dospath)
+            valdos = gdos
+            if cat:
+                frc = self.get_frc_cat(self.dospath, flip=flip)
+            else:
+                frc = [1]
 
-    def get_frc(self, dos, flip=True): # TODO: add folder weights
+        elif self.recurrence == False and self.dosdir == True:
+            gdos, datalen = reorder_dataset.load_dataset(self.dospath)
+            gdos = np.concatenate([i for i in gdos])
+            np.random.shuffle(gdos)
+            gdos, valdos = np.split(gdos, [datalen-datalen//20])
+            
+            if cat:
+                frc = self.get_frc_cat(self.dospath+"*", flip=flip)
+            else:
+                frc = [1]
+                
+        else:
+            datalen = len(glob(self.dospath))
+            gdos = glob(self.dospath)
+            np.random.shuffle(gdos)
+            gdos, valdos = np.split(gdos, [datalen-datalen//20])
+            
+            if cat:
+                frc = self.get_frc_cat(self.dospath, flip=flip)
+            else:
+                frc = [1]
+
+        return gdos, valdos, frc, datalen
+
+    def show_distribution(self, dos, flip=True):
         """
-        calculate stats from labels
+        calculate stats from linear labels
+        and show label distribution 
+        """
+        return
+
+    def get_frc_cat(self, dos, flip=True): 
+        """
+        calculate stats from categorical labels
         returns the weight of the classes for a balanced training
         """
         Y = []
@@ -164,13 +188,13 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\lightv7_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.5, to_cat=True, smoothing=0.3, label_rdm=0.0) 
+    AI = classifier(name = 'test_model\\convolution\\linear_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
+                    recurrence=False, dosdir=True, proportion=0.2, to_cat=False, smoothing=0.0, label_rdm=0.0) 
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False, flip=True, epochs=5, batch_size=64)
+    # AI.train(load=False, flip=True, epochs=5, batch_size=48)
     AI.model = load_model(AI.name) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
@@ -178,7 +202,9 @@ if __name__ == "__main__":
     # iteration_speed = pred_function.evaluate_speed(AI)
     # print(iteration_speed)
 
-    pred_function.compare_pred(AI, dos='C:\\Users\\maxim\\datasets\\7 sim slow+normal\\', dt_range=(0, 4000))
-    # pred_function.after_training_test_pred(AI, 'C:\\Users\\maxim\\datasets\\10 sim chicane\\*', nimg_size=(5,5), sleeptime=1)
+    test_dos = 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
+    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 4000))
+    pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 
     cv2.destroyAllWindows()
+ 

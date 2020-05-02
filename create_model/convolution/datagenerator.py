@@ -62,7 +62,7 @@ class image_generator(keras.utils.Sequence):
             ybatch = np.concatenate(not_emptyY)
         
         if self.flip:
-            xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
+            xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1, cat=self.cat)
             xbatch = np.concatenate((xbatch, xflip))
             ybatch = np.concatenate((ybatch, yflip))
 
@@ -164,7 +164,7 @@ class image_generator(keras.utils.Sequence):
             except:
                 print(i)
 
-        xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
+        xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1, cat=self.cat)
         xbatch = np.concatenate((xbatch, xflip))
         ybatch = np.concatenate((ybatch, yflip))
 

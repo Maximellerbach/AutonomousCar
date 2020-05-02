@@ -10,7 +10,7 @@ from keras.optimizers import Adam
 from glob import glob
 
 import reorder_dataset
-from data_class import data
+from data_class import Data
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True # dynamically grow the memory used on the GPU
@@ -28,20 +28,20 @@ def create_brake_model(model_name="test_model\\convolution\\fe.h5"):
 
     y = Dense(50, use_bias=False)(y)
     y = BatchNormalization()(y)
-    y = Activation("linear")(y)
+    y = Activation("relu")(y)
     y = Dropout(0.2)(y)
 
     y = Dense(25, use_bias=False)(y)
     y = BatchNormalization()(y)
-    y = Activation("linear")(y)
+    y = Activation("relu")(y)
     y = Dropout(0.1)(y)
 
     y = Dense(25, use_bias=False)(y)
     y = BatchNormalization()(y)
-    y = Activation("linear")(y)
+    y = Activation("relu")(y)
     y = Dropout(0.1)(y)
 
-    y = Dense(1, activation="tanh", use_bias=False)(y)
+    y = Dense(1, activation="sigmoid", use_bias=True)(y)
 
     new_model = Model(inp, y)
     new_model.compile(Adam(0.001), loss="mse")
@@ -51,9 +51,8 @@ def create_brake_model(model_name="test_model\\convolution\\fe.h5"):
 
 def train_model(X, Y, batch_size=32, epochs=2):
     new_model = create_brake_model()
-
     new_model.fit(X, Y, batch_size=batch_size, epochs=epochs)
-    new_model.save("test_model\\convolution\\acc_brake.h5")
+    new_model.save("test_model\\convolution\\brakev6.h5")
     return new_model
 
 def test_pred(model, X, dos = "C:\\Users\\maxim\\recorded_imgs\\0_0_1588152155.6270337\\"):
@@ -64,21 +63,21 @@ def test_pred(model, X, dos = "C:\\Users\\maxim\\recorded_imgs\\0_0_1588152155.6
         print(pred)
         cv2.waitKey(0)
 
-class make_labels(data): # TODO: look further in the data to make labels
+class make_labels(Data): # TODO: look further in the data to make labels
     def __init__(self, dos="C:\\Users\\maxim\\recorded_imgs\\0\\", is_float=True, show=False):
         super().__init__(dos, is_float=is_float)
-        window_size = 10
+        window_size = (5,5)
 
         self.X, self.labs = self.load_lab()
         original_labs = self.labs
 
         self.labs = self.average_data(self.labs, window_size=window_size)
-        self.spikes = self.detect_spike(self.labs, th=0.4, window_size=window_size, offset=0)
+        self.spikes = self.detect_spike(self.labs, th=0.75, window_size=window_size, offset=0)
 
         self.times, end = self.get_timetoclosestturn(self.X, self.spikes)
-        self.straigts = self.detect_straight(self.labs, th=0.02)
-        self.variations = self.get_accbrake_periods(self.straigts, self.times, time_threshold=2)
-        self.variations = self.average_data(self.variations, window_size=window_size, sq_factor=1)
+        self.straigts = self.detect_straight(self.labs, th=0.1)
+        self.variations = self.get_accbrake_periods(self.straigts, self.times, time_threshold=1)
+        # self.variations = self.average_data(self.variations, window_size=window_size, sq_factor=1)
 
         self.labs = self.labs[:end]
         self.X = self.X[:end]
@@ -88,17 +87,17 @@ class make_labels(data): # TODO: look further in the data to make labels
             plt.show()
 
     def train(self):
-        imgs = self.load_img(self.X)
-        model = train_model(imgs, self.variations, batch_size=16, epochs=30)
+        imgs = self.load_imgs(self.X)/255
+        model = train_model(imgs, self.variations, batch_size=32, epochs=30)
         print("trained model")
     
     def test(self):
-        model = load_model("test_model\\convolution\\acc_brake.h5")
-        imgs = self.load_img(self.X)
-        test_pred(model, imgs)
+        model = load_model("test_model\\convolution\\brakev6.h5")
+        imgs = self.load_imgs(self.X)
+        test_pred(model, imgs, dos=self.dos)
 
 if __name__ == "__main__":
-    brake_data = make_labels(dos="C:\\Users\\maxim\\recorded_imgs\\0_0_1588152155.6270337\\", is_float=True, show=True)
+    brake_data = make_labels(dos="C:\\Users\\maxim\\recorded_imgs\\0_0_1588369339.6844113\\", is_float=True, show=True)
     brake_data.train()
     brake_data.test()
     
