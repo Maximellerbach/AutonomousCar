@@ -13,6 +13,7 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def __init__(self, dos, is_float=True, recursive=False):
         self.dos = dos
         self.is_float = is_float
+        self.recursive = recursive
         self.dts, self.datalen = reorder_dataset.load_dataset(self.dos, recursive=recursive)
 
     def load_img(self, path):
@@ -128,17 +129,23 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def img_name_format(self, dos, lab, format=".png"):
         return dos+str(lab)+"_"+str(time.time())+".png"
 
-    def save(self, dts, Y, name="saved"):
+    def save(self, dts, Y=[], name="saved", mode=0):
         new_dos = self.dos+"..\\"+name+"\\"
         try:
             os.mkdir(new_dos)
         except:
             pass
 
-        for path, y in tqdm(zip(dts, Y)):
-            x = self.load_img(path)
-            name = self.img_name_format(new_dos, y)
-            cv2.imwrite(name, x)
+        if mode == 0:
+            for path, y in tqdm(zip(dts, Y)):
+                x = self.load_img(path)
+                name = self.img_name_format(new_dos, y)
+                cv2.imwrite(name, x)
+        else:
+            for path in tqdm(dts):
+                x = self.load_img(path)
+                new_path = new_dos+path.split('\\')[-1]
+                cv2.imwrite(new_path, x)
 
 if __name__ == "__main__":
 

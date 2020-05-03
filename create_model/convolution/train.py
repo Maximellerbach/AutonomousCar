@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    # AI.train(load=False, flip=True, epochs=5, batch_size=48)
+    AI.train(load=True, flip=True, epochs=3, batch_size=48)
     AI.model = load_model(AI.name) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
@@ -207,4 +207,3 @@ if __name__ == "__main__":
     pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 
     cv2.destroyAllWindows()
- 
