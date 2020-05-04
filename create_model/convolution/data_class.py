@@ -148,7 +148,7 @@ class Data(): # TODO: clean data class (could be used elsewhere)
                 cv2.imwrite(new_path, x)
 
 if __name__ == "__main__":
-
+    # quick code to transform images from categorical to linear mode
     root_dos = "C:\\Users\\maxim\\random_data\\"
     doss = glob(root_dos+'*')
     save_dos = "linear"
@@ -157,5 +157,5 @@ if __name__ == "__main__":
         if dos.split('\\')[-1] != save_dos:
             data = Data(dos+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(5,5))
+            Y = data.catlab2linear_smooth(Y, window_size=(0,5))
             data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
