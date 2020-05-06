@@ -45,20 +45,16 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.1)(x)
     
     x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(0.1)(x)
 
-    # x = ZeroPadding2D(((1,0), 0))(x)
-    # x = DepthwiseConv2D(kernel_size=(5,5), strides=(5,5), use_bias=False, padding='same')(x)
-
-    x = Conv2D(64, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
+    x = Conv2D(64, kernel_size=(8,2), strides=(8,2), use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.2)(x)
+    x = Dropout(0.4)(x)
     ####
 
     fe = Model(inp, x)
