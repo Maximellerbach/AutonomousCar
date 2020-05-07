@@ -31,30 +31,35 @@ def cat2linear(ny):
     return averages
 
 def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
-    
+    drop_rate = 0.1
+
+
     inp = Input(shape=img_shape)
     # x = GaussianNoise(0.2)(inp)
     x = Conv2D(12, kernel_size=5, strides=2, use_bias=False, padding='same')(inp)
-    x = BatchNormalization()(x)
+    # x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    x = Dropout(drop_rate)(x)
 
     x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
-    x = BatchNormalization()(x)
+    # x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
+    x = Dropout(drop_rate)(x)
 
     x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
     x = BatchNormalization()(x)
-    x = Activation(prev_act)(x)
+    # x = Activation(prev_act)(x)
+    x = Dropout(drop_rate)(x)
     
     x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
-    x = BatchNormalization()(x)
+    # x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.1)(x)
+    x = Dropout(drop_rate)(x)
 
     x = Conv2D(64, kernel_size=(8,2), strides=(8,2), use_bias=False, padding='same')(x)
-    x = BatchNormalization()(x)
+    # x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
-    x = Dropout(0.4)(x)
+    x = Dropout(drop_rate)(x)
     ####
 
     fe = Model(inp, x)
@@ -64,9 +69,9 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Flatten()(y)
 
     y = Dense(50, use_bias=False)(y)
-    y = BatchNormalization()(y)
+    # y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
-    y = Dropout(0.1)(y)
+    y = Dropout(drop_rate)(y)
 
     if recurrence == True:
         inp2 = Input((memory, 5))
@@ -79,12 +84,14 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
 
         y = concatenate([y, y2])
 
-    # y = Dense(25, use_bias=False)(y)
+    y = Dense(1, use_bias=False, activation="linear")(y)
+
+    y = Dense(25, use_bias=False)(y)
     # y = BatchNormalization()(y)
-    # y = Activation(prev_act)(y)
+    y = Activation(prev_act)(y)
 
     y = Dense(9, use_bias=False)(y)
-    y = BatchNormalization()(y)
+    # y = BatchNormalization()(y)
     y = Activation(prev_act)(y)
     
 
