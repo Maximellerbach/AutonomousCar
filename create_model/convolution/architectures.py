@@ -1,16 +1,16 @@
 import keras.backend as K
 from keras.regularizers import l2, l1_l2
 from keras.layers import *
-from keras.losses import mse
+from keras.losses import mse, mae
 from keras.models import Input, Model, Sequential, load_model
 from keras.optimizers import SGD, Adam
 
-def dir_loss(y_true, y_pred, wheights=np.array([-1, -0.5, 0, 0.5, 1])): # TODO: not working for the moment, need to see why (problem of shape)
+def dir_loss(y_true, y_pred): # TODO: not working for the moment, need to see why (problem of shape)
     """
     custom loss function for the models
     (only use if you have the same models as me)
     """
-    return K.square(y_true-y_pred) + mse(y_true, y_pred)
+    return mse(y_true, y_pred) + mae(y_true, y_pred)
 
 def linear2dir(linear, dir_range=(3, 11), to_int=True):
     delta_range = dir_range[1]-dir_range[0]
