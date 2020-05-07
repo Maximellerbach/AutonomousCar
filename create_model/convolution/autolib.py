@@ -204,7 +204,7 @@ def night_effect(img,  label, vmin=150, vmax=230):
     
     return int_img, label
 
-def horizontal_flip(img, label, cat=True):
+def horizontal_flip(img, label, cat=True, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
     if cat:
         lab = dico[label]
         lab = rev.index(lab)

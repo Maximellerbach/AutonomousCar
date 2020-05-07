@@ -157,5 +157,5 @@ if __name__ == "__main__":
         if dos.split('\\')[-1] != save_dos:
             data = Data(dos+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,5))
+            Y = data.catlab2linear_smooth(Y, window_size=(0,1))
             data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
