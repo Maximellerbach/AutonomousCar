@@ -129,7 +129,7 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def img_name_format(self, dos, lab, format=".png"):
         return dos+str(lab)+"_"+str(time.time())+".png"
 
-    def save(self, dts, Y=[], name="saved", mode=0, sleep=0.001):
+    def save(self, dts, Y=[], name="saved", mode=0, sleep=0.0001):
         new_dos = self.dos+"..\\"+name+"\\"
         if os.path.isdir(new_dos) == False:
             os.mkdir(new_dos)
