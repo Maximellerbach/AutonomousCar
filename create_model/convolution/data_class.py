@@ -129,23 +129,24 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def img_name_format(self, dos, lab, format=".png"):
         return dos+str(lab)+"_"+str(time.time())+".png"
 
-    def save(self, dts, Y=[], name="saved", mode=0):
+    def save(self, dts, Y=[], name="saved", mode=0, sleep=0.001):
         new_dos = self.dos+"..\\"+name+"\\"
-        try:
+        if os.path.isdir(new_dos) == False:
             os.mkdir(new_dos)
-        except:
-            pass
 
         if mode == 0:
             for path, y in tqdm(zip(dts, Y)):
+                time.sleep(sleep) # wait a bit to avoid saving error 
                 x = self.load_img(path)
                 name = self.img_name_format(new_dos, y)
                 cv2.imwrite(name, x)
         else:
             for path in tqdm(dts):
+                time.sleep(sleep) # wait a bit to avoid saving error 
                 x = self.load_img(path)
                 new_path = new_dos+path.split('\\')[-1]
                 cv2.imwrite(new_path, x)
+
 
 if __name__ == "__main__":
     # quick code to transform images from categorical to linear mode
@@ -157,5 +158,5 @@ if __name__ == "__main__":
         if dos.split('\\')[-1] != save_dos:
             data = Data(dos+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,5))
+            Y = data.catlab2linear_smooth(Y, window_size=(1,5))
             data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
