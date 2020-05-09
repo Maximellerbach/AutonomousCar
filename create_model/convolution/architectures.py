@@ -5,12 +5,16 @@ from keras.losses import mse, mae
 from keras.models import Input, Model, Sequential, load_model
 from keras.optimizers import SGD, Adam
 
-def dir_loss(y_true, y_pred): # TODO: not working for the moment, need to see why (problem of shape)
+def dir_loss(y_true, y_pred, steer_angle=16): # TODO: not working for the moment, need to see why (problem of shape)
     """
     custom loss function for the models
     (only use if you have the same models as me)
     """
-    return mse(y_true, y_pred) + mae(y_true, y_pred)
+    # return mse(y_true, y_pred) + mae(y_true, y_pred)
+
+    mae_error = K.abs(y_true-y_pred)
+    mse_error = (y_true-y_pred)**2
+    return K.mean(mae_error + mse_error)
 
 def linear2dir(linear, dir_range=(3, 11), to_int=True):
     delta_range = dir_range[1]-dir_range[0]
@@ -51,7 +55,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x = Activation(prev_act)(x)
     x = Dropout(drop_rate)(x)
 
-    x = Conv2D(64, kernel_size=(8,2), strides=(8,2), use_bias=False, padding='same')(x)
+    x = Conv2D(64, kernel_size=(8,10), strides=(8,10), use_bias=False, padding='same')(x)
     x = Activation(prev_act)(x)
     x = Dropout(drop_rate)(x)
     ####

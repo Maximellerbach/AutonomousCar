@@ -152,20 +152,20 @@ if __name__ == "__main__":
     # quick code to transform images from categorical to linear mode
     root_dos = "C:\\Users\\maxim\\random_data\\"
 
-    # doss = glob(root_dos+'*')
-    doss = "C:\\Users\\maxim\\random_data\\11 sim circuit 2"
+    doss = glob(root_dos+'*')
+    # doss = "C:\\Users\\maxim\\random_data\\11 sim circuit 2"
 
     save_dos = "linear"
 
-    # for i, dos in enumerate(doss):
-    #     if dos.split('\\')[-1] != save_dos:
-    #         data = Data(dos+"\\", is_float=False, recursive=False)
-    #         dts, Y = data.load_lab()
-    #         Y = data.catlab2linear_smooth(Y, window_size=(0,5))
-    #         data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
+    for i, dos in enumerate(doss):
+        if dos.split('\\')[-1] != save_dos:
+            data = Data(dos+"\\", is_float=False, recursive=False)
+            dts, Y = data.load_lab()
+            Y = data.catlab2linear_smooth(Y, window_size=(0,3))
+            data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
     
-    if doss.split('\\')[-1] != save_dos:
-        data = Data(doss+"\\", is_float=False, recursive=False)
-        dts, Y = data.load_lab()
-        Y = data.catlab2linear_smooth(Y, window_size=(0,5))
-        data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
+    # if doss.split('\\')[-1] != save_dos:
+    #     data = Data(doss+"\\", is_float=False, recursive=False)
+    #     dts, Y = data.load_lab()
+    #     Y = data.catlab2linear_smooth(Y, window_size=(0,3))
+    #     data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
