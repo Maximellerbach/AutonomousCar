@@ -44,13 +44,15 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def catlab2linear(self, lab, dico=[3, 5, 7, 9, 11]):
         return (dico.index(lab)-2)/2
 
-    def catlab2linear_smooth(self, lab, window_size=(0, 5), sq_factor=1):
+    def catlab2linear_smooth(self, lab, window_size=(0, 5), sq_factor=1, prev_factor=-1, after_factor=1):
         linear = [self.catlab2linear(i) for i in lab]
-        smooth = self.average_data(linear, window_size=window_size, sq_factor=sq_factor)
+        smooth = self.average_data(linear, window_size=window_size, sq_factor=sq_factor, prev_factor=prev_factor, after_factor=after_factor)
         return smooth
 
-    def average_data(self, data, window_size=(5, 5), sq_factor=1):
+    def average_data(self, data, window_size=(5, 5), sq_factor=1, prev_factor=1, after_factor=1):
         averaged = []
+        weights = ([prev_factor]*window_size[0])+([after_factor]*window_size[1])
+
         for i in range(window_size[0], len(data)-window_size[1]):
             averaged.append(np.average(data[i-window_size[0]: i+window_size[1]], axis=-1)**sq_factor)
 
@@ -134,13 +136,13 @@ class Data(): # TODO: clean data class (could be used elsewhere)
         if os.path.isdir(new_dos) == False:
             os.mkdir(new_dos)
 
-        if mode == 0:
+        if mode == 0: # save image with a new label
             for path, y in tqdm(zip(dts, Y)):
                 time.sleep(sleep) # wait a bit to avoid saving error 
                 x = self.load_img(path)
                 name = self.img_name_format(new_dos, y)
                 cv2.imwrite(name, x)
-        else:
+        else: # copy image
             for path in tqdm(dts):
                 time.sleep(sleep) # wait a bit to avoid saving error 
                 x = self.load_img(path)
@@ -161,7 +163,7 @@ if __name__ == "__main__":
         if dos.split('\\')[-1] != save_dos:
             data = Data(dos+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,3))
+            Y = data.catlab2linear_smooth(Y, window_size=(5,5), prev_factor=-0.5, after_factor=1)
             data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
     
     # if doss.split('\\')[-1] != save_dos:

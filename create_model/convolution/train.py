@@ -10,6 +10,7 @@ import cv2
 import h5py
 import keras
 import keras.backend as K
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -24,8 +25,8 @@ from tqdm import tqdm
 
 import architectures
 import autolib
-import reorder_dataset
 import pred_function
+import reorder_dataset
 # from architectures import dir_loss
 from datagenerator import image_generator
 
@@ -143,8 +144,8 @@ class classifier():
         calculate stats from linear labels
         and show label distribution 
         """
-        def round_st(st):
-            return round(st, 1)
+        def round_st(st, digit=1):
+            return round(st, digit)
 
         Y = []
 
@@ -163,10 +164,10 @@ class classifier():
                 for l in label: # will add normal + reversed if flip == True
                     Y.append(round_st(l))
 
-        d = dict(collections.Counter(Y))
-        print(d)
+        d = collections.Counter(Y)
+        plt.bar(list(d.keys()), list(d.values()), width=0.2)
+        plt.show()
 
-        return
 
     def get_frc_cat(self, dos, flip=True): 
         """
