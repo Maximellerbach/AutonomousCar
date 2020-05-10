@@ -52,7 +52,7 @@ class Data(): # TODO: clean data class (could be used elsewhere)
 
     def average_data(self, data, window_size=(5, 5), sq_factor=1, prev_factor=1, after_factor=1):
         averaged = []
-        weights = ([prev_factor/window_size[0]]*window_size[0])+([after_factor/window_size[1]]*window_size[1])
+        weights = ([prev_factor]*window_size[0])+([after_factor]*window_size[1])
 
         for i in range(window_size[0], len(data)-window_size[1]):
             averaged.append(np.average(data[i-window_size[0]: i+window_size[1]], axis=-1)**sq_factor)
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         if dos.split('\\')[-1] != save_dos:
             data = Data(dos+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(5,5), prev_factor=0.2, after_factor=0.8)
+            Y = data.catlab2linear_smooth(Y, window_size=(0,5), prev_factor=1, after_factor=1)
             data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
     
     # if doss.split('\\')[-1] != save_dos:
