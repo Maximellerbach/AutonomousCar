@@ -14,7 +14,7 @@ def dir_loss(y_true, y_pred, steer_angle=16): # TODO: not working for the moment
 
     mae_error = K.abs(y_true-y_pred)
     mse_error = (y_true-y_pred)**2
-    return K.mean(mae_error + mse_error)
+    return (mae_error + mse_error)*steer_angle
 
 def linear2dir(linear, dir_range=(3, 11), to_int=True):
     delta_range = dir_range[1]-dir_range[0]
