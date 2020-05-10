@@ -5,6 +5,7 @@ from glob import glob
 import cv2
 import numpy as np
 from tqdm import tqdm
+import shutil
 
 import reorder_dataset
 
@@ -51,7 +52,7 @@ class Data(): # TODO: clean data class (could be used elsewhere)
 
     def average_data(self, data, window_size=(5, 5), sq_factor=1, prev_factor=1, after_factor=1):
         averaged = []
-        weights = ([prev_factor]*window_size[0])+([after_factor]*window_size[1])
+        weights = ([prev_factor/window_size[0]]*window_size[0])+([after_factor/window_size[1]]*window_size[1])
 
         for i in range(window_size[0], len(data)-window_size[1]):
             averaged.append(np.average(data[i-window_size[0]: i+window_size[1]], axis=-1)**sq_factor)
@@ -131,23 +132,20 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def img_name_format(self, dos, lab, format=".png"):
         return dos+str(lab)+"_"+str(time.time())+".png"
 
-    def save(self, dts, Y=[], name="saved", mode=0, sleep=0.0001):
+    def save(self, dts, Y=[], name="saved", mode=0):
         new_dos = self.dos+"..\\"+name+"\\"
         if os.path.isdir(new_dos) == False:
             os.mkdir(new_dos)
 
         if mode == 0: # save image with a new label
             for path, y in tqdm(zip(dts, Y)):
-                time.sleep(sleep) # wait a bit to avoid saving error 
-                x = self.load_img(path)
                 name = self.img_name_format(new_dos, y)
-                cv2.imwrite(name, x)
-        else: # copy image
+                shutil.copy(path, name)
+
+        else: # copy image by loading it and resaving it 
             for path in tqdm(dts):
-                time.sleep(sleep) # wait a bit to avoid saving error 
-                x = self.load_img(path)
                 new_path = new_dos+path.split('\\')[-1]
-                cv2.imwrite(new_path, x)
+                shutil.copy(path, name)
 
 
 if __name__ == "__main__":
@@ -163,7 +161,7 @@ if __name__ == "__main__":
         if dos.split('\\')[-1] != save_dos:
             data = Data(dos+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(5,5), prev_factor=-0.5, after_factor=1)
+            Y = data.catlab2linear_smooth(Y, window_size=(5,5), prev_factor=0.2, after_factor=0.8)
             data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
     
     # if doss.split('\\')[-1] != save_dos:
