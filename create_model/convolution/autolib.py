@@ -55,7 +55,7 @@ def get_previous_label(paths, cat=True):
 
 def get_label(path, os_type = 'win', flip=True, cat=True, index=-1, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
     """
-    get the label of an image using the patern: as follow "somepath\\lab_time.png"
+    get the label of an image using the patern as following: "somepath\\lab_time.png"
     """
     label = []
 

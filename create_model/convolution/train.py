@@ -110,6 +110,7 @@ class classifier():
                 frc = self.get_frc_cat(self.dospath, flip=flip)
             else:
                 frc = [1]
+                self.show_distribution(self.dospath, flip=flip)
 
         elif self.recurrence == False and self.dosdir == True:
             gdos, datalen = reorder_dataset.load_dataset(self.dospath)
@@ -121,6 +122,7 @@ class classifier():
                 frc = self.get_frc_cat(self.dospath+"*", flip=flip)
             else:
                 frc = [1]
+                self.show_distribution(self.dospath, flip=flip)
                 
         else:
             datalen = len(glob(self.dospath))
@@ -132,6 +134,7 @@ class classifier():
                 frc = self.get_frc_cat(self.dospath, flip=flip)
             else:
                 frc = [1]
+                self.show_distribution(self.dospath, flip=flip)
 
         return gdos, valdos, frc, datalen
 
@@ -140,6 +143,29 @@ class classifier():
         calculate stats from linear labels
         and show label distribution 
         """
+        def round_st(st):
+            return round(st, 1)
+
+        Y = []
+
+        if self.dosdir:
+            for d in tqdm(glob(dos)):
+                for i in glob(d+'\\*'):
+                    label = autolib.get_label(i, flip=flip, cat=False) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+
+                    for l in label: # will add normal + reversed if flip == True
+                        Y.append(round_st(l))
+
+        else:
+            for i in tqdm(glob(dos)):
+                label = autolib.get_label(i, flip=flip, cat=False) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+
+                for l in label: # will add normal + reversed if flip == True
+                    Y.append(round_st(l))
+
+        d = dict(collections.Counter(Y))
+        print(d)
+
         return
 
     def get_frc_cat(self, dos, flip=True): 
@@ -151,7 +177,7 @@ class classifier():
 
         if self.dosdir == True:
             for d in tqdm(glob(dos)):
-                for i in glob(dos+'\\*'):
+                for i in glob(d+'\\*'):
                     label = autolib.get_label(i, flip=flip, cat=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
 
                     Y.append(label[0])
