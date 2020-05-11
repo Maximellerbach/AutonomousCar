@@ -45,17 +45,17 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def catlab2linear(self, lab, dico=[3, 5, 7, 9, 11]):
         return (dico.index(lab)-2)/2
 
-    def catlab2linear_smooth(self, lab, window_size=(0, 5), sq_factor=1, prev_factor=-1, after_factor=1):
+    def catlab2linear_smooth(self, lab, window_size=(0, 5), sq_factor=1, prev_factor=1, after_factor=1, offset=0):
         linear = [self.catlab2linear(i) for i in lab]
-        smooth = self.average_data(linear, window_size=window_size, sq_factor=sq_factor, prev_factor=prev_factor, after_factor=after_factor)
+        smooth = self.average_data(linear, window_size=window_size, sq_factor=sq_factor, prev_factor=prev_factor, after_factor=after_factor, offset=offset)
         return smooth
 
-    def average_data(self, data, window_size=(5, 5), sq_factor=1, prev_factor=1, after_factor=1):
+    def average_data(self, data, window_size=(5, 5), sq_factor=1, prev_factor=1, after_factor=1, offset=0):
         averaged = []
         weights = ([prev_factor]*window_size[0])+([after_factor]*window_size[1])
 
-        for i in range(window_size[0], len(data)-window_size[1]):
-            averaged.append(np.average(data[i-window_size[0]: i+window_size[1]], axis=-1)**sq_factor)
+        for i in range(window_size[0], len(data)-window_size[1]-offset):
+            averaged.append(np.average(data[(i+offset)-window_size[0]: (i+offset)+window_size[1]], axis=-1)**sq_factor)
 
         data[window_size[0]:-window_size[1]] = averaged
 
@@ -139,13 +139,15 @@ class Data(): # TODO: clean data class (could be used elsewhere)
 
         if mode == 0: # save image with a new label
             for path, y in tqdm(zip(dts, Y)):
+                time.sleep(0.0001)
                 name = self.img_name_format(new_dos, y)
                 shutil.copy(path, name)
 
         else: # copy image by loading it and resaving it 
             for path in tqdm(dts):
+                time.sleep(0.0001)
                 new_path = new_dos+path.split('\\')[-1]
-                shutil.copy(path, name)
+                shutil.copy(path, new_path)
 
 
 if __name__ == "__main__":
@@ -161,7 +163,7 @@ if __name__ == "__main__":
         if dos.split('\\')[-1] != save_dos:
             data = Data(dos+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,5), prev_factor=1, after_factor=1)
+            Y = data.catlab2linear_smooth(Y, window_size=(0,1), prev_factor=1, after_factor=1, offset=3)
             data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
     
     # if doss.split('\\')[-1] != save_dos:
