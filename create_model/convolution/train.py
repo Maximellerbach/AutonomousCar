@@ -221,7 +221,7 @@ if __name__ == "__main__":
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=True, flip=True, epochs=3, batch_size=16)
+    # AI.train(load=True, flip=True, epochs=3, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     # iteration_speed = pred_function.evaluate_speed(AI)
     # print(iteration_speed)
 
-    test_dos = 'C:\\Users\\maxim\\datasets\\11 sim circuit 2\\'
+    test_dos = 'C:\\Users\\maxim\\datasets\\12 sim circuit 2 new\\'
     pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 4000))
     pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 
