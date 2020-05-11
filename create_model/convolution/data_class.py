@@ -55,7 +55,13 @@ class Data(): # TODO: clean data class (could be used elsewhere)
         weights = ([prev_factor]*window_size[0])+([after_factor]*window_size[1])
 
         for i in range(window_size[0], len(data)-window_size[1]-offset):
-            averaged.append(np.average(data[(i+offset)-window_size[0]: (i+offset)+window_size[1]], axis=-1)**sq_factor)
+            av = np.average(data[(i+offset)-window_size[0]: (i+offset)+window_size[1]], axis=-1)
+            if av>=0:
+                av = av**sq_factor
+            else:
+                av = -np.absolute(av)**sq_factor
+
+            averaged.append(av)
 
         data[window_size[0]:-window_size[1]] = averaged
 
@@ -153,24 +159,24 @@ class Data(): # TODO: clean data class (could be used elsewhere)
 if __name__ == "__main__":
     # quick code to transform images from categorical to linear mode
     root_dos = "C:\\Users\\maxim\\random_data\\"
-    single_dos = False
 
-    doss = root_dos
-    # doss = "C:\\Users\\maxim\\random_data\\11 sim circuit 2"
+    # doss = root_dos
+    doss = "C:\\Users\\maxim\\random_data\\12 sim circuit 2 new"
+    single_dos = True
 
     save_dos = "linear"
     if single_dos:
         if doss.split('\\')[-1] != save_dos:
             data = Data(doss+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,5), prev_factor=1, after_factor=1, offset=3)
+            Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=0.7, prev_factor=1, after_factor=1, offset=1)
             data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
     else:
         for i, dos in enumerate(glob(doss+'*')):
             if dos.split('\\')[-1] != save_dos:
                 data = Data(dos+"\\", is_float=False, recursive=False)
                 dts, Y = data.load_lab()
-                Y = data.catlab2linear_smooth(Y, window_size=(0,5), prev_factor=1, after_factor=1, offset=3)
+                Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=0.7, prev_factor=1, after_factor=1, offset=1)
                 data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
         
         
