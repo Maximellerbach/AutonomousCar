@@ -40,22 +40,18 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     # x = GaussianNoise(0.2)(inp)
     
     x = Conv2D(12, kernel_size=5, strides=2, use_bias=False, padding='same')(inp)
-    x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(drop_rate)(x)
 
     x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
-    x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(drop_rate)(x)
 
     x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
-    x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(drop_rate)(x)
     
     x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
-    x = BatchNormalization()(x)
     x = Activation(prev_act)(x)
     x = Dropout(drop_rate)(x)
 
