@@ -34,7 +34,7 @@ def cat2linear(ny):
         averages.append(average)
     return averages
 
-def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", drop_rate=0.15, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
+def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
 
     inp = Input(shape=img_shape)
     # x = GaussianNoise(0.2)(inp)
@@ -83,7 +83,7 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     y = Activation(prev_act)(y)
     y = Dropout(drop_rate)(y)
     
-    y = Dense(25, use_bias=False)(y)
+    y = Dense(10, use_bias=False)(y)
     y = Activation(prev_act)(y)
     y = Dropout(drop_rate)(y)
 
