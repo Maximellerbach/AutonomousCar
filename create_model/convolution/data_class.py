@@ -159,24 +159,23 @@ class Data(): # TODO: clean data class (could be used elsewhere)
 if __name__ == "__main__":
     # quick code to transform images from categorical to linear mode
     root_dos = "C:\\Users\\maxim\\random_data\\"
-
-    # doss = root_dos
-    doss = "C:\\Users\\maxim\\random_data\\8 sim correction"
-    single_dos = True
-
     save_dos = "linear"
+
+    doss = "C:\\Users\\maxim\\random_data\\"
+    single_dos = False
+
     if single_dos:
         if doss.split('\\')[-1] != save_dos:
             data = Data(doss+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=0.7, prev_factor=1, after_factor=1, offset=1)
+            Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
             data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
     else:
         for i, dos in enumerate(glob(doss+'*')):
             if dos.split('\\')[-1] != save_dos:
                 data = Data(dos+"\\", is_float=False, recursive=False)
                 dts, Y = data.load_lab()
-                Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=0.7, prev_factor=1, after_factor=1, offset=1)
+                Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
                 data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
         
         
