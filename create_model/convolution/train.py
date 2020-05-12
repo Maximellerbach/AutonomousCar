@@ -70,7 +70,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
-            model, fe = model_type((120, 160, 3), 1, loss=architectures.dir_loss, prev_act="relu", last_act="linear", regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"]) # model used for the race
+            model, fe = model_type((120, 160, 3), 1, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.1, regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"]) # model used for the race
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -111,7 +111,7 @@ class classifier():
                 frc = self.get_frc_cat(self.dospath, flip=flip)
             else:
                 frc = [1]
-                self.show_distribution(self.dospath, flip=flip)
+                self.get_frc_lin(self.dospath, flip=flip)
 
         elif self.recurrence == False and self.dosdir == True:
             gdos, datalen = reorder_dataset.load_dataset(self.dospath)
@@ -123,7 +123,7 @@ class classifier():
                 frc = self.get_frc_cat(self.dospath+"*", flip=flip)
             else:
                 frc = [1]
-                self.show_distribution(self.dospath, flip=flip)
+                self.get_frc_lin(self.dospath, flip=flip)
                 
         else:
             datalen = len(glob(self.dospath))
@@ -135,11 +135,11 @@ class classifier():
                 frc = self.get_frc_cat(self.dospath, flip=flip)
             else:
                 frc = [1]
-                self.show_distribution(self.dospath, flip=flip)
+                self.get_frc_lin(self.dospath, flip=flip)
 
         return gdos, valdos, frc, datalen
 
-    def show_distribution(self, dos, flip=True):
+    def get_frc_lin(self, dos, flip=True):
         """
         calculate stats from linear labels
         and show label distribution 
@@ -167,6 +167,10 @@ class classifier():
         d = collections.Counter(Y)
         plt.bar(list(d.keys()), list(d.values()), width=0.2)
         plt.show()
+
+        frc = class_weight.compute_class_weight('balanced', np.unique(Y), Y)
+        print(frc)
+        return frc
 
 
     def get_frc_cat(self, dos, flip=True): 
@@ -221,7 +225,7 @@ if __name__ == "__main__":
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False, flip=True, epochs=5, batch_size=16)
+    AI.train(load=False, flip=True, epochs=6, batch_size=32)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 

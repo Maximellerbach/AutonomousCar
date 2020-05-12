@@ -60,12 +60,12 @@ def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax
     x1 = Dropout(drop_rate)(x1)
     x1 = Flatten()(x1)
     
-    x2 = Conv2D(8, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
+    x2 = Conv2D(16, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
     x2 = Activation(prev_act)(x2)
     x2 = Dropout(drop_rate)(x2)
     x2 = Flatten()(x2)
     
-    x3 = Conv2D(8, kernel_size=(1,10), strides=(1,10), use_bias=False, padding='same')(x)
+    x3 = Conv2D(16, kernel_size=(1,10), strides=(1,10), use_bias=False, padding='same')(x)
     x3 = Activation(prev_act)(x3)
     x3 = Dropout(drop_rate)(x3)
     x3 = Flatten()(x3)
