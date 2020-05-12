@@ -161,7 +161,7 @@ if __name__ == "__main__":
     root_dos = "C:\\Users\\maxim\\random_data\\"
 
     # doss = root_dos
-    doss = "C:\\Users\\maxim\\random_data\\12 sim circuit 2 new"
+    doss = "C:\\Users\\maxim\\random_data\\8 sim correction"
     single_dos = True
 
     save_dos = "linear"
