@@ -89,16 +89,15 @@ class classifier():
         """
 
         self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat) # TODO: add folder weights
-        # frc = [1]*5 # temporary to test some stuff
 
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
 
         earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, batch_size, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, batch_size, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
-                                class_weight=frc, callbacks=[earlystop], max_queue_size=5, workers=8)
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, batch_size, frc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
+                                validation_data=image_generator(self.valdos, self.datalen, batch_size, frc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
+                                callbacks=[earlystop], max_queue_size=5, workers=8)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
@@ -110,8 +109,7 @@ class classifier():
             if cat:
                 frc = self.get_frc_cat(self.dospath, flip=flip)
             else:
-                frc = [1]
-                self.get_frc_lin(self.dospath, flip=flip)
+                frc = self.get_frc_lin(self.dospath, flip=flip)
 
         elif self.recurrence == False and self.dosdir == True:
             gdos, datalen = reorder_dataset.load_dataset(self.dospath)
@@ -122,8 +120,7 @@ class classifier():
             if cat:
                 frc = self.get_frc_cat(self.dospath+"*", flip=flip)
             else:
-                frc = [1]
-                self.get_frc_lin(self.dospath, flip=flip)
+                frc = self.get_frc_lin(self.dospath, flip=flip)
                 
         else:
             datalen = len(glob(self.dospath))
@@ -134,8 +131,7 @@ class classifier():
             if cat:
                 frc = self.get_frc_cat(self.dospath, flip=flip)
             else:
-                frc = [1]
-                self.get_frc_lin(self.dospath, flip=flip)
+                frc = self.get_frc_lin(self.dospath, flip=flip)
 
         return gdos, valdos, frc, datalen
 
@@ -168,9 +164,12 @@ class classifier():
         plt.bar(list(d.keys()), list(d.values()), width=0.2)
         plt.show()
 
-        frc = class_weight.compute_class_weight('balanced', np.unique(Y), Y)
-        print(frc)
-        return frc
+        unique = np.unique(Y)
+        frc = class_weight.compute_class_weight('balanced', unique, Y)
+        dict_frc = dict(zip(unique, frc))
+
+        print(dict_frc)
+        return dict_frc
 
 
     def get_frc_cat(self, dos, flip=True): 
@@ -203,10 +202,14 @@ class classifier():
         l = len(Y)
         for i in range(5):
             prc[i] = d[i]/l
+        print(prc)
 
-        frc = class_weight.compute_class_weight('balanced', np.unique(Y), Y)
-        print(frc, prc)
-        return frc
+        unique = np.unique(Y)
+        frc = class_weight.compute_class_weight('balanced', unique, Y)
+        dict_frc = dict(zip(unique, frc))
+
+        print(dict_frc)
+        return dict_frc
     
 
     def calculate_FLOPS(self):
@@ -225,7 +228,7 @@ if __name__ == "__main__":
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False, flip=True, epochs=6, batch_size=32)
+    AI.train(load=True, flip=True, epochs=1, batch_size=32)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 

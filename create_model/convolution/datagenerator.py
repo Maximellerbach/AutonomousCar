@@ -5,13 +5,14 @@ import cv2
 from glob import glob
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size=32, augm=True, proportion=0.15, cat=True, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False):
+    def __init__(self, img_path, datalen, batch_size, frc, augm=True, proportion=0.15, cat=True, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
         self.img_rows = shape[1]
         self.batch_size = batch_size
         self.img_path = img_path
+        self.frc = frc
         self.n_classes = n_classes
         self.memory_size = memory+1
         self.datalen = datalen
@@ -67,11 +68,11 @@ class image_generator(keras.utils.Sequence):
             ybatch = np.concatenate((ybatch, yflip))
 
         # ybatch = to_categorical(ybatch, self.n_classes)
-        if self.cat == True:
+        if self.cat:
             ybatch = autolib.label_smoothing(ybatch, self.n_classes, self.smoothing, random=self.label_rdm)
         
-
-        return xbatch/255, ybatch
+        weight = autolib.get_weight(ybatch, self.frc, self.cat)
+        return xbatch/255, ybatch, weight
 
     def __data_generationseq(self, dos_path, memory_size):
         fold = np.random.randint(0, len(dos_path), size=self.batch_size)
@@ -200,7 +201,7 @@ class image_generator(keras.utils.Sequence):
             return [X1, X2], Y
         
         else:
-            X, Y = self.__data_generation(self.img_path)
-            return X, Y
+            X, Y, W = self.__data_generation(self.img_path)
+            return X, Y, W
 
 

@@ -78,6 +78,17 @@ def get_label(path, os_type = 'win', flip=True, cat=True, index=-1, dico=[3,5,7,
 
     return label
 
+def get_weight(Y, frc, to_cat):
+    w = []
+    for y in Y:
+        if to_cat:
+            w.append(frc[y])
+        else:
+            r = round(y, 1)
+            w.append(frc[r])
+
+    return np.array(w)
+
 def cut_img(img, c):
     img = img[c:, :, :]
     return img
