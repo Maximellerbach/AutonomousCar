@@ -34,68 +34,72 @@ def cat2linear(ny):
         averages.append(average)
     return averages
 
-def create_light_CNN(img_shape, number_class, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
+
+def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
+
+    if load_fe == True:
+        fe = load_model('test_model\\convolution\\fe.h5')
+    
+    else:
+        inp = Input(shape=img_shape)
+
+        x = BatchNormalization()(inp)
+        # x = GaussianNoise(0.2)(inp)
+
+        x = Conv2D(12, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
+        x = Activation(prev_act)(x)
+        x = Dropout(drop_rate)(x)
+
+        x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
+        x = Activation(prev_act)(x)
+        x = Dropout(drop_rate)(x)
+
+        x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
+        x = Activation(prev_act)(x)
+        x = Dropout(drop_rate)(x)
+        
+        x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
+        x = Activation(prev_act)(x)
+        x = Dropout(drop_rate)(x)
+
+        x1 = Conv2D(64, kernel_size=(8,10), strides=(8,10), use_bias=False, padding='same')(x)
+        x1 = Activation(prev_act)(x1)
+        x1 = Dropout(drop_rate)(x1)
+        x1 = Flatten()(x1)
+        
+        x2 = Conv2D(16, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
+        x2 = Activation(prev_act)(x2)
+        x2 = Dropout(drop_rate)(x2)
+        x2 = Flatten()(x2)
+        
+        x3 = Conv2D(16, kernel_size=(1,10), strides=(1,10), use_bias=False, padding='same')(x)
+        x3 = Activation(prev_act)(x3)
+        x3 = Dropout(drop_rate)(x3)
+        x3 = Flatten()(x3)
+
+        x = Concatenate()([x1, x2, x3])
+        ####
+
+        fe = Model(inp, x)
 
     inp = Input(shape=img_shape)
-    # x = GaussianNoise(0.2)(inp)
-    
-    x = Conv2D(12, kernel_size=5, strides=2, use_bias=False, padding='same')(inp)
-    x = Activation(prev_act)(x)
-    x = Dropout(drop_rate)(x)
-
-    x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
-    x = Activation(prev_act)(x)
-    x = Dropout(drop_rate)(x)
-
-    x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
-    x = Activation(prev_act)(x)
-    x = Dropout(drop_rate)(x)
-    
-    x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
-    x = Activation(prev_act)(x)
-    x = Dropout(drop_rate)(x)
-
-    x1 = Conv2D(64, kernel_size=(8,10), strides=(8,10), use_bias=False, padding='same')(x)
-    x1 = Activation(prev_act)(x1)
-    x1 = Dropout(drop_rate)(x1)
-    x1 = Flatten()(x1)
-    
-    x2 = Conv2D(16, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
-    x2 = Activation(prev_act)(x2)
-    x2 = Dropout(drop_rate)(x2)
-    x2 = Flatten()(x2)
-    
-    x3 = Conv2D(16, kernel_size=(1,10), strides=(1,10), use_bias=False, padding='same')(x)
-    x3 = Activation(prev_act)(x3)
-    x3 = Dropout(drop_rate)(x3)
-    x3 = Flatten()(x3)
-
-    x = Concatenate()([x1, x2, x3])
-    ####
-
-    fe = Model(inp, x)
-    inp = Input(shape=img_shape)
-
     y = fe(inp)
-    # y = Flatten()(y)
 
     y = Dense(50, use_bias=False)(y)
     y = Activation(prev_act)(y)
     y = Dropout(drop_rate)(y)
     
-    y = Dense(10, use_bias=False)(y)
+    y = Dense(25, use_bias=False)(y)
     y = Activation(prev_act)(y)
-    y = Dropout(drop_rate)(y)
 
     if recurrence == True:
         inp2 = Input((memory, 5))
         y2 = Flatten()(inp2)
-        y2 = Dropout(0.2)(y2)
         
         y2 = Dense(50, use_bias=False)(y2)
         y2 = Activation(prev_act)(y2)
 
-        y = concatenate([y, y2])    
+        y = concatenate([y, y2])
 
     z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
 

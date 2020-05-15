@@ -5,18 +5,22 @@ import cv2
 from glob import glob
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size, frc, augm=True, proportion=0.15, cat=True, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False):
+    def __init__(self, img_path, datalen, batch_size, frc, weight_acc=0.5, augm=True, proportion=0.15, cat=True, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
         self.img_rows = shape[1]
         self.batch_size = batch_size
         self.img_path = img_path
+
         self.frc = frc
+        self.weight_acc = weight_acc
+
         self.n_classes = n_classes
         self.memory_size = memory+1
         self.datalen = datalen
         self.seq = seq
+
         self.reconstruction = reconstruction
         self.proportion = proportion
         self.smoothing = smoothing
@@ -71,7 +75,7 @@ class image_generator(keras.utils.Sequence):
         if self.cat:
             ybatch = autolib.label_smoothing(ybatch, self.n_classes, self.smoothing, random=self.label_rdm)
         
-        weight = autolib.get_weight(ybatch, self.frc, self.cat)
+        weight = autolib.get_weight(ybatch, self.frc, self.cat, acc=self.weight_acc)
         return xbatch/255, ybatch, weight
 
     def __data_generationseq(self, dos_path, memory_size):

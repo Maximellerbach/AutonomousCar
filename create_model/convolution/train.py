@@ -37,7 +37,7 @@ config.log_device_placement = True  # to log device placement (on which device t
 set_session(sess) # set this TensorFlow session as the default
 
 class classifier():
-    def __init__(self, name, impath='', dospath='', recurrence=False, dosdir=True, memory_size=49, proportion=0.15, to_cat=True, smoothing=0, label_rdm=0):
+    def __init__(self, name, impath='', dospath='', recurrence=False, dosdir=True, memory_size=49, proportion=0.15, to_cat=True, weight_acc=0.5, smoothing=0, label_rdm=0):
         
         self.name = name
         self.impath = impath
@@ -55,6 +55,7 @@ class classifier():
         self.number_class = 5
         self.proportion = proportion
         self.to_cat = to_cat
+        self.weight_acc = weight_acc
         self.smoothing = smoothing
         self.label_rdm = label_rdm
 
@@ -70,7 +71,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
-            model, fe = model_type((120, 160, 3), 1, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"]) # model used for the race
+            model, fe = model_type((120, 160, 3), 1, load_fe=True, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"]) # model used for the race
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -95,8 +96,8 @@ class classifier():
 
         earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, batch_size, frc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, batch_size, frc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
+        self.model.fit_generator(image_generator(self.gdos, self.datalen, batch_size, frc, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
+                                validation_data=image_generator(self.valdos, self.datalen, batch_size, frc, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
                                 callbacks=[earlystop], max_queue_size=5, workers=8)
 
         self.model.save(self.name)
@@ -140,9 +141,6 @@ class classifier():
         calculate stats from linear labels
         and show label distribution 
         """
-        def round_st(st, digit=1):
-            return round(st, digit)
-
         Y = []
 
         if self.dosdir:
@@ -151,24 +149,23 @@ class classifier():
                     label = autolib.get_label(i, flip=flip, cat=False) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
 
                     for l in label: # will add normal + reversed if flip == True
-                        Y.append(round_st(l))
+                        Y.append(autolib.round_st(l, self.weight_acc))
 
         else:
             for i in tqdm(glob(dos)):
                 label = autolib.get_label(i, flip=flip, cat=False) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
 
                 for l in label: # will add normal + reversed if flip == True
-                    Y.append(round_st(l))
+                    Y.append(autolib.round_st(l, self.weight_acc))
 
         d = collections.Counter(Y)
-        plt.bar(list(d.keys()), list(d.values()), width=0.2)
-        plt.show()
 
         unique = np.unique(Y)
         frc = class_weight.compute_class_weight('balanced', unique, Y)
         dict_frc = dict(zip(unique, frc))
 
-        print(dict_frc)
+        plt.bar(list(d.keys()), list(d.values()), width=0.2)
+        plt.show()
         return dict_frc
 
 
@@ -223,12 +220,12 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\linear_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.5, to_cat=False, smoothing=0.0, label_rdm=0.0) 
+                    recurrence=False, dosdir=True, proportion=0.3, to_cat=False, weight_acc=0.5, smoothing=0.0, label_rdm=0.0) 
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False, flip=True, epochs=5, batch_size=16)
+    AI.train(load=True, flip=True, epochs=2, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
@@ -236,8 +233,8 @@ if __name__ == "__main__":
     # iteration_speed = pred_function.evaluate_speed(AI)
     # print(iteration_speed)
 
-    test_dos = 'C:\\Users\\maxim\\datasets\\12 sim circuit 2 new\\'
-    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 4000))
+    test_dos = 'C:\\Users\\maxim\\datasets\\9 sim fast\\'
+    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, -1))
     pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 
     cv2.destroyAllWindows()

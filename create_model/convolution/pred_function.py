@@ -27,26 +27,22 @@ def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
     paths = paths[dt_range[0]:dt_range[1]]
     dts_len = len(paths)
 
-    X = []
     Y = []
+    pred = []
     for path in tqdm(paths):
         lab = autolib.get_label(path, flip=False, cat=self.to_cat)[0]
 
         Y.append(lab)
-        X.append(cv2.imread(path)/255)
+        pred.append(self.model.predict(np.expand_dims(cv2.imread(path)/255, axis=0))[0])
 
-    X = np.array(X)
     if self.to_cat:
         Y = to_categorical(Y)
         Y = architectures.cat2linear(Y)
+        pred = architectures.cat2linear(pred)
 
     # Y = average_data(Y, window_size=10)
 
-    pred_Y = self.model.predict(X)
-    if self.to_cat:
-        pred_Y = architectures.cat2linear(pred_Y)
-
-    plt.plot([i for i in range(dts_len)], Y, pred_Y)
+    plt.plot([i for i in range(dts_len)], Y, pred)
     plt.show()
 
 

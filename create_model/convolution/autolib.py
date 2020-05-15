@@ -78,13 +78,17 @@ def get_label(path, os_type = 'win', flip=True, cat=True, index=-1, dico=[3,5,7,
 
     return label
 
-def get_weight(Y, frc, to_cat):
+def round_st(st, acc=0.5):
+    n_val = 1/acc
+    return round(st*n_val, 0)/n_val
+
+def get_weight(Y, frc, to_cat, acc=0.5):
     w = []
     for y in Y:
         if to_cat:
             w.append(frc[y])
         else:
-            r = round(y, 1)
+            r = round_st(y, acc)
             w.append(frc[r])
 
     return np.array(w)

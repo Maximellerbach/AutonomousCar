@@ -168,14 +168,14 @@ if __name__ == "__main__":
         if doss.split('\\')[-1] != save_dos:
             data = Data(doss+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=0.7, prev_factor=1, after_factor=1, offset=1)
+            Y = data.catlab2linear_smooth(Y, window_size=(0,1), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
             data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
     else:
         for i, dos in enumerate(glob(doss+'*')):
             if dos.split('\\')[-1] != save_dos:
                 data = Data(dos+"\\", is_float=False, recursive=False)
                 dts, Y = data.load_lab()
-                Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=0.7, prev_factor=1, after_factor=1, offset=1)
+                Y = data.catlab2linear_smooth(Y, window_size=(0,1), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
                 data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
         
         
