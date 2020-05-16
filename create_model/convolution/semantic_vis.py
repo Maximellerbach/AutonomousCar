@@ -18,6 +18,10 @@ for path in glob(dos):
 
     # print(pred)
     cv2.imshow('img', img)
-    cv2.imshow('pred0', pred[:, :, 0])
-    cv2.imshow('pred1', pred[:, :, 1])
-    cv2.waitKey(33)
+    cv2.imshow('pred', pred)
+
+    # cv2.imshow('pred0', pred[:, :, 0])
+    # cv2.imshow('pred1', pred[:, :, 1])
+    # cv2.imshow('pred2', pred[:, :, 2])
+
+    cv2.waitKey(1)

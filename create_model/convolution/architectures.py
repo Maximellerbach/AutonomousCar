@@ -36,6 +36,16 @@ def cat2linear(ny):
 
 
 def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
+    
+    def conv_block(n_filter, kernel_size, strides, x, drop=drop_rate, activation=prev_act, use_bias=False, flatten=False, batchnorm=False):
+        x = Conv2D(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding='same')(x)
+        if batchnorm:
+            x = BatchNormalization(axis=3)(x)
+        x = Activation(activation)(x)
+        x = Dropout(drop)(x)
+        if flatten:
+            x = Flatten()(x)
+        return x
 
     if load_fe == True:
         fe = load_model('test_model\\convolution\\fe.h5')
@@ -46,40 +56,15 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         x = BatchNormalization()(inp)
         # x = GaussianNoise(0.2)(inp)
 
-        x = Conv2D(12, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
-        x = Activation(prev_act)(x)
-        x = Dropout(drop_rate)(x)
+        x = conv_block(12, 5, 2, x, drop=0)
+        x = conv_block(16, 5, 2, x, drop=0)
+        x = conv_block(32, 3, 2, x, drop=0)
+        x = conv_block(48, 3, 2, x, drop=0)
+        x = conv_block(3, 3, 1, x, activation='softmax', drop=0)
 
-        x = Conv2D(16, kernel_size=5, strides=2, use_bias=False, padding='same')(x)
-        x = Activation(prev_act)(x)
-        x = Dropout(drop_rate)(x)
-
-        x = Conv2D(32, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
-        x = Activation(prev_act)(x)
-        x = Dropout(drop_rate)(x)
-        
-        x = Conv2D(48, kernel_size=3, strides=2, use_bias=False, padding='same')(x)
-        x = Activation(prev_act)(x)
-        x = Dropout(drop_rate)(x)
-        
-        x = Conv2D(3, kernel_size=3, strides=1, use_bias=False, padding='same')(x)
-        x = Activation('softmax')(x)
-        x = Dropout(drop_rate)(x)
-
-        x1 = Conv2D(64, kernel_size=(8,10), strides=(8,10), use_bias=False, padding='same')(x)
-        x1 = Activation(prev_act)(x1)
-        x1 = Dropout(drop_rate)(x1)
-        x1 = Flatten()(x1)
-        
-        x2 = Conv2D(16, kernel_size=(8,1), strides=(8,1), use_bias=False, padding='same')(x)
-        x2 = Activation(prev_act)(x2)
-        x2 = Dropout(drop_rate)(x2)
-        x2 = Flatten()(x2)
-        
-        x3 = Conv2D(16, kernel_size=(1,10), strides=(1,10), use_bias=False, padding='same')(x)
-        x3 = Activation(prev_act)(x3)
-        x3 = Dropout(drop_rate)(x3)
-        x3 = Flatten()(x3)
+        x1 = conv_block(64, (8,10), (8,10), x, flatten=True)
+        x2 = conv_block(16, (8,1), (8,1), x, flatten=True)
+        x3 = conv_block(16, (1,10), (1,10), x, flatten=True)
 
         x = Concatenate()([x1, x2, x3])
         ####
@@ -310,13 +295,6 @@ def create_lightlatent_CNN(img_shape, number_class, prev_act="relu", last_act="s
     model.compile(loss=loss,optimizer=Adam() ,metrics=metrics)
 
     return model, fe
-
-def conv_block(x, conv, args=[8, 3, 1], activation="relu", batchnorm=True): # TODO: add beter args
-    x = conv(args[0], args[1], args[2])(x)
-    if batchnorm == True:
-        x = BatchNormalization()(x)
-    x = Activation(activation)(x)
-    return x
     
 def flatten_model(path, save_path=None):
     model = load_model(path, custom_objects={"dir_loss":dir_loss})
