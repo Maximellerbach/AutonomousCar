@@ -71,7 +71,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
-            model, fe = model_type((120, 160, 3), 1, load_fe=True, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"]) # model used for the race
+            model, fe = model_type((120, 160, 3), 1, load_fe=False, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.1, regularizer=(0.0, 0.0), lr=0.001, last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"]) # model used for the race
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -219,13 +219,13 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\linear_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
+    AI = classifier(name = 'test_model\\convolution\\linearv2_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
                     recurrence=False, dosdir=True, proportion=0.3, to_cat=False, weight_acc=0.5, smoothing=0.0, label_rdm=0.0) 
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=True, flip=True, epochs=2, batch_size=16)
+    AI.train(load=False, flip=True, epochs=3, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 

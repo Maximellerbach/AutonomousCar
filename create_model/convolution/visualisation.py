@@ -20,11 +20,11 @@ sess = tf.Session(config=config)
 config.log_device_placement = True  # to log device placement (on which device the operation ran)
 set_session(sess) # set this TensorFlow session as the default
 
-model = load_model('test_model\\convolution\\lightv7_mix.h5') # , custom_objects={"dir_loss":architectures.dir_loss})
+model = load_model('test_model\\convolution\\fe.h5') # , custom_objects={"dir_loss":architectures.dir_loss})
 for it, i in enumerate(model.layers):
     print(i.name, it)
 
-paths = glob('C:\\Users\\maxim\\datasets\\1 ironcar driving\\*')
+paths = glob('C:\\Users\\maxim\\datasets\\2 donkeycar driving\\*')
 shuffle(paths)
 
 for path in paths:
@@ -32,7 +32,7 @@ for path in paths:
     img = cv2.resize(img, (160, 120))/255
     to_pred = np.expand_dims(img, axis=0)
 
-    layer_to_study = 7
+    layer_to_study = -1
     n_filter = get_num_filters(model.layers[layer_to_study])
     preds = model.predict(to_pred)[0]
     final_hp = np.zeros((120, 160))
