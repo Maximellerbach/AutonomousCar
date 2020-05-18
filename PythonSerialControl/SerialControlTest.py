@@ -69,7 +69,7 @@ for opt, arg in opts:
 
             while(True):
                 print("Turns:" + str(ser.GetTurns()))
-                time.sleep(200)
+                time.sleep(0.2)
         except KeyboardInterrupt:
             ser.__exit__()
 
