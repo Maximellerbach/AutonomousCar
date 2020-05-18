@@ -1,5 +1,6 @@
 import serial
 from enum import IntEnum
+import threading
 
 class direction(IntEnum):
     DIR_LEFT_7 = 0
@@ -24,7 +25,7 @@ class motor(IntEnum):
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
 
-class control:
+class control:    
     "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
     def __init__(self, port):
         "Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows. Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0"
@@ -32,24 +33,32 @@ class control:
         #ser.port = "/dev/ttyUSB7"
         #ser.port = "/dev/ttyS2"
         self.__ser.port = port
+        #self.__ser.port = "COM3"
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS #number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE #set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE #number of stop bits
         #ser.writeTimeout = 1     #timeout for write
         self.__command = bytearray([0, 0])
+        self.__rounds = 0
+        self.__isRuning = True        
         try:
             self.__ser.open()
             print("Serial port open")
             print(self.__ser.portstr)       # check which port was really used
             self.__ser.write(self.__command)
+            #self.__ReadTurns__()
+            self.__thread = threading.Thread(target = self.__ReadTurns__)
+            self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
 
     def __enter__(self):
         return self
     
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self):
+        self.__isRuning = False
+        self.__thread.join()
         if (self.__ser.is_open):
             self.__ser.close()             # close port
 
@@ -97,6 +106,17 @@ class control:
         self.__command[1] = pwm
         if (self.__ser.is_open):
             self.__ser.write(self.__command)
+
+    def __ReadTurns__(self):    
+        while self.__isRuning:
+            out = ''
+            while(self.__ser.inWaiting() > 0):
+                out = self.__ser.readline()
+            if out != '':
+                self.__rounds = out.decode()
+    
+    def GetTurns(self):
+        return self.__rounds
 
 # lines to read for debug if needed
 # while ser.inWaiting() > 0:
