@@ -40,8 +40,8 @@ for opt, arg in opts:
             print("start changing PWM from 0 to 255")
             for pwm in range(0,255):
                 ser.ChangePWM(pwm)
-                time.sleep(0.2)
-                print("Turns:" + str(ser.GetTurns()))
+                time.sleep(0.02)
+                print("Turns", ser.GetTurns(), "pwm", pwm)
             print("finished changing PWM")
 
             print("Turns:" + str(ser.GetTurns()))
@@ -49,19 +49,19 @@ for opt, arg in opts:
             for dir in SerialCommand.direction:
                 ser.ChangeDirection(dir)
                 print("changed direction " + str(dir))
-                time.sleep(5)
+                time.sleep(1)
                 print("Turns:" + str(ser.GetTurns()))
 
             for motor in SerialCommand.motor:
                 ser.ChangeMotorA(motor)
                 print("changed motor A " + str(motor))
-                time.sleep(5)
+                time.sleep(1)
                 print("Turns:" + str(ser.GetTurns()))
 
             for motor in SerialCommand.motor:
                 ser.ChangeMotorB(motor)
                 print("changed motor B " + str(motor))
-                time.sleep(5)
+                time.sleep(1)
                 print("Turns:" + str(ser.GetTurns()))
 
             ser.ChangeAll(SerialCommand.direction.DIR_STRAIGHT, SerialCommand.motor.MOTOR_STOP, SerialCommand.motor.MOTOR_STOP, 255)
