@@ -37,7 +37,7 @@ def cat2linear(ny):
 
 def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
     
-    def conv_block(n_filter, kernel_size, strides, x, drop=drop_rate, activation=prev_act, use_bias=False, flatten=False, batchnorm=False):
+    def conv_block(n_filter, kernel_size, strides, x, drop=drop_rate, activation=prev_act, use_bias=False, flatten=False, batchnorm=True):
         x = Conv2D(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding='same')(x)
         if batchnorm:
             x = BatchNormalization(axis=3)(x)
@@ -56,20 +56,19 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         x = BatchNormalization()(inp)
         # x = GaussianNoise(0.2)(inp)
 
-        x = conv_block(12, 5, 2, x, drop=0)
-        x = conv_block(16, 5, 2, x, drop=0)
-        x = conv_block(32, 3, 2, x, drop=0)
-        x = conv_block(48, 3, 2, x, drop=0)
-        x = conv_block(64, 3, 1, x, drop=0)
-        x = conv_block(3, 1, 1, x, activation='softmax', drop=0)
+        x = conv_block(12, 5, 2, x)
+        x = conv_block(16, 5, 2, x)
+        x = conv_block(32, 3, 2, x)
+        x = conv_block(48, 3, 2, x)
+        # x = conv_block(64, 3, 1, x, drop=0)
+        # x = conv_block(3, 1, 1, x, activation='softmax', drop=0)
 
-        # x1 = conv_block(64, (8,10), (8,10), x, flatten=True)
-        # x2 = conv_block(32, (8,1), (8,1), x, flatten=True)
-        # x3 = conv_block(32, (1,10), (1,10), x, flatten=True)
-
-        # x = Concatenate()([x1, x2, x3])
+        x1 = conv_block(64, (8,10), (8,10), x, flatten=True)
+        x2 = conv_block(8, (8,1), (8,1), x, flatten=True)
+        x3 = conv_block(8, (1,10), (1,10), x, flatten=True)
+        x = Concatenate()([x1, x2, x3])
         
-        x = conv_block(128, (8,1), (8,1), x, flatten=True)
+        # x = conv_block(128, (8,1), (8,1), x, flatten=True)
 
         ####
 
@@ -77,7 +76,6 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
 
     inp = Input(shape=img_shape)
     y = fe(inp)
-    y = Dropout(0.4)(y)
 
     y = Dense(50, use_bias=False)(y)
     y = Activation(prev_act)(y)

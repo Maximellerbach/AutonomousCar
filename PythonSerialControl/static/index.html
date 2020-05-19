@@ -2,6 +2,14 @@
     <title>Pilot the autonomous car</title>
     <script>
     var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+            var ret = xhr.responseText;
+            if (ret != "ok")
+                document.getElementById('turns').innerText = ret;
+        }
+    }
+    setInterval(getTurns, 1000);
     var dir = 7;
     var pwm = 0;
     var pwminc = 15;
@@ -59,6 +67,10 @@
             } 
         }
     }
+
+    function getTurns() {
+        btn("/turns");
+    }
     
 </script>
 </head>
@@ -108,6 +120,7 @@ any value between 0 and 14 will work and you'll be adjust the direction
     <input onclick="decspeed()" type="button" value="Decrease speed">
     <br><br>
     <input onclick="stop()" type="button" value="STOP">
+    <input onclick="getTurns()" type="button"  value="update turns"><div id="turns"></div>
 
 </p>
 </body></html>

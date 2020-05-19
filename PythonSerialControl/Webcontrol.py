@@ -32,7 +32,7 @@ def getPortName(argv):
             printusage()
             sys.exit()
         elif opt in ("-c", "--com"):
-            comPort = arg
+            comPort = arg.strip()
         else:
             printusage()
             sys.exit(2)
@@ -91,6 +91,11 @@ def pilotpwm(pwm):
 def pilotstop():
     ser.ChangeAll(direction.DIR_STRAIGHT,motor.MOTOR_STOP,motor.MOTOR_STOP,0)
     return OK
+
+@app.route('/turns')
+def turns():
+    out = ser.GetTurns()
+    return str(out)
 
 if __name__ == '__main__':
 

@@ -161,21 +161,21 @@ if __name__ == "__main__":
     root_dos = "C:\\Users\\maxim\\random_data\\"
     save_dos = "linear"
 
-    doss = "C:\\Users\\maxim\\random_data\\"
-    single_dos = False
+    doss = "C:\\Users\\maxim\\random_data\\13 sim new circuit"
+    single_dos = True
 
     if single_dos:
         if doss.split('\\')[-1] != save_dos:
             data = Data(doss+"\\", is_float=False, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,1), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
+            Y = data.catlab2linear_smooth(Y, window_size=(2,5), sq_factor=1, prev_factor=0.5, after_factor=1, offset=1)
             data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
     else:
         for i, dos in enumerate(glob(doss+'*')):
             if dos.split('\\')[-1] != save_dos:
                 data = Data(dos+"\\", is_float=False, recursive=False)
                 dts, Y = data.load_lab()
-                Y = data.catlab2linear_smooth(Y, window_size=(0,1), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
+                Y = data.catlab2linear_smooth(Y, window_size=(2,5), sq_factor=1, prev_factor=0.5, after_factor=1, offset=1)
                 data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
         
         

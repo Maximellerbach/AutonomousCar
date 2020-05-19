@@ -54,10 +54,15 @@ Servo servoDirection;
 #define MOTOR_A_PIN_A 8 // 5
 #define MOTOR_A_PIN_B 7 //4
 // Motor B
-#define MOTOR_B_PIN_A 2 //0
+#define MOTOR_B_PIN_A 9 //0
 #define MOTOR_B_PIN_B 4 //2
 //PWM pin
-#define PWM_PIN 3 //14
+#define PWM_PIN 5 //14
+//Output pulses.
+int pulses;
+#define ENCODER_A 2
+#define ENCODER_B 3
+bool pulsesChanged = false;
 
 void setup() {
   // put your setup code here, to run once:
@@ -89,14 +94,33 @@ void setup() {
   // Next lines for Arduino
   pinMode(PWM_PIN, OUTPUT);
   analogWrite(PWM_PIN, 0);
+  pinMode(ENCODER_A, INPUT);
+  pinMode(ENCODER_B, INPUT);
+  attachInterrupt(0, A_CHANGE, CHANGE);
 }
 
 void loop() {
-
+  if (pulsesChanged) {
+      pulsesChanged = false;
+      Serial.println(pulses);
+  }
   if (Serial.available()) {
     Serial.readBytes(buffData, 2);
-    DecryptSerial();
+    DecryptSerial();    
+  }  
+}
+
+void A_CHANGE(){
+  if( digitalRead(ENCODER_B) == 0 ) {
+    if ( digitalRead(ENCODER_A) == 0 ) {
+      // A fell, B is low
+      pulses--; // moving reverse
+    } else {
+      // A rose, B is low
+      pulses++; // moving forward
+    }
   }
+  pulsesChanged = true;
 }
 
 void DecryptSerial()
