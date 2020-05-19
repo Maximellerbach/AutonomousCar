@@ -14,12 +14,13 @@ ser = SerialCommand.control(serialport)
 wi = 160
 he = 120
 
-speed = int(input('speed: '))
+model = load_model("lightv6_mix.h5")
+
 
 dico = [10,8,6,4,2]
 dico_save = [3,5,7,9,11]
 dico_speed = [1, 0.9, 0.8, 0.9, 1]
-model = load_model("lightv6_mix.h5")
+speed = int(input('speed: '))
 
 '''
 vel_sensor = IMUSensor.sensor(10, 1000)
