@@ -35,8 +35,8 @@ def cat2linear(ny):
     return averages
 
 
-def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, memory=49):
-    
+def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, load_speed=False, memory=49):
+    inputs = []
     def conv_block(n_filter, kernel_size, strides, x, drop=drop_rate, activation=prev_act, use_bias=False, flatten=False, batchnorm=True):
         x = Conv2D(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding='same')(x)
         if batchnorm:
@@ -52,7 +52,6 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     
     else:
         inp = Input(shape=img_shape)
-
         x = BatchNormalization()(inp)
         # x = GaussianNoise(0.2)(inp)
 
@@ -76,7 +75,23 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         fe = Model(inp, x)
 
     inp = Input(shape=img_shape)
+    inputs.append(inp)
     y = fe(inp)
+
+    if recurrence:
+        inp = Input((memory, 5))
+        inputs.append(inp)
+        y2 = Flatten()(inp)
+        
+        y2 = Dense(50, use_bias=False)(y2)
+        y2 = Activation(prev_act)(y2)
+
+        y = concatenate([y, y2])
+
+    elif load_speed:
+        inp = Input((1, ))
+        inputs.append(inp)
+        y = concatenate([y, inp])
 
     y = Dense(50, use_bias=False)(y)
     y = Activation(prev_act)(y)
@@ -85,24 +100,10 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     y = Dense(25, use_bias=False)(y)
     y = Activation(prev_act)(y)
 
-    if recurrence == True:
-        inp2 = Input((memory, 5))
-        y2 = Flatten()(inp2)
-        
-        y2 = Dense(50, use_bias=False)(y2)
-        y2 = Activation(prev_act)(y2)
-
-        y = concatenate([y, y2])
-
     z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
 
-    if recurrence == True:
-        model = Model([inp, inp2], z)
-    else:
-        model = Model(inp, z)
-
-
-    model.compile(loss=loss,optimizer=optimizer(lr=lr) ,metrics=metrics)
+    model = Model(inputs, z)
+    model.compile(loss=loss, optimizer=optimizer(lr=lr) ,metrics=metrics)
     return model, fe
 
 

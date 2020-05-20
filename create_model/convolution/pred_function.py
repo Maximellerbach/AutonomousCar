@@ -28,12 +28,18 @@ def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
     dts_len = len(paths)
 
     Y = []
+    speeds = []
     pred = []
     for path in tqdm(paths):
         lab = autolib.get_label(path, flip=False, cat=self.to_cat)[0]
 
         Y.append(lab)
-        pred.append(self.model.predict(np.expand_dims(cv2.imread(path)/255, axis=0))[0])
+        if self.load_speed:
+            speed = reorder_dataset.get_speed(path)
+            speeds.append(speed)
+            pred.append(self.model.predict([np.expand_dims(cv2.imread(path)/255, axis=0), np.expand_dims([speed], axis=0)])[0])
+        else:
+            pred.append(self.model.predict(np.expand_dims(cv2.imread(path)/255, axis=0))[0])
 
     if self.to_cat:
         Y = to_categorical(Y)
@@ -43,6 +49,8 @@ def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
     # Y = average_data(Y, window_size=10)
 
     plt.plot([i for i in range(dts_len)], Y, pred)
+    if self.load_speed:
+        plt.plot([i for i in range(dts_len)], speeds)
     plt.show()
 
 
@@ -61,7 +69,7 @@ def evaluate_speed(self, data_path='C:\\Users\\maxim\\datasets\\1 ironcar drivin
     return (dt, pred_dt, frc)
 
 
-def pred_img(self, img, size, sleeptime, nimg_size=(5, 5)):
+def pred_img(self, img, size, sleeptime, speed=0, nimg_size=(5, 5)):
     """
     predict an image and visualize the prediction
     """
@@ -72,11 +80,15 @@ def pred_img(self, img, size, sleeptime, nimg_size=(5, 5)):
     nimg = np.expand_dims(cv2.resize(nimg, nimg_size), axis=0)
     n = nimg.shape[-1]
 
-    if self.recurrence == True:
+    if self.recurrence:
         filled = [[0, 0.125, 0.75, 0.125, 0]]*(self.memory_size-len(self.av))+self.av
         rec = np.expand_dims(filled, axis=0)
         # print(pred.shape, rec.shape)
         ny = self.model.predict([pred, rec])[0]
+
+    elif self.load_speed:
+        ny = self.model.predict([pred, np.expand_dims(speed, axis=0)])
+
     else:
         ny = self.model.predict(pred)[0]
 
@@ -144,7 +156,9 @@ def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackm
         if from_path==True:
             for i in glob(path+"*"):
                 img = cv2.imread(i)
-                pred_img(self, img, size, sleeptime, nimg_size=nimg_size)
+                if self.load_speed:
+                    speed = reorder_dataset.get_speed(i)
+                pred_img(self, img, size, sleeptime, speed=speed, nimg_size=nimg_size)
                 
         else:
             self.cap = cv2.VideoCapture(path)
@@ -155,7 +169,41 @@ def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackm
                 for img in im_batch:
                     pred_img(self, img, size, sleeptime, nimg_size=nimg_size)
 
+def speed_impact(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt_range=(0, -1)):
+    paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False)
+    paths = paths[dt_range[0]:dt_range[1]]
+    dts_len = len(paths)
+    
+    for path in paths:
+        img = cv2.imread(path)/255
+        img_pred = np.expand_dims(img, axis=0)
 
+        original_speed = reorder_dataset.get_speed(path)
+        original_pred = self.model.predict([img_pred, np.expand_dims(original_speed, axis=0)])
+        c = img.copy()
+        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=2)
+        
+        modified, estimated = estimate_speed(self.model, img_pred, original_pred, accuracy=1, values_range=(1, 21))
+        print("estimated speed:", estimated, "real speed:", original_speed)
+
+        for it, angle in enumerate(modified):
+            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-50), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
+
+        cv2.imshow('img', img)
+        cv2.imshow('angles', c)
+        cv2.waitKey(33)
+    cv2.destroyAllWindows()
+
+def estimate_speed(model, img_pred, original_pred, accuracy=10, values_range=(0, 20), show=True):
+    speeds = np.array(range(values_range[0], int(values_range[1]*accuracy)))/accuracy
+    modified = []
+    for speed in speeds:
+        modified.append(model.predict([img_pred, np.expand_dims(speed, axis=0)])[0])
+
+    angle_dif = np.absolute(np.array(modified)-original_pred)
+    amin = np.argmin(angle_dif)
+
+    return modified, speeds[amin]
 
 def process_trajectory_error(): # TODO: evaluate long term precision of the model 
     return

@@ -395,7 +395,7 @@ class track_estimation():
 
 if __name__ == "__main__":
     dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\recorded_imgs\\clean_lap\\', recursive=False) # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
-    sequence_to_study = (0, 1550)
+    sequence_to_study = (1550, 3100)
     cat = True
 
     dates = [reorder_dataset.get_date(i) for i in dts]

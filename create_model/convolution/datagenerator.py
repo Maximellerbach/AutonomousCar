@@ -3,9 +3,10 @@ import autolib
 import keras
 import cv2
 from glob import glob
+from reorder_dataset import get_speed
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, img_path, datalen, batch_size, frc, weight_acc=0.5, augm=True, proportion=0.15, cat=True, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False):
+    def __init__(self, img_path, datalen, batch_size, frc, weight_acc=0.5, augm=True, proportion=0.15, cat=True, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, reconstruction=False, load_speed=False):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -27,12 +28,14 @@ class image_generator(keras.utils.Sequence):
         self.label_rdm = label_rdm
         self.cat = cat
         self.flip = flip
+        self.load_speed = load_speed 
 
 
     def __data_generation(self, img_path):
         batchfiles = np.random.choice(img_path, size=self.batch_size)
         xbatch = []
         ybatch = []
+        speeds = []
 
         for i in batchfiles:
             try:
@@ -44,39 +47,46 @@ class image_generator(keras.utils.Sequence):
 
                 xbatch.append(img)
                 ybatch.append(label[0])
+                if self.load_speed:
+                    speed = get_speed(i)
+                    speeds.append(speed)
             except:
                 print(i)
 
-
         if self.augm == True:
-            X_bright, Y_bright = autolib.generate_brightness(xbatch, ybatch, proportion=self.proportion)
-            X_gamma, Y_gamma = autolib.generate_low_gamma(xbatch, ybatch, proportion=self.proportion)
-            X_night, Y_night = autolib.generate_night_effect(xbatch, ybatch, proportion=self.proportion)
-            X_shadow, Y_shadow = autolib.generate_random_shadows(xbatch, ybatch, proportion=self.proportion)
-            X_chain, Y_chain = autolib.generate_chained_transformations(xbatch, ybatch, proportion=self.proportion)
-            X_noise, Y_noise = autolib.generate_random_noise(xbatch, ybatch, proportion=self.proportion)
-            X_rev, Y_rev = autolib.generate_inversed_color(xbatch, ybatch, proportion=self.proportion)
-            X_glow, Y_glow = autolib.generate_random_glow(xbatch, ybatch, proportion=self.proportion)
-            X_cut, Y_cut = autolib.generate_random_cut(xbatch, ybatch, proportion=self.proportion)
+            X_bright, Y_bright, speed_bright = autolib.generate_brightness(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_gamma, Y_gamma, speed_gamma = autolib.generate_low_gamma(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_night, Y_night, speed_night = autolib.generate_night_effect(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_shadow, Y_shadow, speed_shadow = autolib.generate_random_shadows(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_chain, Y_chain, speed_chain = autolib.generate_chained_transformations(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_noise, Y_noise, speed_noise = autolib.generate_random_noise(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_rev, Y_rev, speed_rev = autolib.generate_inversed_color(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_glow, Y_glow, speed_glow = autolib.generate_random_glow(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
+            X_cut, Y_cut, speed_cut = autolib.generate_random_cut(xbatch, ybatch, speeds=speeds, load_speed=self.load_speed, proportion=self.proportion)
 
 
             not_emptyX = [i for i in (xbatch, X_gamma, X_bright, X_night, X_shadow, X_chain, X_noise, X_rev, X_glow, X_cut) if len(i)!=0]
             not_emptyY = [i for i in (ybatch, Y_gamma, Y_bright, Y_night, Y_shadow, Y_chain, Y_noise, Y_rev, Y_glow, Y_cut) if len(i)!=0]
-
+            not_emptyspeed = [i for i in (speeds, speed_bright, speed_gamma, speed_night, speed_shadow, speed_chain, speed_noise, speed_rev, speed_glow, speed_cut) if len(i)!=0]
+            
             xbatch = np.concatenate(not_emptyX)
             ybatch = np.concatenate(not_emptyY)
+            speedbatch = np.concatenate(not_emptyspeed)
         
         if self.flip:
-            xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1, cat=self.cat)
+            xflip, yflip, speedflip = autolib.generate_horizontal_flip(xbatch, ybatch, speeds=speedbatch, load_speed=self.load_speed, proportion=1, cat=self.cat)
             xbatch = np.concatenate((xbatch, xflip))
             ybatch = np.concatenate((ybatch, yflip))
+            speedbatch = np.concatenate((speedbatch, speedflip)) # the speed doesn't change when you flip the image
 
-        # ybatch = to_categorical(ybatch, self.n_classes)
         if self.cat:
             ybatch = autolib.label_smoothing(ybatch, self.n_classes, self.smoothing, random=self.label_rdm)
         
         weight = autolib.get_weight(ybatch, self.frc, self.cat, acc=self.weight_acc)
-        return xbatch/255, ybatch, weight
+        if self.load_speed:
+            return [xbatch/255, speedbatch], ybatch, weight
+        else:
+            return xbatch/255, ybatch, weight
 
     def __data_generationseq(self, dos_path, memory_size):
         fold = np.random.randint(0, len(dos_path), size=self.batch_size)
