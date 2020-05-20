@@ -71,13 +71,13 @@ class track_estimation():
         av = np.average([p1, p2], axis=-1)
         return av * pt1[-1] # multiply positive coords with sign (- or +) to separate left turns from right turns -> output coords [-1; 1]
 
-    def get_pos(self, Y, speed=1, cat=False):
+    def get_pos(self, Y, time_series, speed_series, cat=False):
         '''
         Function to calculate position from image label,
         here I'm making a few assumptions like speed = cte, delta_time = cte and the trajectory is not arced
         It's a rough estimation to get something concrete to visualize and turning angle
-        (Y, speed) -> (pos_list, lightpos_list, vect_list, deg_list)
-        ([], float) _> ([(x, y)], [(x, y)], [(dx, dy)], [floats])
+        (Y, time_series, speed_series, speed) -> (pos_list, lightpos_list, vect_list, deg_list)
+        ([], [floats], [floats], float) _> ([(x, y)], [(x, y)], [(dx, dy)], [floats])
         '''
         vect_list = []
         pos_list = []
@@ -100,18 +100,21 @@ class track_estimation():
 
             st = -st # transform [-1, 1] to [1, -1]
             lab_list.append(st)
-            degree_angle = st*self.steer_coef*self.dt
+
+            # TODO !!!!!! current steering angle estimation # https://stackoverflow.com/questions/25895222/estimated-position-of-vector-after-time-angle-and-speed
+
+            degree_angle = st*self.steer_coef*(speed_series[it]*time_series[it])
             rad = math.radians(degree_angle)
 
             angle += rad
             angle = angle%(2*math.pi)
+            
+            x = math.sin(angle)*speed_series[it]*time_series[it]
+            y = math.cos(angle)*speed_series[it]*time_series[it]
 
-            x = math.sin(angle)*(speed*self.dt) #speed is here an unknown variable TODO: speed estimation
-            y = math.cos(angle)*(speed*self.dt)
             pos[0] += x
             pos[1] += y
 
-            # print(x, y, dt) # debuging
             pos_list.append((pos[0], pos[1]))
             vect_list.append((x, y))
             deg_list.append(rad)
@@ -391,12 +394,16 @@ class track_estimation():
             cv2.line(self.pmap, p1, p2, color, thickness=3)
 
 if __name__ == "__main__":
-    dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\datasets\\1 ironcar driving\\', recursive=False) # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
-    sequence_to_study = (0, 3000)
+    dts, datalen = reorder_dataset.load_dataset('C:\\Users\\maxim\\recorded_imgs\\clean_lap\\', recursive=False) # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
+    sequence_to_study = (0, 1550)
     cat = True
 
     dates = [reorder_dataset.get_date(i) for i in dts]
-    its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1], dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j<0.2] # remove images where dt >= 0.1
+    speeds = [reorder_dataset.get_speed(i) for i in dts]
+    speeds = speeds[sequence_to_study[0]:sequence_to_study[1]-1]
+    its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1], dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j>0.0] # remove images where dt >= 0.1
+
+
     av_its = 1/np.average(its)
     print("average img/sec:", av_its, "| images removed:", (sequence_to_study[1]-sequence_to_study[0])-len(its))
 
@@ -412,32 +419,34 @@ if __name__ == "__main__":
 
     if cat:
         Y = autolib.label_smoothing(Y, 5, 0) # to categorical
+    Y = Y[sequence_to_study[0]:sequence_to_study[1]-1]
 
-    max_steer_angle = 10
-    estimation = track_estimation(its=av_its, steer_coef=max_steer_angle*(3/2*math.pi)) # don't know why but this is what works xD
-    pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(Y[sequence_to_study[0]:sequence_to_study[1]], speed=1, cat=cat)
+    max_steer_angle = 14
+    estimation = track_estimation(its=av_its, steer_coef=max_steer_angle) # don't know why but this is what works xD
+    pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(Y, time_series=its, speed_series=speeds, cat=cat)
 
-    turns_segments, average = estimation.segment_track(pos_list, lab_list, th=0.2, look_back=30) # TODO: refactoring to use labels instead of deg_list
-    matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
-    print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
-    
     plt.plot([i for i in range(len(vect_list))], np.array(vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
-    plt.plot(average, linewidth=1)
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves
     plt.show()
-
-    distances = estimation.distance_from_speed_segments(turns_segments, n_turns)
-    speeds = estimation.speed_from_distance_segments(turns_segments, n_turns)
-
-    print(distances)
-    print(speeds)
-
-    iner_list, outer_list = estimation.boundaries(pos_list, radius=0.6)
+    
+    iner_list, outer_list = estimation.boundaries(pos_list, radius=5)
     diner = [1 for i in range(len(iner_list))]
     douter = [-1 for i in range(len(outer_list))]
 
+    analyse_turns = False
+    if analyse_turns:
+        turns_segments, average = estimation.segment_track(pos_list, lab_list, th=0.2, look_back=5) # TODO: refactoring to use labels instead of deg_list
+        matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
+        print(matchs, '| number of turns in a lap: ', n_turns, '| accuracy: ', accuracy)
+
+        distances = estimation.distance_from_speed_segments(turns_segments, n_turns)
+        speeds = estimation.speed_from_distance_segments(turns_segments, n_turns)
+
+        print(distances)
+        print(speeds)
+    
+        estimation.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
     estimation.draw_points(pos_list+iner_list+outer_list, degs=deg_list+diner+douter, colors=[(0.75, 0, 0), (1, 1, 1), (0, 0, 0.75)])
-    estimation.draw_segments(turns_segments, matches=matchs, min_max=iner_list+outer_list)
 
     cv2.imshow('pmap', estimation.pmap)
     cv2.waitKey(0)

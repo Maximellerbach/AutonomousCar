@@ -61,11 +61,17 @@ def pack_datasets(dos, new_dos, d_threshold=60):
 def get_date(p):
     try:
         name = p.split('\\')[-1]
-        lab, date = name.split('_')
+        lab = name.split('_')[0]
+        date = name.split('_')[-1]
         date = date.split('.png')[0]
         return float(date)
     except Exception as e:
         print(p, e)
+        
+def get_speed(p):
+    name = p.split('\\')[-1]
+    lab, speed, date = name.split('_')
+    return float(speed)
 
 def str2float(string, ancient_str, relative_path):
     try:
