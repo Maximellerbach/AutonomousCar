@@ -45,8 +45,11 @@ class Data(): # TODO: clean data class (could be used elsewhere)
     def catlab2linear(self, lab, dico=[3, 5, 7, 9, 11]):
         return (dico.index(lab)-2)/2
 
-    def catlab2linear_smooth(self, lab, window_size=(0, 5), sq_factor=1, prev_factor=1, after_factor=1, offset=0):
-        linear = [self.catlab2linear(i) for i in lab]
+    def lab2linear_smooth(self, lab, cat2linear=False, window_size=(0, 5), sq_factor=1, prev_factor=1, after_factor=1, offset=0):
+        if cat2linear:
+            linear = [self.catlab2linear(i) for i in lab]
+        else:
+            linear = lab
         smooth = self.average_data(linear, window_size=window_size, sq_factor=sq_factor, prev_factor=prev_factor, after_factor=after_factor, offset=offset)
         return smooth
 
@@ -63,8 +66,7 @@ class Data(): # TODO: clean data class (could be used elsewhere)
 
             averaged.append(av)
 
-        data[window_size[0]:-window_size[1]] = averaged
-
+        data[offset+window_size[0]:-window_size[1]] = averaged
         return data
 
     def detect_spike(self, labs, th=0.5, window_size=(5, 5), offset=5):
@@ -135,8 +137,12 @@ class Data(): # TODO: clean data class (could be used elsewhere)
                 variations.append(0)
         return variations
 
-    def img_name_format(self, dos, lab, format=".png"):
-        return dos+str(lab)+"_"+str(time.time())+".png"
+    def img_name_format(self, dos, lab, path):
+        str_name = dos+str(lab)
+        img_name_component = path.split('\\')[-1].split('_')[1:]
+        for info in img_name_component:
+            str_name += '_'+str(info)
+        return str_name
 
     def save(self, dts, Y=[], name="saved", mode=0):
         new_dos = self.dos+"..\\"+name+"\\"
@@ -146,7 +152,7 @@ class Data(): # TODO: clean data class (could be used elsewhere)
         if mode == 0: # save image with a new label
             for path, y in tqdm(zip(dts, Y)):
                 time.sleep(0.0001)
-                name = self.img_name_format(new_dos, y)
+                name = self.img_name_format(new_dos, y, path)
                 shutil.copy(path, name)
 
         else: # copy image by loading it and resaving it 
@@ -161,21 +167,23 @@ if __name__ == "__main__":
     root_dos = "C:\\Users\\maxim\\random_data\\"
     save_dos = "linear"
 
-    doss = "C:\\Users\\maxim\\random_data\\13 sim new circuit"
+    doss = "C:\\Users\\maxim\\random_data\\14 sim new circuit 2"
     single_dos = True
+    is_float = True
+    cat2linear = not is_float
 
     if single_dos:
         if doss.split('\\')[-1] != save_dos:
-            data = Data(doss+"\\", is_float=False, recursive=False)
+            data = Data(doss+"\\", is_float=is_float, recursive=False)
             dts, Y = data.load_lab()
-            Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
+            Y = data.lab2linear_smooth(Y, cat2linear=cat2linear, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
             data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
     else:
         for i, dos in enumerate(glob(doss+'*')):
             if dos.split('\\')[-1] != save_dos:
-                data = Data(dos+"\\", is_float=False, recursive=False)
+                data = Data(dos+"\\", is_float=is_float, recursive=False)
                 dts, Y = data.load_lab()
-                Y = data.catlab2linear_smooth(Y, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
+                Y = data.lab2linear_smooth(Y, cat2linear=cat2linear, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
                 data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
         
         
