@@ -62,7 +62,7 @@ class classifier():
 
         self.av = []
 
-    def build_classifier(self, model_type, load=False):
+    def build_classifier(self, model_type, load=False, load_fe=False):
         """
         load a model using architectures program
         """
@@ -72,7 +72,7 @@ class classifier():
         
         else:
             # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
-            model, fe = model_type((120, 160, 3), 1, load_fe=False, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.2, regularizer=(0.0, 0.0001), lr=0.001,
+            model, fe = model_type((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.2, regularizer=(0.0, 0.0), lr=0.001,
                                     last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"], load_speed=self.load_speed) # model used for the race
 
             
@@ -86,7 +86,7 @@ class classifier():
         return model, fe
 
 
-    def train(self, load=False, flip=True, epochs=5, batch_size=64):
+    def train(self, load=False, load_fe=False, flip=True, epochs=5, batch_size=64):
         """
         trains the model loaded as self.model
         """
@@ -94,7 +94,7 @@ class classifier():
         self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat) # TODO: add folder weights
 
         print(self.gdos.shape, self.valdos.shape)
-        self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load)
+        self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load, load_fe=load_fe)
 
         earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
@@ -159,7 +159,6 @@ class classifier():
 
                 for l in label: # will add normal + reversed if flip == True
                     Y.append(autolib.round_st(l, self.weight_acc))
-
         d = collections.Counter(Y)
 
         unique = np.unique(Y)
@@ -222,12 +221,12 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\linearv2_mix.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=1.0, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=True)
+                    recurrence=False, dosdir=True, proportion=0.1, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=True)
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False, flip=True, epochs=7, batch_size=16)
+    AI.train(load=True, load_fe=False, flip=True, epochs=2, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
@@ -235,8 +234,8 @@ if __name__ == "__main__":
     # iteration_speed = pred_function.evaluate_speed(AI)
     # print(iteration_speed)
 
-    test_dos = 'C:\\Users\\maxim\\datasets\\13 sim new circuit\\'
-    # pred_function.speed_impact(AI, dos=test_dos, dt_range=(0, -1))
+    test_dos = 'C:\\Users\\maxim\\datasets\\14 sim new circuit 2\\'
+    pred_function.speed_impact(AI, test_dos, dt_range=(0, -1))
     pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, -1))
     pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 

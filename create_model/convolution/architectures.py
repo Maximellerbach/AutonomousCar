@@ -1,5 +1,5 @@
 import keras.backend as K
-from keras.regularizers import l2, l1_l2
+from keras.regularizers import l1, l2, l1_l2
 from keras.layers import *
 from keras.losses import mse, mae
 from keras.models import Input, Model, Sequential, load_model
@@ -37,12 +37,13 @@ def cat2linear(ny):
 
 def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, load_speed=False, memory=49):
     inputs = []
-    def conv_block(n_filter, kernel_size, strides, x, drop=drop_rate, activation=prev_act, use_bias=False, flatten=False, batchnorm=True):
+    def conv_block(n_filter, kernel_size, strides, x, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=False):
         x = Conv2D(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding='same')(x)
         if batchnorm:
             x = BatchNormalization(axis=3)(x)
         x = Activation(activation)(x)
-        x = Dropout(drop)(x)
+        if drop:
+            x = Dropout(drop_rate)(x)
         if flatten:
             x = Flatten()(x)
         return x
@@ -55,16 +56,14 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         x = BatchNormalization()(inp)
         # x = GaussianNoise(0.2)(inp)
 
-        x = conv_block(12, 5, 2, x, drop=0)
-        x = conv_block(16, 5, 2, x, drop=0)
-        x = conv_block(32, 3, 2, x, drop=0)
-        x = conv_block(48, 3, 2, x, drop=0)
-        # x = conv_block(64, 3, 1, x, drop=0)
-        # x = conv_block(3, 1, 1, x, activation='softmax', drop=0)
+        x = conv_block(12, 5, 2, x, drop=False)
+        x = conv_block(16, 5, 2, x, drop=False)
+        x = conv_block(32, 3, 2, x, drop=False)
+        x = conv_block(48, 3, 2, x, drop=False)
 
-        x1 = conv_block(64, (8,10), (8,10), x, flatten=True, drop=0)
-        x2 = conv_block(16, (8,1), (8,1), x, flatten=True, drop=0)
-        x3 = conv_block(16, (1,10), (1,10), x, flatten=True, drop=0)
+        x1 = conv_block(64, (8,10), (8,10), x, flatten=True, drop=False)
+        x2 = conv_block(8, (8,1), (8,1), x, flatten=True, drop=False)
+        x3 = conv_block(8, (1,10), (1,10), x, flatten=True, drop=False)
         x = Concatenate()([x1, x2, x3])
         x = Dropout(drop_rate)(x)
         
@@ -88,10 +87,10 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
 
         y = concatenate([y, y2])
 
-    elif load_speed:
+    if load_speed:
         inp = Input((1, ))
         inputs.append(inp)
-        y = concatenate([y, inp])
+        y = Concatenate()([y, inp])
 
     y = Dense(50, use_bias=False)(y)
     y = Activation(prev_act)(y)
@@ -100,7 +99,11 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     y = Dense(25, use_bias=False)(y)
     y = Activation(prev_act)(y)
 
+    # y = Dense(5, activation="softmax", use_bias=True, activity_regularizer=l1(0.1))(y)
+
     z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
+
+
 
     model = Model(inputs, z)
     model.compile(loss=loss, optimizer=optimizer(lr=lr) ,metrics=metrics)

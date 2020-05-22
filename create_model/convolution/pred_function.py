@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 import architectures
 import autolib
+import data_class
 import reorder_dataset
 
 
@@ -169,22 +170,31 @@ def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackm
                 for img in im_batch:
                     pred_img(self, img, size, sleeptime, nimg_size=nimg_size)
 
-def speed_impact(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt_range=(0, -1)):
+def speed_impact(self, dos, dt_range=(0, -1)):
     paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False)
+    _, Y = data_class.load_lab(paths, is_float=True)
+    Y = data_class.lab2linear_smooth(Y, cat2linear=False, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
     paths = paths[dt_range[0]:dt_range[1]]
     dts_len = len(paths)
     
-    for path in paths:
+    window = []
+    for it, path in enumerate(paths):
         img = cv2.imread(path)/255
         img_pred = np.expand_dims(img, axis=0)
 
         original_speed = reorder_dataset.get_speed(path)
         original_pred = self.model.predict([img_pred, np.expand_dims(original_speed, axis=0)])
+        real_lab = Y[it]
+
         c = img.copy()
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=2)
+        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+real_lab*30), img.shape[0]-50), color=[0, 0, 1], thickness=2)
         
-        modified, estimated = estimate_speed(self.model, img_pred, original_pred, accuracy=1, values_range=(1, 21))
-        print("estimated speed:", estimated, "real speed:", original_speed)
+        modified, estimated = estimate_speed(self.model, img_pred, real_lab, accuracy=0.5, values_range=(1, 21))
+        window.append(estimated)
+        if len(window)>10:
+            del window[0]
+        print("estimated speed:", np.average(window), "real speed:", original_speed)
 
         for it, angle in enumerate(modified):
             cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-50), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
@@ -194,7 +204,7 @@ def speed_impact(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
         cv2.waitKey(33)
     cv2.destroyAllWindows()
 
-def estimate_speed(model, img_pred, original_pred, accuracy=10, values_range=(0, 20), show=True):
+def estimate_speed(model, img_pred, original_pred, accuracy=1, values_range=(0, 20), show=True):
     speeds = np.array(range(values_range[0], int(values_range[1]*accuracy)))/accuracy
     modified = []
     for speed in speeds:
