@@ -37,7 +37,7 @@ def cat2linear(ny):
 
 def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, load_speed=False, memory=49):
     inputs = []
-    def conv_block(n_filter, kernel_size, strides, x, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=False):
+    def conv_block(n_filter, kernel_size, strides, x, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True):
         x = Conv2D(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding='same')(x)
         if batchnorm:
             x = BatchNormalization(axis=3)(x)
@@ -58,7 +58,7 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
 
         x = conv_block(12, 5, 2, x, drop=False)
         x = conv_block(16, 5, 2, x, drop=False)
-        x = conv_block(32, 3, 2, x, drop=False)
+        x = conv_block(32, 3, 2, x, drop=True)
         x = conv_block(48, 3, 2, x, drop=False)
 
         x1 = conv_block(64, (8,10), (8,10), x, flatten=True, drop=False)
