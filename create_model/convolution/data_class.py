@@ -8,6 +8,7 @@ from tqdm import tqdm
 import shutil
 
 import reorder_dataset
+import autolib
 
 
 class Data(): # TODO: clean data class (could be used elsewhere)
@@ -77,6 +78,10 @@ def lab2linear_smooth(lab, cat2linear=False, window_size=(0, 5), sq_factor=1, pr
         linear = lab
     smooth = average_data(linear, window_size=window_size, sq_factor=sq_factor, prev_factor=prev_factor, after_factor=after_factor, offset=offset)
     return smooth
+
+def offset_data(data, offset):
+    data[0:-offset] = data[offset:-1]
+    return data
 
 def average_data(data, window_size=(5, 5), sq_factor=1, prev_factor=1, after_factor=1, offset=0):
     averaged = []
@@ -180,23 +185,23 @@ if __name__ == "__main__":
     root_dos = "C:\\Users\\maxim\\random_data\\"
     save_dos = "linear"
 
-    doss = "C:\\Users\\maxim\\random_data\\15 new training"
-    single_dos = True
-    is_float = True
-    cat2linear = not is_float
+    doss = ["C:\\Users\\maxim\\random_data\\13 clean lap", "C:\\Users\\maxim\\random_data\\13 sim new circuit", "C:\\Users\\maxim\\random_data\\14 sim new circuit 2", "C:\\Users\\maxim\\random_data\\15 new training", "C:\\Users\\maxim\\random_data\\16 st limit"]
+    reccurent = False
 
-    if single_dos:
-        if doss.split('\\')[-1] != save_dos:
-            data = Data(doss+"\\", is_float=is_float, recursive=False)
+    if reccurent:
+        doss = glob(doss+"*")
+    
+    for dos in doss:
+        if dos.split('\\')[-1] != save_dos:
+            is_float = False
+            try: 
+                p = glob(dos+"\\*")[0]
+                d = autolib.get_label(p)
+            except:
+                is_float=True
+            cat2linear = not is_float
+
+            data = Data(dos+"\\", is_float=is_float, recursive=False)
             dts, Y = data.load_lab()
             Y = lab2linear_smooth(Y, cat2linear=cat2linear, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
-            data.save(dts, Y, name=save_dos+"\\"+doss.split('\\')[-1])
-    else:
-        for i, dos in enumerate(glob(doss+'*')):
-            if dos.split('\\')[-1] != save_dos:
-                data = Data(dos+"\\", is_float=is_float, recursive=False)
-                dts, Y = data.load_lab()
-                Y = lab2linear_smooth(Y, cat2linear=cat2linear, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
-                data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])
-        
-        
+            data.save(dts, Y, name=save_dos+"\\"+dos.split('\\')[-1])

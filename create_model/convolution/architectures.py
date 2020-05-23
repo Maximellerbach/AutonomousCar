@@ -10,11 +10,11 @@ def dir_loss(y_true, y_pred, steer_angle=16): # TODO: not working for the moment
     custom loss function for the models
     (only use if you have the same models as me)
     """
-    # return mse(y_true, y_pred) + mae(y_true, y_pred)
 
-    mae_error = K.abs(y_true-y_pred)
-    mse_error = (y_true-y_pred)**2
-    return (mae_error + mse_error)*steer_angle
+    # mae_error = K.abs(y_true-y_pred)
+    # mse_error = (y_true-y_pred)**2
+    # return (mae_error + mse_error)*steer_angle
+    return mae(y_true, y_pred) + mse(y_true, y_pred)
 
 def linear2dir(linear, dir_range=(3, 11), to_int=True):
     delta_range = dir_range[1]-dir_range[0]
@@ -61,9 +61,9 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         x = conv_block(32, 3, 2, x, drop=True)
         x = conv_block(48, 3, 2, x, drop=False)
 
-        x1 = conv_block(64, (8,10), (8,10), x, flatten=True, drop=False)
-        x2 = conv_block(8, (8,1), (8,1), x, flatten=True, drop=False)
-        x3 = conv_block(8, (1,10), (1,10), x, flatten=True, drop=False)
+        x1 = conv_block(96, (8,10), (8,10), x, flatten=True, drop=False)
+        x2 = conv_block(16, (8,1), (8,1), x, flatten=True, drop=False)
+        x3 = conv_block(16, (1,10), (1,10), x, flatten=True, drop=False)
         x = Concatenate()([x1, x2, x3])
         x = Dropout(drop_rate)(x)
         
@@ -98,8 +98,6 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     
     y = Dense(25, use_bias=False)(y)
     y = Activation(prev_act)(y)
-
-    # y = Dense(5, activation="softmax", use_bias=True, activity_regularizer=l1(0.1))(y)
 
     z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
 

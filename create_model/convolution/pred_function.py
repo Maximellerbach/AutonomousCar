@@ -191,10 +191,10 @@ def speed_impact(self, dos, dt_range=(0, -1)):
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+real_lab*30), img.shape[0]-50), color=[0, 0, 1], thickness=2)
         
         modified, estimated = estimate_speed(self.model, img_pred, real_lab, accuracy=0.5, values_range=(1, 21))
-        window.append(estimated)
-        if len(window)>10:
-            del window[0]
-        print("estimated speed:", np.average(window), "real speed:", original_speed)
+        # window.append(estimated)
+        # if len(window)>10:
+        #     del window[0]
+        # print("estimated speed:", np.average(window), "real speed:", original_speed)
 
         for it, angle in enumerate(modified):
             cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-50), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
