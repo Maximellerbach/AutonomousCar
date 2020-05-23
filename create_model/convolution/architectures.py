@@ -58,7 +58,7 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
 
         x = conv_block(12, 5, 2, x, drop=False)
         x = conv_block(16, 5, 2, x, drop=False)
-        x = conv_block(32, 3, 2, x, drop=True)
+        x = conv_block(32, 3, 2, x, drop=False)
         x = conv_block(48, 3, 2, x, drop=False)
 
         x1 = conv_block(96, (8,10), (8,10), x, flatten=True, drop=False)
@@ -91,6 +91,10 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         inp = Input((1, ))
         inputs.append(inp)
         y = Concatenate()([y, inp])
+
+    y = Dense(150, use_bias=False)(y)
+    y = Activation(prev_act)(y)
+    y = Dropout(drop_rate)(y)
 
     y = Dense(50, use_bias=False)(y)
     y = Activation(prev_act)(y)
