@@ -77,16 +77,6 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     inputs.append(inp)
     y = fe(inp)
 
-    if recurrence:
-        inp = Input((memory, 5))
-        inputs.append(inp)
-        y2 = Flatten()(inp)
-        
-        y2 = Dense(50, use_bias=False)(y2)
-        y2 = Activation(prev_act)(y2)
-
-        y = concatenate([y, y2])
-
     if load_speed:
         inp = Input((1, ))
         inputs.append(inp)

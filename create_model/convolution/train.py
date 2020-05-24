@@ -27,6 +27,7 @@ import architectures
 import autolib
 import pred_function
 import reorder_dataset
+import dataset
 # from architectures import dir_loss
 from datagenerator import image_generator
 
@@ -37,12 +38,11 @@ config.log_device_placement = True  # to log device placement (on which device t
 set_session(sess) # set this TensorFlow session as the default
 
 class classifier():
-    def __init__(self, name, impath='', dospath='', recurrence=False, dosdir=True, memory_size=49, proportion=0.15, to_cat=True, weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=False):
+    def __init__(self, name, dospath='', dosdir=True, memory_size=49, proportion=0.15, to_cat=True, weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=False):
         
+        self.Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component])
         self.name = name
-        self.impath = impath
         self.dospath = dospath
-        self.recurrence = recurrence
         self.memory_size = memory_size
         self.dosdir = dosdir
 
@@ -71,9 +71,9 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, recurrence=self.recurrence, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
+            # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
             model, fe = model_type((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.2, regularizer=(0.0, 0.0), lr=0.001,
-                                    last_bias=False, recurrence=self.recurrence, memory=self.memory_size, metrics=["mae", "mse"], load_speed=self.load_speed) # model used for the race
+                                    last_bias=False, memory=self.memory_size, metrics=["mae", "mse"], load_speed=self.load_speed) # model used for the race
 
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -98,43 +98,32 @@ class classifier():
 
         earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
-                                validation_data=image_generator(self.valdos, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, seq=self.recurrence, cat=self.to_cat, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
+        self.model.fit_generator(image_generator(self.gdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
+                                validation_data=image_generator(self.valdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
                                 callbacks=[earlystop], max_queue_size=5, workers=8)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
 
     def get_gdos(self, flip=True, cat=True):
-        if self.recurrence == True:
-            gdos, datalen = reorder_dataset.load_dataset(self.dospath)
-            valdos = gdos
-            if cat:
-                frc = self.get_frc_cat(self.dospath, flip=flip)
-            else:
-                frc = self.get_frc_lin(self.dospath, flip=flip)
-
-        elif self.recurrence == False and self.dosdir == True:
-            gdos, datalen = reorder_dataset.load_dataset(self.dospath)
+        if self.dosdir == True:
+            gdos = self.Dataset.load_dataset(self.dospath)
             gdos = np.concatenate([i for i in gdos])
+            datalen = len(gdos)
             np.random.shuffle(gdos)
             gdos, valdos = np.split(gdos, [datalen-datalen//20])
             
-            if cat:
-                frc = self.get_frc_cat(self.dospath+"*", flip=flip)
-            else:
-                frc = self.get_frc_lin(self.dospath, flip=flip)
-                
         else:
-            datalen = len(glob(self.dospath))
             gdos = glob(self.dospath)
+            datalen = len(gdos)
             np.random.shuffle(gdos)
             gdos, valdos = np.split(gdos, [datalen-datalen//20])
-            
-            if cat:
-                frc = self.get_frc_cat(self.dospath, flip=flip)
-            else:
-                frc = self.get_frc_lin(self.dospath, flip=flip)
+
+
+        if cat:
+            frc = self.get_frc_cat(self.dospath, flip=flip)
+        else:
+            frc = self.get_frc_lin(self.dospath, flip=flip)
 
         return gdos, valdos, frc, datalen
 
@@ -146,18 +135,26 @@ class classifier():
         Y = []
 
         if self.dosdir:
-            for d in tqdm(glob(dos)):
+            for d in tqdm(glob(dos+"*")):
                 for i in glob(d+'\\*'):
-                    label = autolib.get_label(i, flip=flip, cat=False) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+                    labels = []
+                    lab = self.Dataset.load_annotation(i)[0]
+                    labels.append(lab)
+                    if flip:
+                        labels.append(-lab)
 
-                    for l in label: # will add normal + reversed if flip == True
+                    for l in labels: # will add normal + reversed if flip == True
                         Y.append(autolib.round_st(l, self.weight_acc))
 
         else:
-            for i in tqdm(glob(dos)):
-                label = autolib.get_label(i, flip=flip, cat=False) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+            for i in tqdm(glob(dos+"*")):
+                labels = []
+                lab = self.Dataset.load_annotation(i)[0]
+                labels.append(lab)
+                if flip:
+                    labels.append(-lab)
 
-                for l in label: # will add normal + reversed if flip == True
+                for l in labels: # will add normal + reversed if flip == True
                     Y.append(autolib.round_st(l, self.weight_acc))
         d = collections.Counter(Y)
 
@@ -170,7 +167,7 @@ class classifier():
         return dict_frc
 
 
-    def get_frc_cat(self, dos, flip=True): 
+    def get_frc_cat(self, dos, flip=True): # old, now using linear labels
         """
         calculate stats from categorical labels
         returns the weight of the classes for a balanced training
@@ -220,13 +217,12 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\linearv3_latency.h5', dospath ='C:\\Users\\maxim\\datasets\\*',
-                    recurrence=False, dosdir=True, proportion=0.5, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=True)
+    AI = classifier(name = 'test_model\\convolution\\test.h5', dospath ='C:\\Users\\maxim\\datasets\\', dosdir=True, proportion=0.5, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=True)
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=True, load_fe=False, flip=True, epochs=1, batch_size=16)
+    AI.train(load=False, load_fe=False, flip=True, epochs=1, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 

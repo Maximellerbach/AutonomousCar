@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 import architectures
 import autolib
-import data_class
+import data_utils
 import reorder_dataset
 
 
