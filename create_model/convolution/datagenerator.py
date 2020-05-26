@@ -39,7 +39,7 @@ class image_generator(keras.utils.Sequence):
 
         for i in batchfiles:
             try:
-                img = self.Dataset.load_image(i)
+                img = self.Dataset.load_image(i) 
                 img = cv2.resize(img, (self.img_cols, self.img_rows))
 
                 annotations = self.Dataset.load_annotation(i)

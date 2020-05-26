@@ -12,6 +12,7 @@ import architectures
 import autolib
 import data_utils
 import reorder_dataset
+import dataset
 
 
 def average_data(data, window_size=10, sq_factor=1):
@@ -24,7 +25,13 @@ def average_data(data, window_size=10, sq_factor=1):
     return data
 
 def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt_range=(0, -1)):
-    paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False)
+    if self.load_speed:
+        Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.time_component])
+    else:
+        Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
+
+    # paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False) 
+    paths = Dataset.load_dos_sorted(dos, sort_component=-1) # sort directory by last component (time)
     paths = paths[dt_range[0]:dt_range[1]]
     dts_len = len(paths)
 
@@ -32,26 +39,18 @@ def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
     speeds = []
     pred = []
     for path in tqdm(paths):
-        lab = autolib.get_label(path, flip=False, cat=self.to_cat)[0]
+        img_annotation = Dataset.load_annotation(path)
+        Y.append(img_annotation[0])
 
-        Y.append(lab)
         if self.load_speed:
-            speed = reorder_dataset.get_speed(path)
-            speeds.append(speed)
-            pred.append(self.model.predict([np.expand_dims(cv2.imread(path)/255, axis=0), np.expand_dims([speed], axis=0)])[0])
+            speeds.append(img_annotation[1])
+            pred.append(self.model.predict([np.expand_dims(cv2.imread(path)/255, axis=0), np.expand_dims([img_annotation[1]], axis=0)])[0])
         else:
             pred.append(self.model.predict(np.expand_dims(cv2.imread(path)/255, axis=0))[0])
 
-    if self.to_cat:
-        Y = to_categorical(Y)
-        Y = architectures.cat2linear(Y)
-        pred = architectures.cat2linear(pred)
-
-    # Y = average_data(Y, window_size=10)
 
     plt.plot([i for i in range(dts_len)], Y, pred)
-    if self.load_speed:
-        plt.plot([i for i in range(dts_len)], speeds)
+    plt.plot([i for i in range(dts_len)], speeds)
     plt.show()
 
 
@@ -81,13 +80,7 @@ def pred_img(self, img, size, sleeptime, speed=0, nimg_size=(5, 5)):
     nimg = np.expand_dims(cv2.resize(nimg, nimg_size), axis=0)
     n = nimg.shape[-1]
 
-    if self.recurrence:
-        filled = [[0, 0.125, 0.75, 0.125, 0]]*(self.memory_size-len(self.av))+self.av
-        rec = np.expand_dims(filled, axis=0)
-        # print(pred.shape, rec.shape)
-        ny = self.model.predict([pred, rec])[0]
-
-    elif self.load_speed:
+    if self.load_speed:
         ny = self.model.predict([pred, np.expand_dims(speed, axis=0)])
 
     else:
@@ -148,41 +141,30 @@ def load_frames(self, path, size=(160, 120), batch_len=32):
 
     return batch
 
-def after_training_test_pred(self, path='C:\\Users\\maxim\\random_data\\4 trackmania A04\\', size=(160,120), nimg_size=(5,5), from_path=True, batch_vid=32, sleeptime=1):
-        """
-        either predict images in a folder
-        or from a video
-        """
-
-        if from_path==True:
-            for i in glob(path+"*"):
-                img = cv2.imread(i)
-                if self.load_speed:
-                    speed = reorder_dataset.get_speed(i)
-                pred_img(self, img, size, sleeptime, speed=speed, nimg_size=nimg_size)
+def after_training_test_pred(self, dos='C:\\Users\\maxim\\random_data\\4 trackmania A04\\', size=(160,120), nimg_size=(5,5), sleeptime=1):
+    Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.time_component])
+    for i in Dataset.load_dos(dos):
+        img = cv2.imread(i)
+        if self.load_speed:
+            speed = Dataset.load_component_item(i, 1)
+            pred_img(self, img, size, sleeptime, speed=speed, nimg_size=nimg_size)
                 
-        else:
-            self.cap = cv2.VideoCapture(path)
-            print("created cap")
 
-            while(True):
-                im_batch = self.load_frames(path, batch_len=batch_vid)
-                for img in im_batch:
-                    pred_img(self, img, size, sleeptime, nimg_size=nimg_size)
-
-def speed_impact(self, dos, dt_range=(0, -1)):
-    paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False)
-    _, Y = data_class.load_lab(paths, is_float=True)
-    Y = data_class.lab2linear_smooth(Y, cat2linear=False, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
+def speed_impact(self, dos, dt_range=(0, -1), sleeptime=33):
+    Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.time_component])
+    paths = Dataset.load_dos_sorted(dos, sort_component=-1)
     paths = paths[dt_range[0]:dt_range[1]]
     dts_len = len(paths)
+    
+    Y = np.array(Dataset.repeat_function(Dataset.load_annotation, paths))[:, 0]
+    Y = data_utils.lab2linear_smooth(Y, cat2linear=False, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
     
     window = []
     for it, path in enumerate(paths):
         img = cv2.imread(path)/255
         img_pred = np.expand_dims(img, axis=0)
 
-        original_speed = reorder_dataset.get_speed(path)
+        original_speed = Dataset.load_component_item(path, 1)
         original_pred = self.model.predict([img_pred, np.expand_dims(original_speed, axis=0)])
         real_lab = Y[it]
 
@@ -190,21 +172,17 @@ def speed_impact(self, dos, dt_range=(0, -1)):
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=2)
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+real_lab*30), img.shape[0]-50), color=[0, 0, 1], thickness=2)
         
-        modified, estimated = estimate_speed(self.model, img_pred, real_lab, accuracy=0.5, values_range=(1, 21))
-        # window.append(estimated)
-        # if len(window)>10:
-        #     del window[0]
-        # print("estimated speed:", np.average(window), "real speed:", original_speed)
+        modified, estimated = compute_speed(self.model, img_pred, real_lab, accuracy=0.5, values_range=(0, 21))
 
         for it, angle in enumerate(modified):
             cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-50), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
 
         cv2.imshow('img', img)
         cv2.imshow('angles', c)
-        cv2.waitKey(33)
+        cv2.waitKey(sleeptime)
     cv2.destroyAllWindows()
 
-def estimate_speed(model, img_pred, original_pred, accuracy=1, values_range=(0, 20), show=True):
+def compute_speed(model, img_pred, original_pred, accuracy=1, values_range=(0, 20), show=True):
     speeds = np.array(range(values_range[0], int(values_range[1]*accuracy)))/accuracy
     modified = []
     for speed in speeds:

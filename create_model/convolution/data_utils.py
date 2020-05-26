@@ -185,8 +185,9 @@ if __name__ == "__main__":
     root_dos = "C:\\Users\\maxim\\random_data\\"
     save_dos = "linear"
 
-    doss = ["C:\\Users\\maxim\\random_data\\13 clean lap", "C:\\Users\\maxim\\random_data\\13 sim new circuit", "C:\\Users\\maxim\\random_data\\14 sim new circuit 2", "C:\\Users\\maxim\\random_data\\15 new training", "C:\\Users\\maxim\\random_data\\16 st limit"]
-    reccurent = False
+    # doss = ["C:\\Users\\maxim\\random_data\\14 sim new circuit 2", "C:\\Users\\maxim\\random_data\\15 new training", "C:\\Users\\maxim\\random_data\\16 st limit"]
+    doss = "C:\\Users\\maxim\\random_data\\"
+    reccurent = True
 
     if reccurent:
         doss = glob(doss+"*")

@@ -61,10 +61,6 @@ class data_visualization():
 
         return flat_fe
 
-    def load_model(self):
-        model = load_model('test_model\\convolution\\lightv6_mix.h5')
-        return Model(model.layers[0].input, model.layers[-11].output)
-
     def get_batchs(self, doss, max_img=2000, scramble=True):
         paths = []
         for dos in doss:
@@ -91,7 +87,7 @@ class data_visualization():
         batchs = self.get_batchs(doss, max_img=max_img)
         # fe = self.load_fe()
         model = self.load_model()
-
+        model.summary()
 
         for i, batch in tqdm(enumerate(batchs)):
             X = self.get_img(batch)
@@ -132,8 +128,7 @@ class data_visualization():
 
     def computeTSNEProjectionOfLatentSpace(self, doss, display=True): # X is here the latent representation
         batchs = self.get_batchs(doss, max_img=1000)
-        model = self.load_model()
-        # fe = self.load_fe()
+        model = self.load_fe()
 
         for batch in batchs:
             X = self.get_img(batch, flip=True)

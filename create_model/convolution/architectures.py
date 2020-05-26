@@ -37,10 +37,10 @@ def cat2linear(ny):
 
 def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="softmax", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, load_speed=False, memory=49):
     inputs = []
-    def conv_block(n_filter, kernel_size, strides, x, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True):
-        x = Conv2D(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding='same')(x)
+    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True, padding='same'):
+        x = conv_type(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding=padding)(x)
         if batchnorm:
-            x = BatchNormalization(axis=3)(x)
+            x = BatchNormalization()(x)
         x = Activation(activation)(x)
         if drop:
             x = Dropout(drop_rate)(x)
@@ -61,13 +61,14 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         x = conv_block(32, 3, 2, x, drop=False)
         x = conv_block(48, 3, 2, x, drop=False)
 
-        x1 = conv_block(96, (8,10), (8,10), x, flatten=True, drop=False)
+        x1 = conv_block(64, (8,10), (8,10), x, flatten=True, drop=False)
         x2 = conv_block(16, (8,1), (8,1), x, flatten=True, drop=False)
         x3 = conv_block(16, (1,10), (1,10), x, flatten=True, drop=False)
         x = Concatenate()([x1, x2, x3])
         x = Dropout(drop_rate)(x)
-        
-        # x = conv_block(128, (8,1), (8,1), x, flatten=True, drop=0)
+        n_out = 64+16*10+16*8
+        x = Reshape((n_out, 1))(x)
+        x = conv_block(48, n_out, n_out, x, flatten=True, drop=False, padding='valid', conv_type=Conv1D)
 
         ####
 
@@ -82,13 +83,13 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         inputs.append(inp)
         y = Concatenate()([y, inp])
 
-    y = Dense(150, use_bias=False)(y)
-    y = Activation(prev_act)(y)
-    y = Dropout(drop_rate)(y)
+    # y = Dense(150, use_bias=False)(y)
+    # y = Activation(prev_act)(y)
+    # y = Dropout(drop_rate)(y)
 
     y = Dense(50, use_bias=False)(y)
     y = Activation(prev_act)(y)
-    y = Dropout(drop_rate)(y)
+    # y = Dropout(drop_rate)(y)
     
     y = Dense(25, use_bias=False)(y)
     y = Activation(prev_act)(y)
