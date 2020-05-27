@@ -1,14 +1,38 @@
 import math
 import random as rn
+
+import cv2
 import numpy as np
 import scipy as sc
-import matplotlib.pyplot as plt
-from scipy.spatial import ConvexHull
-from scipy import interpolate
-
 from constants import *
+from scipy import interpolate
+from scipy.spatial import ConvexHull
 
-class GameTrackGenerator():
+WIDTH = 250
+HEIGHT = 250
+
+# Boundaries for the numbers of points that will be randomly 
+# generated to define the initial polygon used to build the track
+MIN_POINTS = 20
+MAX_POINTS = 30
+
+SPLINE_POINTS = 100
+
+# Margin between screen limits and any of the points that shape the
+# initial polygon
+MARGIN = 25
+# minimum distance between points that form the track skeleton
+MIN_DISTANCE = 50
+# Maximum midpoint displacement for points placed after obtaining the initial polygon
+MAX_DISPLACEMENT = 25
+# Track difficulty
+DIFFICULTY = 0.1
+# min distance between two points that are part of thr track skeleton
+DISTANCE_BETWEEN_POINTS = 10
+# Maximum corner allowed angle
+MAX_ANGLE = 90
+
+class TrackGenerator():
     def __init__(self):
         self._track_points = []
         self._checkpoints = []
@@ -19,12 +43,26 @@ class GameTrackGenerator():
         self._points = self.random_points()
         self._hull = ConvexHull(self._points)
         self._track_points = self.shape_track(self.get_track_points_from_hull(self._hull, self._points))
-        self._f_points = self.smooth_track(self._track_points)
+        self._track_points = self.smooth_track(self._track_points)
 
-        self.draw_f_points(np.array(self._f_points))
+        self.draw_track_points(np.array(self._track_points))
 
-    def save(self): # TODO:
-        return
+    def save(self, points, x_offset=47.71, y_offset=0.6, z_offset=49.71787562201313, fact=1, save_file='C:\\Users\\maxim\\GITHUB\\sdsandbox\\sdsim\\Assets\\Resources\\track.txt'): # TODO:
+        import os
+        try:
+            os.remove(save_file)
+        except:
+            pass
+
+        points[-1] = points[0]
+
+        points = np.array(points)*fact
+        x_auto_off, z_auto_off = -points[0][0], -points[0][1]
+
+        circuit_coords = open(save_file, 'w')
+        for pt in points:
+            circuit_coords.write(str(pt[0]+x_offset+x_auto_off)+','+str(y_offset)+','+str(pt[1]+z_offset+z_auto_off)+'\n')
+        circuit_coords.close()
         
     def random_points(self, min=MIN_POINTS, max=MAX_POINTS, margin=MARGIN, min_distance=MIN_DISTANCE):
         point_count = rn.randrange(min, max+1, 1)
@@ -47,7 +85,7 @@ class GameTrackGenerator():
         return np.array([np.array(points[v]) for v in hull.vertices])
 
     def make_rand_vector(self, dims):
-        vec = [rn.uniform(-1, 1) for i in range(dims)]
+        vec = [rn.gauss(0, 1) for i in range(dims)]
         mag = sum(x**2 for x in vec) ** .5
         return [x/mag for x in vec]
 
@@ -63,8 +101,8 @@ class GameTrackGenerator():
             displacement = math.pow(rn.random(), difficulty) * max_displacement
             disp = [displacement * i for i in self.make_rand_vector(2)]
             track_set[i*2] = track_points[i]
-            track_set[i*2 + 1][0] = int((track_points[i][0] + track_points[(i+1)%len(track_points)][0]) / 2 + disp[0])
-            track_set[i*2 + 1][1] = int((track_points[i][1] + track_points[(i+1)%len(track_points)][1]) / 2 + disp[1])
+            track_set[i*2 + 1][0] = (track_points[i][0] + track_points[(i+1)%len(track_points)][0]) / 2 + disp[0]
+            track_set[i*2 + 1][1] = (track_points[i][1] + track_points[(i+1)%len(track_points)][1]) / 2 + disp[1]
         for i in range(3):
             track_set = self.fix_angles(track_set)
             track_set = self.push_points_apart(track_set)
@@ -89,18 +127,18 @@ class GameTrackGenerator():
             for j in range(i+1, len(points)):
                 p_distance =  math.sqrt((points[i][0]-points[j][0])**2 + (points[i][1]-points[j][1])**2)
                 if p_distance < distance:
-                    dx = points[j][0] - points[i][0];  
-                    dy = points[j][1] - points[i][1];  
-                    dl = math.sqrt(dx*dx + dy*dy);  
-                    dx /= dl;  
-                    dy /= dl;  
-                    dif = distance - dl;  
-                    dx *= dif;  
-                    dy *= dif;  
-                    points[j][0] = int(points[j][0] + dx);  
-                    points[j][1] = int(points[j][1] + dy);  
-                    points[i][0] = int(points[i][0] - dx);  
-                    points[i][1] = int(points[i][1] - dy);  
+                    dx = points[j][0] - points[i][0]  
+                    dy = points[j][1] - points[i][1]  
+                    dl = math.sqrt(dx*dx + dy*dy)  
+                    dx /= dl
+                    dy /= dl
+                    dif = distance - dl
+                    dx *= dif
+                    dy *= dif
+                    points[j][0] = points[j][0] + dx 
+                    points[j][1] = points[j][1] + dy 
+                    points[i][0] = points[i][0] - dx 
+                    points[i][1] = points[i][1] - dy 
         return points
 
     def fix_angles(self, points, max_angle=MAX_ANGLE):
@@ -128,8 +166,8 @@ class GameTrackGenerator():
             s = math.sin(diff)
             new_x = (nx * c - ny * s) * nl
             new_y = (nx * s + ny * c) * nl
-            points[next_point][0] = int(points[i][0] + new_x)
-            points[next_point][1] = int(points[i][1] + new_y)
+            points[next_point][0] = points[i][0] + new_x
+            points[next_point][1] = points[i][1] + new_y
         return points
 
     def smooth_track(self, track_points):
@@ -146,16 +184,52 @@ class GameTrackGenerator():
 
         # evaluate the spline fits for # points evenly spaced distance values
         xi, yi = interpolate.splev(np.linspace(0, 1, SPLINE_POINTS), tck)
-        return [(int(xi[i]), int(yi[i])) for i in range(len(xi))]
+        return [(xi[i], yi[i]) for i in range(len(xi))]
 
-    def draw_f_points(self, fpoints):
-        plt.scatter(fpoints[:, 0], fpoints[:, 1])
-        plt.show()
+    def draw_track_points(self, points):
+        screen = np.zeros((HEIGHT, WIDTH, 1))
+        points = np.array(points, dtype=np.int32)
+        points = points.reshape((-1,1,2))
+        cv2.polylines(screen, [points], True, 1, thickness=2)
+        cv2.imshow("track", screen)
+        key = chr(cv2.waitKey(0))
+        
+        if key == "1":
+            to_save_points = self.select_start_point(screen, self._track_points)
+            self.save(to_save_points)
+
+    def select_start_point(self, screen, points):
+        start_index = 0
+        key = "0"
+
+        while(key != "1"):
+            screen = np.zeros((HEIGHT, WIDTH, 1))
+            for i, point in enumerate(points):
+                cv2.circle(screen, (int(point[0]), int(point[1])), 10, 0.5)
+
+            cv2.circle(screen, (int(points[start_index][0]), int(points[start_index][1])), 20, 1)
+
+            cv2.imshow("track", screen)
+            key = chr(cv2.waitKey(0))
+
+            if key == "3": # plus
+                start_index = int(start_index+1)
+            elif key == "2": # minus
+                start_index = int(start_index-1)
+
+            start_index = start_index%len(points)
+
+        points = np.concatenate((points[start_index:], points[:start_index]), axis=0)
+        return points
+
+    def rotate_circuit():
+        return
             
 if __name__ == "__main__":
-    t = GameTrackGenerator()
-    for _ in range(10):
+    t = TrackGenerator()
+    while(1):
+        # try:
+        #     t.generate_track()
+        # except:
+        #     print("unable to create track")
         t.generate_track()
-        to_save = int(input('save ? '))
-        if to_save:
-            t.save()
