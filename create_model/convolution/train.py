@@ -217,13 +217,13 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\test.h5', dospath='C:\\Users\\maxim\\random_data\\linear\\', dosdir=True, 
-                    proportion=0.5, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=True)
+    AI = classifier(name = 'test_model\\convolution\\test.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
+                    proportion=0.1, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=True)
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function # 'C:\\Users\\maxim\\datasets\\'
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    # AI.train(load=False, load_fe=False, flip=True, epochs=4, batch_size=16)
+    AI.train(load=False, load_fe=True, flip=True, epochs=2, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     # iteration_speed = pred_function.evaluate_speed(AI)
     # print(iteration_speed)
 
-    test_dos = glob('C:\\Users\\maxim\\random_data\\linear\\*')[0]+"\\"
+    test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
     pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, -1))
     pred_function.speed_impact(AI, test_dos, dt_range=(0, -1))
     pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
