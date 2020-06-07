@@ -78,7 +78,7 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     inputs.append(inp)
     y = fe(inp)
 
-    if load_speed:
+    if load_speed[0]:
         inp = Input((1, ))
         inputs.append(inp)
         y = Concatenate()([y, inp])
@@ -95,10 +95,14 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     y = Activation(prev_act)(y)
 
     z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y) #  kernel_regularizer=l2(0.0005)
+    
+    if load_speed[1]:
+        th = Dense(1, use_bias=last_bias, activation="tanh", activity_regularizer=l1_l2(regularizer[0], regularizer[1]))(y)
+        model = Model(inputs, [z, th])
 
+    else:
+        model = Model(inputs, z)
 
-
-    model = Model(inputs, z)
     model.compile(loss=loss, optimizer=optimizer(lr=lr) ,metrics=metrics)
     return model, fe
 

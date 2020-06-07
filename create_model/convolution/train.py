@@ -38,9 +38,9 @@ config.log_device_placement = True  # to log device placement (on which device t
 set_session(sess) # set this TensorFlow session as the default
 
 class classifier():
-    def __init__(self, name, dospath='', dosdir=True, memory_size=49, proportion=0.15, to_cat=True, weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=False):
+    def __init__(self, name, dospath='', dosdir=True, memory_size=49, proportion=0.15, to_cat=True, weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
         
-        self.Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.time_component])
+        self.Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.throttle_component, dataset.time_component])
         self.name = name
         self.dospath = dospath
         self.memory_size = memory_size
@@ -71,10 +71,10 @@ class classifier():
             fe = load_model('test_model\\convolution\\fe.h5')
         
         else:
-            # model, fe = model_type((120, 160, 3), 5, loss="categorical_crossentropy", prev_act="relu", last_act="softmax", regularizer=(0.0, 0.0), lr=0.001, last_bias=True, memory=self.memory_size, metrics=["categorical_accuracy", "mse"]) # model used for the race
-            model, fe = model_type((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, prev_act="relu", last_act="linear", drop_rate=0.2, regularizer=(0.0, 0.0), lr=0.001,
-                                    last_bias=False, memory=self.memory_size, metrics=["mae", "mse"], load_speed=self.load_speed) # model used for the race
 
+            model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, 
+                                    prev_act="relu", last_act="linear", drop_rate=0.2, regularizer=(0.0, 0.0), lr=0.001,
+                                    last_bias=False, memory=self.memory_size, metrics=["mae", "mse"], load_speed=self.load_speed) # model used for the race
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
@@ -94,7 +94,7 @@ class classifier():
         self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat) # TODO: add folder weights
 
         print(self.gdos.shape, self.valdos.shape)
-        self.model, self.fe = self.build_classifier(architectures.create_light_CNN, load=load, load_fe=load_fe)
+        self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
 
         earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
@@ -218,12 +218,12 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\test.h5', dospath='C:\\Users\\maxim\\random_data\\linear\\', dosdir=True, 
-                    proportion=0.5, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=True)
+                    proportion=0.5, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(True, False))
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function # 'C:\\Users\\maxim\\datasets\\'
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    # AI.train(load=False, load_fe=False, flip=True, epochs=4, batch_size=16)
+    AI.train(load=False, load_fe=False, flip=True, epochs=4, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 

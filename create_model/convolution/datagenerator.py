@@ -6,7 +6,7 @@ from glob import glob
 from reorder_dataset import get_speed
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, gdos, Dataset, datalen, batch_size, frc, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, load_speed=False):
+    def __init__(self, gdos, Dataset, datalen, batch_size, frc, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, load_speed=(False, False)):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -35,7 +35,6 @@ class image_generator(keras.utils.Sequence):
         batchfiles = np.random.choice(gdos, size=self.batch_size)
         xbatch = []
         ybatch = []
-        speeds = []
 
         for i in batchfiles:
             try:
@@ -73,10 +72,16 @@ class image_generator(keras.utils.Sequence):
             ybatch = np.concatenate((ybatch, yflip))
         
         weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
-        if self.load_speed:
-            return [xbatch/255, ybatch[:, 1]], ybatch[:, 0], weight
-        else:
-            return xbatch/255, ybatch[:, 0], weight
+        X = [xbatch/255]
+        Y = [ybatch[:, 0]]
+
+        if self.load_speed[0]:
+            X.append(ybatch[:, 1])
+
+        if self.load_speed[1]:
+            Y.append(ybatch[:, 2])
+
+        return X, Y, weight
 
     def __len__(self):
         return int(self.datalen/self.batch_size)
