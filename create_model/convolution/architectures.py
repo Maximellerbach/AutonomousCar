@@ -58,17 +58,18 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
 
         x = conv_block(12, 5, 2, x, drop=False)
         x = conv_block(16, 5, 2, x, drop=False)
-        x = conv_block(32, 3, 2, x, drop=False)
+        x = conv_block(32, 3, 2, x, drop=True)
         x = conv_block(48, 3, 2, x, drop=False)
 
         x1 = conv_block(64, (8,10), (8,10), x, flatten=True, drop=False)
-        x2 = conv_block(16, (8,1), (8,1), x, flatten=True, drop=False)
-        x3 = conv_block(16, (1,10), (1,10), x, flatten=True, drop=False)
+        x2 = conv_block(24, (8,1), (8,1), x, flatten=True, drop=False)
+        x3 = conv_block(24, (1,10), (1,10), x, flatten=True, drop=False)
         x = Concatenate()([x1, x2, x3])
         x = Dropout(drop_rate)(x)
-        n_out = 64+16*10+16*8
-        x = Reshape((n_out, 1))(x)
-        x = conv_block(48, n_out, n_out, x, flatten=True, drop=False, padding='valid', conv_type=Conv1D)
+        
+        # n_out = 64+16*10+16*8
+        # x = Reshape((n_out, 1))(x)
+        # x = conv_block(48, n_out, n_out, x, flatten=True, drop=False, padding='valid', conv_type=Conv1D)
 
         ####
 
@@ -83,13 +84,13 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         inputs.append(inp)
         y = Concatenate()([y, inp])
 
-    # y = Dense(150, use_bias=False)(y)
-    # y = Activation(prev_act)(y)
-    # y = Dropout(drop_rate)(y)
+    y = Dense(150, use_bias=False)(y)
+    y = Activation(prev_act)(y)
+    y = Dropout(drop_rate)(y)
 
     y = Dense(50, use_bias=False)(y)
     y = Activation(prev_act)(y)
-    # y = Dropout(drop_rate)(y)
+    y = Dropout(drop_rate)(y)
     
     y = Dense(25, use_bias=False)(y)
     y = Activation(prev_act)(y)
