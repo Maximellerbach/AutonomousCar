@@ -95,3 +95,15 @@ class time_component:
 
 
 
+def angle_speed_to_throttle(dos, target_speed=18):
+    dataset = Dataset([direction_component, speed_component, time_component])
+
+    for path in glob(dos+"*"):
+        annotations = dataset.load_annotation(path)
+        print(annotations)
+
+    return 
+
+
+if __name__ == "__main__":
+    angle_speed_to_throttle("")
