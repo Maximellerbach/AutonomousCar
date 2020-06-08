@@ -25,10 +25,13 @@ def average_data(data, window_size=10, sq_factor=1):
     return data
 
 def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt_range=(0, -1)):
-    if self.load_speed:
-        Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.time_component])
-    else:
-        Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
+    components = [dataset.direction_component, dataset.time_component]
+    if self.load_speed[0]:
+        components.insert(1, dataset.speed_component)
+    if self.load_speed[1]:
+        components.insert(2, dataset.throttle_component)
+    
+    Dataset = dataset.Dataset(components)
 
     # paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False) 
     paths = Dataset.load_dos_sorted(dos, sort_component=-1) # sort directory by last component (time)
@@ -37,24 +40,40 @@ def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
 
     Y = []
     speeds = []
-    pred = []
+    throttle = []
+    pred_throttle = []
+    sts = []
     for path in tqdm(paths):
         img_annotation = Dataset.load_annotation(path)
         Y.append(img_annotation[0])
 
-        if self.load_speed:
+
+        inputs = [np.expand_dims(cv2.imread(path)/255, axis=0)]
+
+        if self.load_speed[0]:
             speeds.append(img_annotation[1])
-            pred.append(self.model.predict([np.expand_dims(cv2.imread(path)/255, axis=0), np.expand_dims([img_annotation[1]], axis=0)])[0])
-        else:
-            pred.append(self.model.predict(np.expand_dims(cv2.imread(path)/255, axis=0))[0])
+            inputs.append(np.expand_dims([img_annotation[1]], axis=0))
 
+        pred = self.model.predict(inputs)
+        sts.append(pred[0][0])
 
-    plt.plot([i for i in range(dts_len)], Y, pred)
-    plt.plot([i for i in range(dts_len)], speeds)
+        if self.load_speed[1]:
+            throttle.append(img_annotation[2])
+            pred_throttle.append(pred[1][0])
+
+    plt.plot([i for i in range(dts_len)], Y, sts)
+    
+    if self.load_speed[0]:
+        plt.plot([i for i in range(dts_len)], speeds)
+
+    if self.load_speed[1]:
+        plt.plot([i for i in range(dts_len)], throttle, pred_throttle)
+        
+        
     plt.show()
 
 
-def evaluate_speed(self, data_path='C:\\Users\\maxim\\datasets\\1 ironcar driving\\'):
+def evaluate_speed(self, data_path='C:\\Users\\maxim\\datasets\\1 ironcar driving\\'): # not suited for multiple inputs
     paths = glob(data_path+"*")
     X = np.array([cv2.resize(cv2.imread(i), (160,120)) for i in tqdm(paths[:5000])])
 
@@ -159,23 +178,30 @@ def speed_impact(self, dos, dt_range=(0, -1), sleeptime=33):
     Y = np.array(Dataset.repeat_function(Dataset.load_annotation, paths))[:, 0]
     Y = data_utils.lab2linear_smooth(Y, cat2linear=False, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
     
-    window = []
     for it, path in enumerate(paths):
         img = cv2.imread(path)/255
         img_pred = np.expand_dims(img, axis=0)
 
         original_speed = Dataset.load_component_item(path, 1)
         original_pred = self.model.predict([img_pred, np.expand_dims(original_speed, axis=0)])
+
+        if self.load_speed[1]:
+            original_pred, throttle_pred = original_pred
+            original_pred = original_pred[0]
+            throttle_pred = throttle_pred[0]
         real_lab = Y[it]
 
         c = img.copy()
-        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=2)
+        if self.load_speed[1]:
+            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-int(throttle_pred*50)), color=[1, 0, 0], thickness=5)
+        else:
+            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=5)
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+real_lab*30), img.shape[0]-50), color=[0, 0, 1], thickness=2)
         
         modified, estimated = compute_speed(self.model, img_pred, real_lab, accuracy=0.5, values_range=(0, 21))
 
-        for it, angle in enumerate(modified):
-            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-50), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
+        # for it, angle in enumerate(modified):
+        #     cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-50), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
 
         cv2.imshow('img', img)
         cv2.imshow('angles', c)

@@ -62,7 +62,7 @@ class classifier():
 
         self.av = []
 
-    def build_classifier(self, model_type, load=False, load_fe=False):
+    def build_classifier(self, load=False, load_fe=False):
         """
         load a model using architectures program
         """
@@ -74,7 +74,7 @@ class classifier():
 
             model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, 
                                     prev_act="relu", last_act="linear", drop_rate=0.2, regularizer=(0.0, 0.0), lr=0.001,
-                                    last_bias=False, memory=self.memory_size, metrics=["mae", "mse"], load_speed=self.load_speed) # model used for the race
+                                    last_bias=False, memory=self.memory_size, metrics=["mse"], load_speed=self.load_speed) # model used for the race
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
@@ -218,8 +218,9 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\test.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
-                    proportion=0.1, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(True, False))
+                    proportion=0.2, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(True, True))
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function # 'C:\\Users\\maxim\\datasets\\'
+                    # when weight_acc = 2, only one steering class is created
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
@@ -232,8 +233,8 @@ if __name__ == "__main__":
     # print(iteration_speed)
 
     test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
-    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, -1))
-    pred_function.speed_impact(AI, test_dos, dt_range=(0, -1))
+    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 1000))
+    pred_function.speed_impact(AI, test_dos, dt_range=(0, 1000))
     pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 
     cv2.destroyAllWindows()

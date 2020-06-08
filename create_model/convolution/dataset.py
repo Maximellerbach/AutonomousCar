@@ -1,5 +1,7 @@
-import cv2
 from glob import glob
+
+import cv2
+
 
 class Dataset():
     def __init__(self, lab_structure):
@@ -93,17 +95,64 @@ class time_component:
         item = split_string[self.index_in_string]
         return float(item)
 
+def annotations_to_name(annotations):
+    string = ""
+    for it, component in enumerate(annotations):
+        string+=str(component)
 
+        if it != len(annotations)-1:
+            string+="_"
+        else:
+            string+=".png"
 
-def angle_speed_to_throttle(dos, target_speed=18):
+    return string
+
+def save(save_path, dts, annotations):
+    import os
+    import time
+
+    from tqdm import tqdm
+    import shutil
+
+    if os.path.isdir(save_path) == False:
+        os.mkdir(save_path)
+
+    for i in tqdm(range(len(dts))):
+        time.sleep(0.0001)
+        name = annotations_to_name(annotations[i])
+        shutil.copy(dts[i], save_path+name)
+
+def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45):
+    def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed): # Function from my Virtual Racing repo
+        dt_throttle = max_throttle-min_throttle
+
+        optimal_acc = ((target_speed-current_speed)/target_speed)
+        if optimal_acc < 0:
+            optimal_acc = 0
+
+        optimal_acc = min_throttle+((optimal_acc**0.1)*(1-abs(st)))*dt_throttle
+
+        if optimal_acc > max_throttle:
+            optimal_acc = max_throttle
+        elif optimal_acc < min_throttle:
+            optimal_acc = min_throttle
+
+        return optimal_acc
+
     dataset = Dataset([direction_component, speed_component, time_component])
 
-    for path in glob(dos+"*"):
+    dts = glob(dos+"*")
+    Y = []
+    for path in dts:
         annotations = dataset.load_annotation(path)
-        print(annotations)
+        converted_throttle = opt_acc(annotations[0], annotations[1], max_throttle, min_throttle, target_speed)
+        annotations.insert(2, converted_throttle)
 
-    return 
+        Y.append(annotations)
+    return dts, Y
+
 
 
 if __name__ == "__main__":
-    angle_speed_to_throttle("")
+    dts, annotations = angle_speed_to_throttle("C:\\Users\\maxim\\random_data\\17 custom maps\\")
+    save("C:\\Users\\maxim\\random_data\\throttle\\17 custom maps\\", dts, annotations)

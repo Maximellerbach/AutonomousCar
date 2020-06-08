@@ -74,14 +74,16 @@ class image_generator(keras.utils.Sequence):
         weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
         X = [xbatch/255]
         Y = [ybatch[:, 0]]
+        weights = [weight]
 
         if self.load_speed[0]:
             X.append(ybatch[:, 1])
 
         if self.load_speed[1]:
             Y.append(ybatch[:, 2])
+            weights.append(weight)
 
-        return X, Y, weight
+        return X, Y, weights
 
     def __len__(self):
         return int(self.datalen/self.batch_size)
