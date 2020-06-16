@@ -77,19 +77,19 @@ class control:
         # apply the mask for direction and send the command
         self.__command[0] = (self.__command[0] & 0b11110000) | (dir.to_bytes(1, byteorder='big')[0] & 0b00001111)   
         #print(self.__command[0])
-        __safeWrite__(self, self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangeMotorA(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b11001111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b000011) << 4)
         #print(self.__command[0])
-        __safeWrite__(self, self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangeMotorB(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b00111111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b00000011) << 6)
         #print(self.__command[0])
-        __safeWrite__(self, self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangePWM(self, pwm):
         "Change both motor speed, use byte from 0 to 255."
@@ -98,7 +98,7 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        __safeWrite__(self, self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangeAll(self, dir, motorA, motorB, pwm):
         "Change all the elements at the same time. Consider using the direction and motor enums. PWM is byte from 0 to 255."
@@ -110,7 +110,7 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        __safeWrite__(self, self.__command)
+        self.__safeWrite__(self.__command)
 
     def __ReadTurns__(self):    
         while self.__isRuning:
