@@ -32,10 +32,7 @@ class control:
     def __init__(self, port):
         "Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows. Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0"
         self.__ser = serial.Serial()
-        #ser.port = "/dev/ttyUSB7"
-        #ser.port = "/dev/ttyS2"
         self.__ser.port = port
-        #self.__ser.port = "COM3"
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS #number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE #set parity check: no parity
@@ -50,8 +47,8 @@ class control:
             print(self.__ser.portstr)       # check which port was really used
             self.__ser.write(self.__command)
             #self.__ReadTurns__()
-            #self.__thread = threading.Thread(target = self.__ReadTurns__)
-            #self.__thread.start()
+            self.__thread = threading.Thread(target = self.__ReadTurns__)
+            self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
 
@@ -59,8 +56,8 @@ class control:
         return self
     
     def __exit__(self):
-        #self.__isRuning = False
-        #self.__thread.join()
+        self.__isRuning = False
+        self.__thread.join()
         if (self.__ser.is_open):
             self.__ser.close()             # close port
 
@@ -111,24 +108,13 @@ class control:
 
     def __ReadTurns__(self):    
         while self.__isRuning:
-            out = ''
-            with lock:
-                while(self.__ser.inWaiting() > 0):
-                    out = self.__ser.readline()
+            if self.__ser.inWaiting() > 0:
+                out = self.__ser.readlines().split("\r")[-1]
                 if out != '':
+                    with lock:             
                         self.__rounds = out.decode()
     
     def GetTurns(self):
-        if self.__ser.inWaiting() > 0:
-            out = self.__ser.readline()
-            if out != '':
-                self.__rounds = out.decode()
-        return self.__rounds
-
-# lines to read for debug if needed
-# while ser.inWaiting() > 0:
-#    # out += str(ser.read(1))
-#    out = ser.readline()
-#if out != '':
-#    print(">>" + out.decode())
+        with lock:
+            return self.__rounds
 
