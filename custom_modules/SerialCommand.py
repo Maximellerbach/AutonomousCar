@@ -69,6 +69,7 @@ class control:
                 pass
             self.__isOperation = True
             self.__ser.write(command)
+            self.__ser.flush()
             self.__isOperation = False
 
 
