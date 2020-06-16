@@ -40,14 +40,15 @@ class control:
         #ser.writeTimeout = 1     #timeout for write
         self.__command = bytearray([0, 0])
         self.__rounds = 0
-        self.__isRuning = True        
+        self.__isRuning = True 
+        self.__isOperation = False       
         try:
             self.__ser.open()
             print("Serial port open")
             print(self.__ser.portstr)       # check which port was really used
             self.__ser.write(self.__command)
             #self.__ReadTurns__()
-            self.__thread = threading.Thread(target = self.__ReadTurns__)
+            #self.__thread = threading.Thread(target = self.__ReadTurns__)
             self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
@@ -57,35 +58,38 @@ class control:
     
     def __exit__(self):
         self.__isRuning = False
-        #self.__thread.join()
+        self.__thread.join()
         if (self.__ser.is_open):
             with lock:
                 self.__ser.close()             # close port
+
+    def __safeWrite__(self, command):
+        if (self.__ser.is_open):
+            while(self.__isOperation):
+                pass
+            self.__isOperation = True
+            self.__ser.write(command)
+            self.__isOperation = False
+
 
     def ChangeDirection(self, dir):
         "Change direction, use the direction enum."
         # apply the mask for direction and send the command
         self.__command[0] = (self.__command[0] & 0b11110000) | (dir.to_bytes(1, byteorder='big')[0] & 0b00001111)   
         #print(self.__command[0])
-        if (self.__ser.is_open):
-            with lock:
-                self.__ser.write(self.__command)
+        __safeWrite__(self, self.__command)
 
     def ChangeMotorA(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b11001111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b000011) << 4)
         #print(self.__command[0])
-        if (self.__ser.is_open):
-            with lock:
-                self.__ser.write(self.__command)
+        __safeWrite__(self, self.__command)
 
     def ChangeMotorB(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b00111111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b00000011) << 6)
         #print(self.__command[0])
-        if (self.__ser.is_open):
-            with lock:
-                self.__ser.write(self.__command)
+        __safeWrite__(self, self.__command)
 
     def ChangePWM(self, pwm):
         "Change both motor speed, use byte from 0 to 255."
@@ -94,9 +98,7 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        if (self.__ser.is_open):
-            with lock:
-                self.__ser.write(self.__command)
+        __safeWrite__(self, self.__command)
 
     def ChangeAll(self, dir, motorA, motorB, pwm):
         "Change all the elements at the same time. Consider using the direction and motor enums. PWM is byte from 0 to 255."
@@ -108,20 +110,22 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        if (self.__ser.is_open):
-            with lock:
-                self.__ser.write(self.__command)
+        __safeWrite__(self, self.__command)
 
     def __ReadTurns__(self):    
         while self.__isRuning:
-            if self.__ser.inWaiting() > 0:
-                with lock:
-                    try:
-                        out = self.__ser.readlines().split("\r")[-1]
-                        if out != '':
-                            self.__rounds = out.decode()
-                    except:
-                        pass
+            if self.__ser.in_waiting > 0:
+                while(self.__isOperation):
+                    pass
+                try:
+                    self.__isOperation = True
+                    out = self.__ser.readlines().split("\r")[-1]
+                    if out != '':
+                        self.__rounds = out.decode()
+                except:
+                    pass
+                finally:
+                    self.__isOperation = False
     
     def GetTurns(self):
         #if self.__ser.inWaiting() > 0:
