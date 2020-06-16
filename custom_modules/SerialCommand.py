@@ -115,11 +115,11 @@ class control:
             while(self.__ser.inWaiting() > 0):
                 out = self.__ser.readline()
             if out != '':
-                # with lock:
+                with lock:
                     self.__rounds = out.decode()
     
     def GetTurns(self):
-        # with lock:
+        with lock:
             return self.__rounds
 
 # lines to read for debug if needed
