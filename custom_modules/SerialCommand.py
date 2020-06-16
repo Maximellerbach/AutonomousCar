@@ -115,9 +115,13 @@ class control:
                         self.__rounds = out.decode()
     
     def GetTurns(self):
-        if self.__ser.inWaiting() > 0:
-                out = self.__ser.readlines().split("\r")[-1]
-                if out != '':
-                    self.__rounds = out.decode()
+        #if self.__ser.inWaiting() > 0:
+        try:
+            out = self.__ser.readlines().split("\r")[-1]
+            if out != '':
+                self.__rounds = out.decode()
+        except Exception as e:
+            print("Error opening port: " + str(e))
+
         return self.__rounds
 
