@@ -193,15 +193,17 @@ def speed_impact(self, dos, dt_range=(0, -1), sleeptime=33):
 
         c = img.copy()
         if self.load_speed[1]:
-            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-int(throttle_pred*50)), color=[1, 0, 0], thickness=5)
+            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-int(throttle_pred*50)), color=[1, 0, 0], thickness=3)
         else:
-            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=5)
+            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=3)
         cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+real_lab*30), img.shape[0]-50), color=[0, 0, 1], thickness=2)
         
-        modified, estimated = compute_speed(self.model, img_pred, real_lab, accuracy=0.5, values_range=(0, 21))
+        modified = compute_speed(self.model, img_pred, real_lab, accuracy=0.5, values_range=(0, 21))
 
-        # for it, angle in enumerate(modified):
-        #     cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-50), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
+        for it, pred in enumerate(modified):
+            angle = pred[0][0][0]
+            modified_throttle = pred[1][0][0]
+            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+angle*30), img.shape[0]-int(modified_throttle*50)), color=[0.5+(it)/(2*len(modified)), (it)/len(modified), 0], thickness=1)
 
         cv2.imshow('img', img)
         cv2.imshow('angles', c)
@@ -212,12 +214,9 @@ def compute_speed(model, img_pred, original_pred, accuracy=1, values_range=(0, 2
     speeds = np.array(range(values_range[0], int(values_range[1]*accuracy)))/accuracy
     modified = []
     for speed in speeds:
-        modified.append(model.predict([img_pred, np.expand_dims(speed, axis=0)])[0])
+        modified.append(model.predict([img_pred, np.expand_dims(speed, axis=0)]))
 
-    angle_dif = np.absolute(np.array(modified)-original_pred)
-    amin = np.argmin(angle_dif)
-
-    return modified, speeds[amin]
+    return modified
 
 def process_trajectory_error(): # TODO: evaluate long term precision of the model 
     return

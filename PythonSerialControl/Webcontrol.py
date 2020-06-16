@@ -1,6 +1,13 @@
+import getopt
+import os
+import platform
+import sys
+
 from flask import Flask
-from SerialCommand import control, motor, direction
-import platform, os, sys, getopt
+
+sys.path.append('../custom_modules/')
+from SerialCommand import control, direction, motor
+
 
 OK = "ok"
 ERROR = "error"

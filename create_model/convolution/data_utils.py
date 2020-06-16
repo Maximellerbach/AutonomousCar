@@ -185,7 +185,7 @@ if __name__ == "__main__":
     root_dos = "C:\\Users\\maxim\\random_data\\"
     save_dos = "linear"
 
-    doss = ["C:\\Users\\maxim\\random_data\\17 custom maps"]
+    doss = ["C:\\Users\\maxim\\random_data\\1 ironcar driving"]
     # doss = "C:\\Users\\maxim\\random_data\\"
     reccurent = False
 
@@ -200,6 +200,7 @@ if __name__ == "__main__":
                 d = autolib.get_label(p)
             except:
                 is_float=True
+
             cat2linear = not is_float
 
             data = Data(dos+"\\", is_float=is_float, recursive=False)

@@ -1,11 +1,15 @@
 import os
+import sys
 import time
+from threading import Thread
 
 import cv2
 import numpy as np
 from keras.models import load_model
-from threading import Thread
+
+sys.path.append('../custom_modules/')
 import SerialCommand
+
 
 serialport = '/dev/ttyS0'
 os.system('sudo chmod 0666 {}'.format(serialport))
@@ -21,17 +25,6 @@ dico = [10,8,6,4,2]
 dico_save = [3,5,7,9,11]
 dico_speed = [1, 0.9, 0.8, 0.9, 1]
 speed = int(input('speed: '))
-
-'''
-vel_sensor = IMUSensor.sensor(10, 1000)
-thread = Thread(target = vel_sensor.loop)
-thread.start()
-
-pid = PID(1, 0.5, 0.1)
-pid.setpoint = 0.1 #targeted speed
-pid.output_limits = (0, 1)
-v = vel_sensor.get_vel()
-'''
 
 cap = cv2.VideoCapture(0)
 ser.ChangeMotorA(2)

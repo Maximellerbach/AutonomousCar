@@ -1,6 +1,11 @@
-import SerialCommand
+import getopt
+import os
+import sys
 import time
-import sys, getopt, os
+
+sys.path.append('../custom_modules/')
+import SerialCommand
+
 
 def printusage():
     print(__file__ + " -c <COM_Port>")
@@ -73,5 +78,4 @@ for opt, arg in opts:
 
     else:
         printusage()
-
 
