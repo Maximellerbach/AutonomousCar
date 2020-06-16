@@ -50,8 +50,8 @@ class control:
             print(self.__ser.portstr)       # check which port was really used
             self.__ser.write(self.__command)
             #self.__ReadTurns__()
-            self.__thread = threading.Thread(target = self.__ReadTurns__)
-            self.__thread.start()
+            #self.__thread = threading.Thread(target = self.__ReadTurns__)
+            #self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
 
@@ -59,8 +59,8 @@ class control:
         return self
     
     def __exit__(self):
-        self.__isRuning = False
-        self.__thread.join()
+        #self.__isRuning = False
+        #self.__thread.join()
         if (self.__ser.is_open):
             self.__ser.close()             # close port
 
@@ -119,9 +119,11 @@ class control:
                         self.__rounds = out.decode()
     
     def GetTurns(self):
-        print("ici")
-        with lock:
-            return self.__rounds
+        if self.__ser.inWaiting() > 0:
+            out = self.__ser.readline()
+            if out != '':
+                self.__rounds = out.decode()
+        return self.__rounds
 
 # lines to read for debug if needed
 # while ser.inWaiting() > 0:
