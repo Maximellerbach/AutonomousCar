@@ -8,7 +8,6 @@ from flask import Flask
 sys.path.append('../custom_modules/')
 from SerialCommand import control, direction, motor
 
-
 OK = "ok"
 ERROR = "error"
 
@@ -22,12 +21,6 @@ def printusage():
     print("  You can use as well environement variable COM_PORT. Arguments will prevent on environment variable")
 
 def getPortName(argv):
-    #plat = platform.system()
-    #if (plat == "Windows"):
-    #    ser = control("COM4")
-    #else:
-    #    ser = control("/dev/ttyS2")
-    #    ser = control("/dev/ttyUSB0")
     comPort = ""
     try:
         opts, args = getopt.getopt(argv,"c:h",["com=", "help"])
@@ -52,7 +45,6 @@ def getPortName(argv):
     return comPort
 
 app = Flask(__name__)
-
 ser = control(getPortName(sys.argv[1:]))
 
 def cleanargs(val):
@@ -105,6 +97,5 @@ def turns():
     return str(out)
 
 if __name__ == '__main__':
-
     # run flask, host = 0.0.0.0 needed to get access to it outside of the host
     app.run(host='0.0.0.0',port=1337)
