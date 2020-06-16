@@ -119,6 +119,7 @@ class control:
                     self.__rounds = out.decode()
     
     def GetTurns(self):
+        print("ici")
         with lock:
             return self.__rounds
 
