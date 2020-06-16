@@ -47,8 +47,8 @@ class control:
             print(self.__ser.portstr)       # check which port was really used
             self.__ser.write(self.__command)
             #self.__ReadTurns__()
-            #self.__thread = threading.Thread(target = self.__ReadTurns__)
-            #self.__thread.start()
+            self.__thread = threading.Thread(target = self.__ReadTurns__)
+            self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
 
@@ -115,21 +115,24 @@ class control:
     def __ReadTurns__(self):    
         while self.__isRuning:
             if self.__ser.inWaiting() > 0:
-                out = self.__ser.readlines().split("\r")[-1]
-                if out != '':
-                    with lock:
-                        self.__rounds = out.decode()
+                with lock:
+                    try:
+                        out = self.__ser.readlines().split("\r")[-1]
+                        if out != '':
+                            self.__rounds = out.decode()
+                    except:
+                        pass
     
     def GetTurns(self):
         #if self.__ser.inWaiting() > 0:
-        try:
-            with lock:
-                if self.__ser.inWaiting() > 0:
-                    out = self.__ser.readlines().split("\r")[-1]
-                    if out != '':
-                        self.__rounds = out.decode()
-        except Exception as e:
-            print("Error opening port: " + str(e))
+        #try:
+        #    with lock:
+        #        if self.__ser.inWaiting() > 0:
+        #            out = self.__ser.readlines().split("\r")[-1]
+        #            if out != '':
+        #                self.__rounds = out.decode()
+        #except Exception as e:
+        #    print("Error opening port: " + str(e))
 
         return self.__rounds
 
