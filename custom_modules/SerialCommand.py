@@ -2,7 +2,7 @@ import serial
 from enum import IntEnum
 import threading
 
-lock = threading.Lock()
+lock = threading.RLock()
 
 class direction(IntEnum):
     DIR_LEFT_7 = 0
