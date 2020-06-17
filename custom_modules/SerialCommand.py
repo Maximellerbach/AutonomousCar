@@ -1,9 +1,5 @@
 import serial
 from enum import IntEnum
-import threading
-import time
-
-lock = threading.RLock()
 
 class direction(IntEnum):
     DIR_LEFT_7 = 0
@@ -28,74 +24,56 @@ class motor(IntEnum):
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
 
-class control:    
+class control:
     "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
     def __init__(self, port):
         "Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows. Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0"
         self.__ser = serial.Serial()
+        #ser.port = "/dev/ttyUSB7"
+        #ser.port = "/dev/ttyS2"
         self.__ser.port = port
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS #number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE #set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE #number of stop bits
-        self.__ser.timeout = 0     #no timeout
+        #ser.writeTimeout = 1     #timeout for write
         self.__command = bytearray([0, 0])
-        self.__rounds = 0
-        self.__isRuning = True 
-        self.__isOperation = False
-        self.__toSend = []
         try:
             self.__ser.open()
             print("Serial port open")
             print(self.__ser.portstr)       # check which port was really used
             self.__ser.write(self.__command)
-            #self.__ReadTurns__()
-            #self.__thread = threading.Thread(target = self.__ReadTurns__)
-            #self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
 
     def __enter__(self):
         return self
     
-    def __exit__(self):
-        self.__isRuning = False
-        self.__thread.join()
+    def __exit__(self, exc_type, exc_value, traceback):
         if (self.__ser.is_open):
-            with lock:
-                self.__ser.close()             # close port
-
-    def __safeWrite__(self, command):
-        if (self.__ser.is_open):
-            #while(self.__isOperation):
-            #    pass
-            #self.__isOperation = True
-            self.__ser.write(command)
-            #self.__ser.flush()
-            #self.__isOperation = False
-
+            self.__ser.close()             # close port
 
     def ChangeDirection(self, dir):
         "Change direction, use the direction enum."
         # apply the mask for direction and send the command
         self.__command[0] = (self.__command[0] & 0b11110000) | (dir.to_bytes(1, byteorder='big')[0] & 0b00001111)   
         #print(self.__command[0])
-        #self.__toSend.append(self.__command)
-        self.__safeWrite__(self.__command)
+        if (self.__ser.is_open):
+            self.__ser.write(self.__command)
 
     def ChangeMotorA(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b11001111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b000011) << 4)
         #print(self.__command[0])
-        #self.__toSend.append(self.__command)
-        self.__safeWrite__(self.__command)
+        if (self.__ser.is_open):
+            self.__ser.write(self.__command)
 
     def ChangeMotorB(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b00111111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b00000011) << 6)
         #print(self.__command[0])
-        #self.__toSend.append(self.__command)
-        self.__safeWrite__(self.__command)
+        if (self.__ser.is_open):
+            self.__ser.write(self.__command)
 
     def ChangePWM(self, pwm):
         "Change both motor speed, use byte from 0 to 255."
@@ -104,8 +82,8 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        #self.__toSend.append(self.__command)
-        self.__safeWrite__(self.__command)
+        if (self.__ser.is_open):
+            self.__ser.write(self.__command)
 
     def ChangeAll(self, dir, motorA, motorB, pwm):
         "Change all the elements at the same time. Consider using the direction and motor enums. PWM is byte from 0 to 255."
@@ -117,37 +95,12 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        #self.__toSend.append(self.__command)
-        self.__safeWrite__(self.__command)
+        if (self.__ser.is_open):
+            self.__ser.write(self.__command)
 
-    def __ReadTurns__(self):    
-        pass
-        #while self.__isRuning:
-        #    for cmd in self.__toSend:
-        #        self.__safeWrite__(cmd)
-        #        self.__toSend.remove(cmd)
-            #    time.sleep(0.1)
-            # if self.__ser.in_waiting > 0:
-            #     while(self.__isOperation):
-            #         pass
-            #     try:
-            #         self.__isOperation = True
-            #         out = self.__ser.readlines().split("\n")[-1]
-            #         if out != '':
-            #             self.__rounds = out.decode()
-            #     except:
-            #         pass
-            #     finally:
-            #         self.__isOperation = False
-    
-    def GetTurns(self):
-        try:
-            if self.__ser.in_waiting > 0:
-                out = self.__ser.readlines().split("\n")[-1]
-                if out != '':
-                    self.__rounds = out.decode()
-        except Exception as e:
-           print("Error opening port: " + str(e))
-
-        return self.__rounds
-
+# lines to read for debug if needed
+# while ser.inWaiting() > 0:
+#    # out += str(ser.read(1))
+#    out = ser.readline()
+#if out != '':
+#    print(">>" + out.decode())
