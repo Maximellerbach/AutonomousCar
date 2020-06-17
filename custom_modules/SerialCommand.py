@@ -50,8 +50,8 @@ class control:
             print(self.__ser.portstr)       # check which port was really used
             self.__ser.write(self.__command)
             #self.__ReadTurns__()
-            self.__thread = threading.Thread(target = self.__ReadTurns__)
-            self.__thread.start()
+            #self.__thread = threading.Thread(target = self.__ReadTurns__)
+            #self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
 
@@ -80,22 +80,22 @@ class control:
         # apply the mask for direction and send the command
         self.__command[0] = (self.__command[0] & 0b11110000) | (dir.to_bytes(1, byteorder='big')[0] & 0b00001111)   
         #print(self.__command[0])
-        self.__toSend.append(self.__command)
-        #self.__safeWrite__(self.__command)
+        #self.__toSend.append(self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangeMotorA(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b11001111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b000011) << 4)
         #print(self.__command[0])
-        self.__toSend.append(self.__command)
-        #self.__safeWrite__(self.__command)
+        #self.__toSend.append(self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangeMotorB(self, mot):
         "Change motor A state, use the motor enum."
         self.__command[0] = (self.__command[0] & 0b00111111) | ((mot.to_bytes(1, byteorder='big')[0] & 0b00000011) << 6)
         #print(self.__command[0])
-        self.__toSend.append(self.__command)
-        #self.__safeWrite__(self.__command)
+        #self.__toSend.append(self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangePWM(self, pwm):
         "Change both motor speed, use byte from 0 to 255."
@@ -104,8 +104,8 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        self.__toSend.append(self.__command)
-        #self.__safeWrite__(self.__command)
+        #self.__toSend.append(self.__command)
+        self.__safeWrite__(self.__command)
 
     def ChangeAll(self, dir, motorA, motorB, pwm):
         "Change all the elements at the same time. Consider using the direction and motor enums. PWM is byte from 0 to 255."
@@ -117,14 +117,14 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
-        self.__toSend.append(self.__command)
-        #self.__safeWrite__(self.__command)
+        #self.__toSend.append(self.__command)
+        self.__safeWrite__(self.__command)
 
     def __ReadTurns__(self):    
-        while self.__isRuning:
-            for cmd in self.__toSend:
-                self.__safeWrite__(cmd)
-                self.__toSend.remove(cmd)
+        #while self.__isRuning:
+        #    for cmd in self.__toSend:
+        #        self.__safeWrite__(cmd)
+        #        self.__toSend.remove(cmd)
             #    time.sleep(0.1)
             # if self.__ser.in_waiting > 0:
             #     while(self.__isOperation):
