@@ -126,18 +126,18 @@ class control:
                 self.__safeWrite__(cmd)
                 self.__toSend.remove(cmd)
                 time.sleep(0.1)
-            if self.__ser.in_waiting > 0:
-                while(self.__isOperation):
-                    pass
-                try:
-                    self.__isOperation = True
-                    out = self.__ser.readlines().split("\n")[-1]
-                    if out != '':
-                        self.__rounds = out.decode()
-                except:
-                    pass
-                finally:
-                    self.__isOperation = False
+            # if self.__ser.in_waiting > 0:
+            #     while(self.__isOperation):
+            #         pass
+            #     try:
+            #         self.__isOperation = True
+            #         out = self.__ser.readlines().split("\n")[-1]
+            #         if out != '':
+            #             self.__rounds = out.decode()
+            #     except:
+            #         pass
+            #     finally:
+            #         self.__isOperation = False
     
     def GetTurns(self):
         #if self.__ser.inWaiting() > 0:
