@@ -125,7 +125,7 @@ class control:
             for cmd in self.__toSend:
                 self.__safeWrite__(cmd)
                 self.__toSend.remove(cmd)
-                time.sleep(0.01)
+                time.sleep(0.1)
             if self.__ser.in_waiting > 0:
                 while(self.__isOperation):
                     pass
