@@ -1,6 +1,7 @@
 import serial
 from enum import IntEnum
 import threading
+import time
 
 lock = threading.RLock()
 
@@ -124,13 +125,13 @@ class control:
             for cmd in self.__toSend:
                 self.__safeWrite__(cmd)
                 self.__toSend.remove(cmd)
+                time.sleep(0.01)
             if self.__ser.in_waiting > 0:
                 while(self.__isOperation):
                     pass
-                self.__isOperation = True
                 try:
+                    self.__isOperation = True
                     out = self.__ser.readlines().split("\n")[-1]
-                    print(out)
                     if out != '':
                         self.__rounds = out.decode()
                 except:
