@@ -141,15 +141,13 @@ class control:
             #         self.__isOperation = False
     
     def GetTurns(self):
-        #if self.__ser.inWaiting() > 0:
-        #try:
-        #    with lock:
-        #        if self.__ser.inWaiting() > 0:
-        #            out = self.__ser.readlines().split("\n")[-1]
-        #            if out != '':
-        #                self.__rounds = out.decode()
-        #except Exception as e:
-        #    print("Error opening port: " + str(e))
+        try:
+            if self.__ser.in_waiting > 0:
+                out = self.__ser.readlines().split("\n")[-1]
+                if out != '':
+                    self.__rounds = out.decode()
+        except Exception as e:
+           print("Error opening port: " + str(e))
 
         return self.__rounds
 
