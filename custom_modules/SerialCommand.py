@@ -121,6 +121,7 @@ class control:
         self.__safeWrite__(self.__command)
 
     def __ReadTurns__(self):    
+        pass
         #while self.__isRuning:
         #    for cmd in self.__toSend:
         #        self.__safeWrite__(cmd)
