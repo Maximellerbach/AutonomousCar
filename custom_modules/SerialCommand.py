@@ -130,6 +130,7 @@ class control:
                 try:
                     self.__isOperation = True
                     out = self.__ser.readlines().split("\n")[-1]
+                    print(out)
                     if out != '':
                         self.__rounds = out.decode()
                 except:
