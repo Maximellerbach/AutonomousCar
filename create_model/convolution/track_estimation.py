@@ -101,7 +101,7 @@ class track_estimation():
             st = -st # transform [-1, 1] to [1, -1]
             lab_list.append(st)
 
-            # TODO !!!!!! current steering angle estimation # https://stackoverflow.com/questions/25895222/estimated-position-of-vector-after-time-angle-and-speed
+            # TODO current steering angle estimation # https://stackoverflow.com/questions/25895222/estimated-position-of-vector-after-time-angle-and-speed
 
             degree_angle = st*self.steer_coef*(speed_series[it]*time_series[it])
             rad = math.radians(degree_angle)

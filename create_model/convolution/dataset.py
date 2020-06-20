@@ -166,9 +166,9 @@ def add_dummy_speed(dos, dummy_speed=10):
 
 
 if __name__ == "__main__":
-    # dts, annotations = add_dummy_speed("C:\\Users\\maxim\\random_data\\linear\\1 ironcar driving\\", dummy_speed=1)
-    # save("C:\\Users\\maxim\\random_data\\speed\\1 ironcar driving\\", dts, annotations)
+    dts, annotations = add_dummy_speed("C:\\Users\\maxim\\random_data\\linear\\1 ironcar driving\\", dummy_speed=1)
+    save("C:\\Users\\maxim\\random_data\\speed\\1 ironcar driving\\", dts, annotations)
 
-    dts, annotations = angle_speed_to_throttle("C:\\Users\\maxim\\random_data\\17 custom maps\\")
-    save("C:\\Users\\maxim\\random_data\\throttle\\17 custom maps\\", dts, annotations)
+    # dts, annotations = angle_speed_to_throttle("C:\\Users\\maxim\\random_data\\17 custom maps\\")
+    # save("C:\\Users\\maxim\\random_data\\throttle\\17 custom maps\\", dts, annotations)
     
