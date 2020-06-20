@@ -217,14 +217,14 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\linearv4_latency.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
+    AI = classifier(name = 'test_model\\convolution\\linearv5_latency.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
                     proportion=0.1, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(True, True))
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function # 'C:\\Users\\maxim\\datasets\\'
                     # when weight_acc = 2, only one steering class is created
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False, load_fe=True, flip=True, epochs=4, batch_size=16)
+    AI.train(load=False, load_fe=True, flip=True, epochs=5, batch_size=16)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
