@@ -73,7 +73,7 @@ class classifier():
         else:
 
             model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, 
-                                    prev_act="relu", last_act="tanh", drop_rate=0.2, regularizer=(0.0, 0.0), lr=0.001,
+                                    prev_act="relu", last_act="linear", drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
                                     last_bias=False, memory=self.memory_size, metrics=["mse"], load_speed=self.load_speed) # model used for the race
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
@@ -234,8 +234,8 @@ if __name__ == "__main__":
 
     test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
     # test_dos = "C:\\Users\\maxim\\random_data\\throttle\\1 ironcar driving\\"
-    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, -1))
-    pred_function.speed_impact(AI, test_dos, dt_range=(0, -1))
+    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 5000))
+    pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
     pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 
     cv2.destroyAllWindows()
