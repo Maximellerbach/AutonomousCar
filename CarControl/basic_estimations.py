@@ -92,8 +92,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32, orientation=1):
 
             print(in_progress_turns, delta_distance, remaining, it)
         
-            
-
+        
     ser.ChangePWM(0)
     ser.ChangeDirection(dico[2])
     ser.ChangeMotorA(0)
@@ -121,5 +120,6 @@ if __name__ == "__main__":
     ser = start_serial()
     rotatecar(ser, angle, way, orientation=orientation)
 
+    time.sleep(1)
     ser.stop()
     print("got here")
