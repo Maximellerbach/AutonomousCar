@@ -57,11 +57,10 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
 
     ser.ChangeDirection(dico[0])
     ser.ChangeMotorA(1)
-    ser.ChangePWM(75)
+    ser.ChangePWM(85)
     
     while(remaining>0):
         in_progress_turns = -ser.GetTurns()
-        print(in_progress_turns)
         in_progress_time = ser.GetTimeLastReceived()
         # print(in_progress_turns, in_progress_time)
 
