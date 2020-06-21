@@ -104,6 +104,7 @@ if __name__ == "__main__":
                 print(arg.strip())
                 angle = int(arg.strip())
             elif opt in ("-w", "--way"):
+                print(arg.strip())
                 way = int(arg.strip())
                 
         return angle, way
