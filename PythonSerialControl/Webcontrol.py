@@ -93,9 +93,8 @@ def pilotstop():
 
 @app.route('/turns')
 def turns():
-    #out = ser.GetTurns()
-    #return str(out)
-    return ""
+    out = ser.GetTurns()
+    return str(out)
 
 if __name__ == '__main__':
     # run flask, host = 0.0.0.0 needed to get access to it outside of the host

@@ -10,7 +10,7 @@ def dir_loss(y_true, y_pred):
     custom loss function for the models
     (only use if you have the same models as me)
     """
-    return mae(y_true, y_pred) + mse(y_true, y_pred)
+    return mae(y_true, y_pred)/2 + mse(y_true, y_pred)
 
 def linear2dir(linear, dir_range=(3, 11), to_int=True):
     delta_range = dir_range[1]-dir_range[0]
