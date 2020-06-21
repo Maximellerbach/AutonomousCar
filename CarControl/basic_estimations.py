@@ -70,7 +70,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32, orientation=1):
     else:
         direction = -1
 
-    ser.ChangeDirection(dico[0])
+    ser.ChangeDirection(dico[direction])
     ser.ChangeMotorA(way)
     ser.ChangePWM(85)
     
