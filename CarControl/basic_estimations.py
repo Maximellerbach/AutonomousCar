@@ -121,5 +121,5 @@ if __name__ == "__main__":
     ser = start_serial()
     rotatecar(ser, angle, way, orientation=orientation)
 
-    exit()
+    ser.stop()
     print("got here")

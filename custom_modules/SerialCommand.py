@@ -59,7 +59,7 @@ class control:
     def __enter__(self):
         return self
     
-    def __exit__(self):
+    def stop(self):
         self.__isRuning = False
         self.__thread.join()
         if (self.__ser.is_open):
