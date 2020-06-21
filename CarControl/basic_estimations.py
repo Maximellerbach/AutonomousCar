@@ -47,7 +47,7 @@ def get_approx_radius(angle):
 
     return r
 
-def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
+def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32, orientation=1):
     if way == 2:
         mult = -1
     else:
@@ -64,6 +64,11 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     prev_turns = start_turns
 
     print(start_turns)
+
+    if orientation == 1:
+        direction = 0
+    else:
+        direction = -1
 
     ser.ChangeDirection(dico[0])
     ser.ChangeMotorA(way)
@@ -101,17 +106,20 @@ if __name__ == "__main__":
                 angle = int(argv[it+1].strip())
             elif arg in ("-w", "--way"):
                 way = int(argv[it+1].strip())
+            elif arg in ("-o", "--orientation"):
+                orientation = int(argv[it+1].strip())
                 
-        return angle, way
+        return angle, way, orientation
 
     # r = get_approx_radius(38)
     # d = distance_needed_to_turn(90, r)
     # d_remaining = remaining_distance(0.5, d)
     # print(r d, d_remaining)
 
-    angle, way = getParams(sys.argv[1:])
+    angle, way, orientation = getParams(sys.argv[1:])
 
     ser = start_serial()
-    rotatecar(ser, angle, way)
-    
-    sys.exit()
+    rotatecar(ser, angle, way, orientation=orientation)
+
+    exit()
+    print("got here")
