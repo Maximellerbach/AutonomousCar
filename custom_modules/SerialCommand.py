@@ -125,8 +125,7 @@ class control:
                 try:
                     out = self.__ser.readlines()[-1]
                     if out != '':
-                        self.__rounds = out.decode() # .replace('\r', '').replace('\n','')
-                        print(self.__rounds)
+                        self.__rounds = out.decode()
                         self.__time_last_received = time.time()
                 except:
                     pass

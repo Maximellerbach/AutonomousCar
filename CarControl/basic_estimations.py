@@ -62,19 +62,22 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
     
     it = 0
     while(remaining>0):
-        in_progress_turns = -ser.GetTurns()
-        in_progress_time = ser.GetTimeLastReceived()
-        # print(in_progress_turns, in_progress_time)
+        try:
+            in_progress_turns = -ser.GetTurns()
+            in_progress_time = ser.GetTimeLastReceived()
+            # print(in_progress_turns, in_progress_time)
 
-        if in_progress_turns != prev_turns:
-            delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
-            dt = start_time-in_progress_time
-            delta_distance = wheel_length*((delta_turns)/5)
-            if delta_distance/dt < 10: # set a threshold of 10m/s
-                remaining = remaining_distance(delta_distance, d_remaining)
-            else:
-                overflow_count += 1 # in case of overflow, positive int turns will become negative
-            print(delta_distance, remaining, delta_turns, it)
+            if in_progress_turns != prev_turns:
+                delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
+                dt = start_time-in_progress_time
+                delta_distance = wheel_length*((delta_turns)/5)
+                if delta_distance/dt < 10: # set a threshold of 10m/s
+                    remaining = remaining_distance(delta_distance, d_remaining)
+                else:
+                    overflow_count += 1 # in case of overflow, positive int turns will become negative
+                print(delta_distance, remaining, delta_turns, it)
+        except:
+            pass
 
     ser.ChangePWM(0)
     ser.ChangeDirection(dico[2])
