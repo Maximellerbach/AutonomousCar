@@ -96,6 +96,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
 if __name__ == "__main__":
         
     def getParams(argv):
+        import getopt
         opts, args = getopt.getopt(argv,"a:w",["angle=", "way="])
         for opt, arg in opts:
             if opt in ("-a", "--angle"):
