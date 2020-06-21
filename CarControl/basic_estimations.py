@@ -57,7 +57,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     d_remaining = distance_needed_to_turn(angle, r)*mult
     remaining = d_remaining
 
-    time.sleep(2)
+    time.sleep(1) # wait for the get turn thread to start
 
     start_turns = -ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
@@ -101,4 +101,4 @@ if __name__ == "__main__":
     # print(r d, d_remaining)
 
     ser = start_serial()
-    rotatecar(ser, 90, 1)
+    rotatecar(ser, 90, 2)
