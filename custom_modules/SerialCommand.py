@@ -128,7 +128,7 @@ class control:
                 while(self.__isOperation):
                     pass
                 self.__isOperation = True
-                out = self.__ser.readlines().split("\n")[-1]
+                out = self.__ser.readlines()[-1]
                 print(out)
                 if out != '':
                     self.__rounds = out.decode()
