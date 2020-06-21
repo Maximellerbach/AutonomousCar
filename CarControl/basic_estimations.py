@@ -46,7 +46,7 @@ def get_approx_radius(angle):
 
     return r
 
-def rotatecar(ser, angle, max_angle=25, wheel_length=0.32):
+def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
     r = get_approx_radius(max_angle)
     d_remaining = distance_needed_to_turn(angle, r)
     remaining = d_remaining
