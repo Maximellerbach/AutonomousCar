@@ -47,14 +47,14 @@ def get_approx_radius(angle):
     return r
 
 def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
-    r = get_approx_radius(max_angle)
-    d_remaining = distance_needed_to_turn(angle, r)
-    remaining = d_remaining
-
     if way == 2:
         mult = -1
     else:
         mult = 1
+        
+    r = get_approx_radius(max_angle)
+    d_remaining = distance_needed_to_turn(angle, r)*mult
+    remaining = d_remaining
 
     start_turns = -ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
@@ -67,7 +67,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     ser.ChangePWM(85)
     
     it = 0
-    while(remaining>0.1): # stop 10cm before (inertia)
+    while(remaining>0): # stop 10cm before (inertia)
         in_progress_turns = -ser.GetTurns()
         in_progress_time = ser.GetTimeLastReceived()
         # print(in_progress_turns, in_progress_time)
@@ -80,6 +80,10 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
             remaining = remaining_distance(delta_distance, d_remaining)
                 
             prev_turns = in_progress_turns
+            it += 1
+
+            print(delta_distance, remaining, it)
+        
             
 
     ser.ChangePWM(0)
