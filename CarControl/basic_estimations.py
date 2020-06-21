@@ -101,6 +101,7 @@ if __name__ == "__main__":
         for opt, arg in opts:
             print(opt)
             if opt in ("-a", "--angle"):
+                print(arg.strip())
                 angle = int(arg.strip())
             elif opt in ("-w", "--way"):
                 way = int(arg.strip())
