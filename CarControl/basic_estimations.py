@@ -97,14 +97,14 @@ if __name__ == "__main__":
         
     def getParams(argv):
         import getopt
-        opts, args = getopt.getopt(argv,"aw",["angle=", "way="])
+        print(argv)
+        args = argv.split()
+        opts, args = getopt.getopt(argv,"aw")
+
         for opt, arg in opts:
-            print(opt)
             if opt in ("-a", "--angle"):
-                print(arg.strip())
                 angle = int(arg.strip())
             elif opt in ("-w", "--way"):
-                print(arg.strip())
                 way = int(arg.strip())
                 
         return angle, way
