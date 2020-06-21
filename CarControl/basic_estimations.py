@@ -66,7 +66,7 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
         if start_time != in_progress_time:
             delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
             dt = start_time-in_progress_time
-            delta_distance = wheel_length*((delta_turns)/14)
+            delta_distance = wheel_length*((delta_turns)/7)
             if delta_distance/dt < 10: # set a threshold of 10m/s
                 remaining = remaining_distance(delta_distance, d_remaining)
             else:
