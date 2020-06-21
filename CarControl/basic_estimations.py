@@ -84,4 +84,4 @@ if __name__ == "__main__":
     # print(r d, d_remaining)
 
     ser = start_serial()
-    rotatecar(ser, 45)
+    rotatecar(ser, 90)
