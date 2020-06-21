@@ -74,6 +74,7 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
 
     ser.ChangePWM(dico[2])
     ser.ChangeDirection(0)
+    ser.ChangeMotorA(0)
 
 if __name__ == "__main__":
     
