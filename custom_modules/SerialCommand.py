@@ -1,6 +1,8 @@
-import serial
-from enum import IntEnum
 import threading
+import time
+from enum import IntEnum
+
+import serial
 
 lock = threading.RLock()
 
@@ -40,6 +42,7 @@ class control:
         self.__ser.timeout = 0     #no timeout
         self.__command = bytearray([0, 0])
         self.__rounds = 0
+        self.__time_last_received = time.time()
         self.__isRuning = True 
         self.__isOperation = False
         self.__toSend = []
@@ -123,11 +126,14 @@ class control:
                     out = self.__ser.readlines()[-1]
                     if out != '':
                         self.__rounds = out.decode()
+                        self.__time_last_received = time.time()
                 except:
                     pass
                 finally:
                     self.__isOperation = False
 
-    
     def GetTurns(self):
         return self.__rounds
+
+    def GetTimeLastReceived(self):
+        return self.__time_last_received

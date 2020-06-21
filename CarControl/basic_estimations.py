@@ -3,9 +3,14 @@ import sys
 
 import numpy as np
 
-sys.path.append('custom_modules\\')
+sys.path.append('../custom_modules/')
+import SerialCommand
 
+dico = [10,8,6,4,2]
 
+def start_serial(port="/dev/ttyUSB0"):
+    ser = SerialCommand.control(port)
+    return ser
 
 def plot_points(positions):
     import matplotlib.pyplot as plt
@@ -24,10 +29,9 @@ def get_approx_distance(dt, speed):
 def distance_needed_to_turn(angle, r):
     return 2*math.pi*r*(math.radians(angle)/math.pi)
 
-def remaining_distance(dt, speed, d_remaining):
-    d_remaining = d_remaining-(dt*speed)
-    eta = d_remaining/speed
-    return d_remaining, eta
+def remaining_distance(distance, d_remaining):
+    d_remaining = d_remaining-distance
+    return d_remaining
 
 
 def get_approx_radius(angle):
@@ -42,10 +46,37 @@ def get_approx_radius(angle):
 
     return r
 
+def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
+    r = get_approx_radius(max_angle)
+    d_remaining = distance_needed_to_turn(angle, r)
+
+    ser.ChangeDirection(dico[0])
+    ser.ChangePWM(75)
+
+    overflow_count = 0
+    start_turns = -ser.GetTurns()
+    start_time = ser.TimeLastReceived()
+    while(d_remaining>0):
+        in_progress_turns = -ser.GetTurns()
+        in_progress_time = ser.TimeLastReceived()
+
+        delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
+        dt = start_time-in_progress_time
+        delta_distance = (wheel_length*(delta_turns)/14)
+        if delta_distance/dt > 10: # set a threshold of 10m/s
+            d_remaining = remaining_distance(delta_distance, d_remaining)
+        else:
+            overflow_count += 1 # in case of overflow, positive int turns will become negative
+
+    ser.ChangePWM(0)
+    ser.ChangeDirection(0)
 
 if __name__ == "__main__":
     
-    r = get_approx_radius(38)
-    d = distance_needed_to_turn(90, r)
-    d_remaining, eta = remaining_distance(0.05, 5, d)
-    print(r, d, d_remaining, eta)
+    # r = get_approx_radius(38)
+    # d = distance_needed_to_turn(90, r)
+    # d_remaining = remaining_distance(0.5, d)
+    # print(r d, d_remaining)
+
+    ser = start_serial()
+    rotatecar(ser, 45)
