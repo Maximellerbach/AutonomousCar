@@ -82,7 +82,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
             prev_turns = in_progress_turns
             it += 1
 
-            print(delta_distance, remaining, it)
+            print(in_progress_turns, delta_distance, remaining, it)
         
             
 
