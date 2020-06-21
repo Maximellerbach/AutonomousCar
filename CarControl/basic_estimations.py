@@ -51,6 +51,9 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     d_remaining = distance_needed_to_turn(angle, r)
     remaining = d_remaining
 
+    if way == 2:
+        mult = -1
+
     overflow_count = 0
     start_turns = -ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
@@ -70,7 +73,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
             if in_progress_turns != prev_turns:
                 delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
                 dt = start_time-in_progress_time
-                delta_distance = wheel_length*((delta_turns)/5)
+                delta_distance = (wheel_length*((delta_turns)/5))*mult
                 if delta_distance/dt < 10: # set a threshold of 10m/s
                     remaining = remaining_distance(delta_distance, d_remaining)
                 else:
