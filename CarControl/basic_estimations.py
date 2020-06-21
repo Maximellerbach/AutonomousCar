@@ -60,13 +60,14 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
         in_progress_turns = -ser.GetTurns()
         in_progress_time = ser.GetTimeLastReceived()
 
-        delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
-        dt = start_time-in_progress_time
-        delta_distance = (wheel_length*(delta_turns)/14)
-        if delta_distance/dt > 10: # set a threshold of 10m/s
-            d_remaining = remaining_distance(delta_distance, d_remaining)
-        else:
-            overflow_count += 1 # in case of overflow, positive int turns will become negative
+        if start_time != in_progress_time:
+            delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
+            dt = start_time-in_progress_time
+            delta_distance = (wheel_length*(delta_turns)/14)
+            if delta_distance/dt > 10: # set a threshold of 10m/s
+                d_remaining = remaining_distance(delta_distance, d_remaining)
+            else:
+                overflow_count += 1 # in case of overflow, positive int turns will become negative
 
     ser.ChangePWM(0)
     ser.ChangeDirection(0)
