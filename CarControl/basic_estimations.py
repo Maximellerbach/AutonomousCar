@@ -53,6 +53,8 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
 
     if way == 2:
         mult = -1
+    else:
+        mult = 1
 
     overflow_count = 0
     start_turns = -ser.GetTurns()
@@ -78,6 +80,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
             else:
                 overflow_count += 1 # in case of overflow, positive int turns will become negative
             print(delta_distance, remaining, delta_turns, it)
+            prev_turns = in_progress_turns
             
 
     ser.ChangePWM(0)
