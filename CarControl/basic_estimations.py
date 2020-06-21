@@ -97,7 +97,7 @@ if __name__ == "__main__":
         
     def getParams(argv):
         import getopt
-        opts, args = getopt.getopt(argv,"a:w",["angle=", "way="])
+        opts, args = getopt.getopt(argv,"aw",["angle=", "way="])
         for opt, arg in opts:
             print(opt)
             if opt in ("-a", "--angle"):
