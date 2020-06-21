@@ -133,7 +133,7 @@ class control:
                     self.__isOperation = False
 
     def GetTurns(self):
-        return self.__rounds
+        return int(self.__rounds)
 
     def GetTimeLastReceived(self):
         return self.__time_last_received

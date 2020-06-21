@@ -58,8 +58,7 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
     start_turns = -ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
     while(d_remaining>0):
-        in_progress_turns = ser.GetTurns()
-        print(in_progress_turns)
+        in_progress_turns = -ser.GetTurns()
         in_progress_time = ser.GetTimeLastReceived()
         # print(in_progress_turns, in_progress_time)
 
