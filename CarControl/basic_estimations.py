@@ -51,10 +51,12 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
     d_remaining = distance_needed_to_turn(angle, r)
     remaining = d_remaining
 
-    ser.ChangeDirection(dico[0])
+    ser.ChangeDirection(dico[2])
     ser.ChangeMotorA(1)
     ser.ChangePWM(75)
-
+    time.time(1)
+    ser.ChangeDirection(dico[0])
+    
     overflow_count = 0
     start_turns = -ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
