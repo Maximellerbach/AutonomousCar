@@ -47,7 +47,7 @@ def get_approx_radius(angle):
 
     return r
 
-def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32, orientation=1):
+def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.25, orientation=1):
     if way == 2:
         mult = -1
     else:
@@ -59,7 +59,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32, orientation=1):
 
     time.sleep(1) # wait for the get turn thread to start
 
-    start_turns = -ser.GetTurns()
+    start_turns = ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
     prev_turns = start_turns
 
@@ -76,7 +76,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32, orientation=1):
     
     it = 0
     while((remaining*mult)>0): # stop 10cm before (inertia)
-        in_progress_turns = -ser.GetTurns()
+        in_progress_turns = ser.GetTurns()
         in_progress_time = ser.GetTimeLastReceived()
         # print(in_progress_turns, in_progress_time)
 
@@ -122,4 +122,3 @@ if __name__ == "__main__":
 
     time.sleep(1)
     ser.stop()
-    print("got here")

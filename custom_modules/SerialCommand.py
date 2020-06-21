@@ -1,3 +1,4 @@
+import math
 import threading
 import time
 from enum import IntEnum
@@ -28,6 +29,14 @@ class motor(IntEnum):
     MOTOR_FORWARD = 1
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
+
+class car():
+    WHEEL_BASE = 0.257
+    REAR_DIAMETER = 0.105
+    FRONT_DIAMETER = 0.082
+    REAR_PERIMETER = REAR_DIAMETER*math.pi
+    FRONT_PERIMETER = FRONT_DIAMETER*math.pi
+    SENSOR_RATIO = 1/6
 
 class control:    
     "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
@@ -113,7 +122,7 @@ class control:
         self.__command[1] = pwm
         self.__toSend.append(self.__command)
 
-    def __ReadTurns__(self):    
+    def __ReadTurns__(self):
         while self.__isRuning:
             for cmd in self.__toSend:
                 self.__safeWrite__(cmd)
@@ -125,8 +134,14 @@ class control:
                 try:
                     out = self.__ser.readlines()[-1]
                     if out != '':
-                        self.__rounds = int(out.decode())
-                        self.__time_last_received = time.time()
+                        new_rounds = -int(out.decode())
+                        new_time = time.time()
+                        dt = new_time-self.__time_last_received
+                        dturn = new_rounds-self.__rounds
+
+                        self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
+                        self.__rounds = new_rounds
+                        self.__time_last_received = new_time
                 except:
                     pass
                 finally:
@@ -137,3 +152,6 @@ class control:
 
     def GetTimeLastReceived(self):
         return self.__time_last_received
+
+    def GetCurrentSpeed(self):
+        return self.__current_speed
