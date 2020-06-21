@@ -70,7 +70,7 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     ser.ChangePWM(85)
     
     it = 0
-    while(remaining>0): # stop 10cm before (inertia)
+    while((remaining*mult)>0): # stop 10cm before (inertia)
         in_progress_turns = -ser.GetTurns()
         in_progress_time = ser.GetTimeLastReceived()
         # print(in_progress_turns, in_progress_time)
