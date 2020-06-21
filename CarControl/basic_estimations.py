@@ -94,11 +94,23 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     ser.ChangeMotorA(0)
 
 if __name__ == "__main__":
-    
+        
+    def getParams(argv):
+        opts, args = getopt.getopt(argv,"a:w",["angle=", "way="])
+        for opt, arg in opts:
+            if opt in ("-a", "--angle"):
+                angle = arg.strip()
+            elif opt in ("-w", "--way"):
+                way = arg.strip()
+                
+        return angle, way
+
     # r = get_approx_radius(38)
     # d = distance_needed_to_turn(90, r)
     # d_remaining = remaining_distance(0.5, d)
     # print(r d, d_remaining)
 
+    angle, way = getParams(sys.argv[1:])
+
     ser = start_serial()
-    rotatecar(ser, 90, 2)
+    rotatecar(ser, angle, way)
