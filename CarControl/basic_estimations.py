@@ -51,6 +51,7 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
     d_remaining = distance_needed_to_turn(angle, r)
 
     ser.ChangeDirection(dico[0])
+    ser.ChangeMotorA(2)
     ser.ChangePWM(75)
 
     overflow_count = 0
