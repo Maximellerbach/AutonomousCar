@@ -56,6 +56,8 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     d_remaining = distance_needed_to_turn(angle, r)*mult
     remaining = d_remaining
 
+    time.time(2)
+
     start_turns = -ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
     prev_turns = start_turns
