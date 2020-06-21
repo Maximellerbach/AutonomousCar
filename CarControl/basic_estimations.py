@@ -49,6 +49,7 @@ def get_approx_radius(angle):
 def rotatecar(ser, angle, max_angle=25, wheel_length=0.32):
     r = get_approx_radius(max_angle)
     d_remaining = distance_needed_to_turn(angle, r)
+    remaining = d_remaining
 
     ser.ChangeDirection(dico[0])
     ser.ChangeMotorA(1)
@@ -57,7 +58,7 @@ def rotatecar(ser, angle, max_angle=25, wheel_length=0.32):
     overflow_count = 0
     start_turns = -ser.GetTurns()
     start_time = ser.GetTimeLastReceived()
-    while(d_remaining>0):
+    while(remaining>0):
         in_progress_turns = -ser.GetTurns()
         in_progress_time = ser.GetTimeLastReceived()
         # print(in_progress_turns, in_progress_time)
@@ -65,9 +66,9 @@ def rotatecar(ser, angle, max_angle=25, wheel_length=0.32):
         if start_time != in_progress_time:
             delta_turns = (in_progress_turns+overflow_count*32768)-start_turns #turns are actually counted downwards when going forward, reversing it
             dt = start_time-in_progress_time
-            delta_distance = wheel_length*((delta_turns)/200)
+            delta_distance = wheel_length*((delta_turns)/14)
             if delta_distance/dt < 10: # set a threshold of 10m/s
-                d_remaining = remaining_distance(delta_distance, d_remaining)
+                remaining = remaining_distance(delta_distance, d_remaining)
             else:
                 overflow_count += 1 # in case of overflow, positive int turns will become negative
             print(delta_distance, d_remaining, delta_turns)
