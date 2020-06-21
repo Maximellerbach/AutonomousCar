@@ -71,7 +71,7 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
                 remaining = remaining_distance(delta_distance, d_remaining)
             else:
                 overflow_count += 1 # in case of overflow, positive int turns will become negative
-            print(delta_distance, d_remaining, delta_turns)
+            print(delta_distance, remaining, delta_turns)
 
     ser.ChangePWM(0)
     ser.ChangeDirection(dico[2])
