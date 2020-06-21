@@ -99,6 +99,7 @@ if __name__ == "__main__":
         import getopt
         opts, args = getopt.getopt(argv,"a:w",["angle=", "way="])
         for opt, arg in opts:
+            print(opt)
             if opt in ("-a", "--angle"):
                 angle = int(arg.strip())
             elif opt in ("-w", "--way"):
