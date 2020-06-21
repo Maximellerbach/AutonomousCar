@@ -46,7 +46,7 @@ def get_approx_radius(angle):
 
     return r
 
-def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
+def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.32):
     r = get_approx_radius(max_angle)
     d_remaining = distance_needed_to_turn(angle, r)
     remaining = d_remaining
@@ -57,11 +57,11 @@ def rotatecar(ser, angle, max_angle=40, wheel_length=0.32):
     prev_turns = start_turns
 
     ser.ChangeDirection(dico[0])
-    ser.ChangeMotorA(1)
+    ser.ChangeMotorA(way)
     ser.ChangePWM(85)
     
     it = 0
-    while(remaining>0):
+    while(remaining>0.1): # stop 10cm before (inertia)
         try:
             in_progress_turns = -ser.GetTurns()
             in_progress_time = ser.GetTimeLastReceived()
@@ -91,4 +91,4 @@ if __name__ == "__main__":
     # print(r d, d_remaining)
 
     ser = start_serial()
-    rotatecar(ser, 90)
+    rotatecar(ser, 90, 2)
