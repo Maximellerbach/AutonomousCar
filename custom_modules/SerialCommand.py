@@ -125,7 +125,7 @@ class control:
                 try:
                     out = self.__ser.readlines()[-1]
                     if out != '':
-                        self.__rounds = out.decode()
+                        self.__rounds = int(out.decode())
                         self.__time_last_received = time.time()
                 except:
                     pass
@@ -133,7 +133,7 @@ class control:
                     self.__isOperation = False
 
     def GetTurns(self):
-        return int(self.__rounds)
+        return self.__rounds
 
     def GetTimeLastReceived(self):
         return self.__time_last_received
