@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     kp = 15
     ki = 1
-    kd = 0
+    kd = 1
 
     pid = PID.PID(kp, ki, kd)
     current_speed = ser.GetCurrentSpeed()
