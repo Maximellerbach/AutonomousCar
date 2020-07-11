@@ -51,6 +51,7 @@ class control:
         self.__ser.timeout = 0     #no timeout
         self.__command = bytearray([0, 0])
         self.__rounds = 0
+        self.__current_speed = 0
         self.__time_last_received = time.time()
         self.__isRuning = True 
         self.__isOperation = False
