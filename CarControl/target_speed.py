@@ -1,5 +1,6 @@
 import math
 import sys
+import os
 import time
 
 import numpy as np
@@ -9,6 +10,7 @@ import SerialCommand
 import PID
 
 def start_serial(port="/dev/ttyUSB0"):
+    os.system('sudo chmod 0666 {}'.format(serialport))
     ser = SerialCommand.control(port)
     return ser
 
