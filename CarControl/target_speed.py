@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     kp = 1
     ki = 1
-    kd = 0.01
+    kd = 1
 
     pid = PID.PID(kp, ki, kd)
     current_speed = ser.GetCurrentSpeed()
@@ -49,6 +49,8 @@ if __name__ == "__main__":
 
             if new_pwm >= low_th and new_pwm <= high_th:
                 ser.ChangePWM(new_pwm+low_th)
+            else:
+                ser.ChangePWM(0)
             print(new_pwm, current_speed)
 
     
