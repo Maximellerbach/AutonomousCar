@@ -30,6 +30,8 @@ if __name__ == "__main__":
 
     ser.ChangeMotorA(1)
     ser.ChangePWM(0)
+    ser.ChangeDirection(6)
+
 
     to_target = 1
     pid.SetPoint = to_target
