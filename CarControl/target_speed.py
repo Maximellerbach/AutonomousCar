@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
         if time_received != last_received:
             pid.update(current_speed, current_time=last_received)
-            new_pwm = int(pid.output)
+            new_pwm = int(pid.output*5)
             last_received = time_received
 
             if new_pwm >= low_th and new_pwm <= high_th:
