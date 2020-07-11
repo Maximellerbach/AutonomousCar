@@ -21,7 +21,7 @@ if __name__ == "__main__":
     high_th = 127
     low_th = 0
 
-    kp = 1
+    kp = 2
     ki = 1
     kd = 1
 
