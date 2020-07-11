@@ -18,8 +18,8 @@ def start_serial(port="/dev/ttyUSB0"):
 if __name__ == "__main__":
     ser = start_serial()
 
-    high_th = 127
-    low_th = 30
+    high_th = 50
+    low_th = 0
 
     kp = 1
     ki = 1
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
             if new_pwm >= low_th and new_pwm <= high_th:
                 ser.ChangePWM(new_pwm+low_th)
-                print(new_pwm, current_speed)
+            print(new_pwm, current_speed)
 
     
 
