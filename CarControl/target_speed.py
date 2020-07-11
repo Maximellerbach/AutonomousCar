@@ -29,6 +29,7 @@ if __name__ == "__main__":
     current_speed = ser.GetCurrentSpeed()
 
     ser.ChangeMotorA(1)
+    ser.ChangePWM(0)
 
     to_target = 1
     pid.SetPoint = to_target
