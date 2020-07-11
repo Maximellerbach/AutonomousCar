@@ -10,7 +10,7 @@ import SerialCommand
 import PID
 
 def start_serial(port="/dev/ttyUSB0"):
-    os.system('sudo chmod 0666 {}'.format(serialport))
+    os.system('sudo chmod 0666 {}'.format(port))
     ser = SerialCommand.control(port)
     return ser
 
