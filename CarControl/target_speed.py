@@ -18,7 +18,7 @@ def start_serial(port="/dev/ttyUSB0"):
 if __name__ == "__main__":
     ser = start_serial()
 
-    high_th = 50
+    high_th = 127
     low_th = 0
 
     kp = 1
