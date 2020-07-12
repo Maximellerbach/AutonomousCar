@@ -36,7 +36,7 @@ class car():
     FRONT_DIAMETER = 0.082
     REAR_PERIMETER = REAR_DIAMETER*math.pi
     FRONT_PERIMETER = FRONT_DIAMETER*math.pi
-    SENSOR_RATIO = 1/6
+    SENSOR_RATIO = 1/14
 
 class control:    
     "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
