@@ -143,10 +143,12 @@ class control:
                         dturn = new_rounds-self.__rounds
 
                         if dturn < -32768:
-                            dturn = new_rounds-(self.__rounds-65536)
-                        self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
-                        self.__rounds = new_rounds
-                        self.__time_last_received = new_time
+                            # dturn = new_rounds-(self.__rounds-65536)
+                            self.__rounds = new_rounds
+                        else:
+                            self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
+                            self.__time_last_received = new_time
+                            self.__rounds = new_rounds
                 except:
                     pass
                 finally:
