@@ -141,6 +141,8 @@ class control:
                         dturn = new_rounds-self.__rounds
                         if abs(dturn) > 16384:
                             print(new_rounds, self.__rounds)
+                            self.__rounds = new_rounds
+                            
                         else:
                             self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
                             self.__rounds = new_rounds
