@@ -142,7 +142,7 @@ class control:
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
 
-                        if abs(dturn) < -32768:
+                        if abs(dturn) > 16384:
                             # dturn = new_rounds-(self.__rounds-65536)
                             self.__rounds = new_rounds
                             print("OVERFLOW DETECTED")
