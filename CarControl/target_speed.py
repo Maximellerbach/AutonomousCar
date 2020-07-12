@@ -46,11 +46,11 @@ if __name__ == "__main__":
 
         if time_received != last_received:
             pid.update(current_speed, current_time=last_received)
-            new_pwm = int(pid.output*5)
+            new_pwm = int(pid.output)
             last_received = time_received
 
             ser.ChangePWM(new_pwm+low_th)
-            #print(new_pwm, current_speed)
+            print(new_pwm, current_speed)
 
         it += 1
 
