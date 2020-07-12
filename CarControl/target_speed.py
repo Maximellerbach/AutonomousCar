@@ -19,9 +19,9 @@ if __name__ == "__main__":
     ser = start_serial()
 
     high_th = 127
-    low_th = 0
+    low_th = 30
 
-    kp = 2
+    kp = 1
     ki = 1
     kd = 1
 
@@ -47,10 +47,7 @@ if __name__ == "__main__":
             new_pwm = int(pid.output*5)
             last_received = time_received
 
-            if new_pwm >= low_th and new_pwm <= high_th:
-                ser.ChangePWM(new_pwm+low_th)
-            else:
-                ser.ChangePWM(0)
+            ser.ChangePWM(new_pwm+low_th)
             print(new_pwm, current_speed)
 
     
