@@ -142,16 +142,22 @@ class control:
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
 
-                        print(self.__rounds, new_rounds)
+                        new_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
+                        dspeed = new_speed-self.__current_speed
+
+                        if new_speed > 8.5: # speed never rises higher then 30 km/h ( 8.5m/s )
+                            # print("speed anomaly detected")
+                            pass
+
+                        elif (dspeed/self.__current_speed)>0.8 and self.__current_speed >= 1: # if 80% of the last speed is lost, then consider it's a crash
+                            # print("crash detected")
+                            pass
                         
-                        if abs(dturn) > 16384:
-                            # dturn = new_rounds-(self.__rounds-65536)
-                            self.__rounds = new_rounds
-                            print("OVERFLOW DETECTED")
                         else:
-                            self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
+                            self.__current_speed = new_speed
                             self.__time_last_received = new_time
                             self.__rounds = new_rounds
+                        self.__rounds = new_rounds
 
                 except:
                     pass
