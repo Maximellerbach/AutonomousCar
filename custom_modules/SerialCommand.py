@@ -135,7 +135,7 @@ class control:
                 try:
                     out = self.__ser.readlines()[-1]
                     if out != '':
-                        new_rounds = int(out.decode())
+                        new_rounds = -int(out.decode())
                         new_time = time.time()
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
