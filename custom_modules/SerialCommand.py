@@ -139,10 +139,12 @@ class control:
                         new_time = time.time()
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
-
-                        self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
-                        self.__rounds = new_rounds
-                        self.__time_last_received = new_time
+                        if abs(dturn) > 16384:
+                            print(new_rounds, self.__rounds)
+                        else:
+                            self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
+                            self.__rounds = new_rounds
+                            self.__time_last_received = new_time
                 except:
                     pass
                 finally:
