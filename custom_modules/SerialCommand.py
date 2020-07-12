@@ -139,8 +139,9 @@ class control:
                         new_time = time.time()
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
+                        print(new_rounds, self.__rounds)
                         if abs(dturn) > 16384:
-                            print(new_rounds, self.__rounds)
+                            # print(new_rounds, self.__rounds)
                             self.__rounds = new_rounds
 
                         else:
