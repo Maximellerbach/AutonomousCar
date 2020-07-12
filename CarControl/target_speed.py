@@ -32,11 +32,13 @@ if __name__ == "__main__":
     ser.ChangePWM(0)
     ser.ChangeDirection(6)
 
+    time.sleep(2) # waiting for sensor data to come in
 
     to_target = 1
     pid.SetPoint = to_target
 
     last_received = time.time()
+    it = 0
     while(True):
 
         current_speed = ser.GetCurrentSpeed()
@@ -50,7 +52,7 @@ if __name__ == "__main__":
             ser.ChangePWM(new_pwm+low_th)
             #print(new_pwm, current_speed)
 
-    
+        it += 1
 
 
 
