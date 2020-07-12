@@ -36,7 +36,7 @@ class car():
     FRONT_DIAMETER = 0.082
     REAR_PERIMETER = REAR_DIAMETER*math.pi
     FRONT_PERIMETER = FRONT_DIAMETER*math.pi
-    SENSOR_RATIO = 1/56
+    SENSOR_RATIO = 1/(14*6)
 
 class control:    
     "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
@@ -139,8 +139,9 @@ class control:
                         new_time = time.time()
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
-                        print(new_rounds, self.__rounds)
 
+                        if dturn < -32768:
+                            dturn = new_rounds-(self.__rounds-65536)
                         self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
                         self.__rounds = new_rounds
                         self.__time_last_received = new_time
