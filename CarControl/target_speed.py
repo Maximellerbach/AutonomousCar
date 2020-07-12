@@ -39,6 +39,8 @@ if __name__ == "__main__":
 
     last_received = time.time()
     it = 0
+    pwm = 0
+
     while(True):
 
         current_speed = ser.GetCurrentSpeed()
@@ -50,14 +52,14 @@ if __name__ == "__main__":
             last_received = time_received
 
             if new_pwm < high_th and new_pwm > -low_th:
-                new_pwm += low_th
+                pwm = new_pwm+low_th
             elif new_pwm <= -low_th:
-                new_pwm -= 5
+                pwm -= 5
             else:
-                new_pwm = high_th
+                pwm = high_th
 
-            ser.ChangePWM(new_pwm)
-            print(new_pwm, current_speed)
+            ser.ChangePWM(pwm)
+            print(new_pwm, pwm, current_speed)
 
         it += 1
 
