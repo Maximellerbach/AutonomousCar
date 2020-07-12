@@ -50,7 +50,13 @@ if __name__ == "__main__":
             last_received = time_received
 
             if new_pwm < high_th and new_pwm > -low_th:
-                ser.ChangePWM(new_pwm+low_th)
+                new_pwm += low_th
+            elif new_pwm <= -low_th:
+                new_pwm -= 5
+            else:
+                new_pwm = high_th
+
+            ser.ChangePWM(new_pwm)
             print(new_pwm, current_speed)
 
         it += 1
