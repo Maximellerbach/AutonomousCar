@@ -142,9 +142,10 @@ class control:
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
 
-                        if dturn < -32768:
+                        if abs(dturn) < -32768:
                             # dturn = new_rounds-(self.__rounds-65536)
                             self.__rounds = new_rounds
+                            print("OVERFLOW DETECTED")
                         else:
                             self.__current_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
                             self.__time_last_received = new_time
