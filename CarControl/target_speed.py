@@ -59,7 +59,7 @@ if __name__ == "__main__":
                 pwm = high_th
 
             ser.ChangePWM(pwm)
-            print(new_pwm, pwm, current_speed)
+            # print(new_pwm, pwm, current_speed)
 
         it += 1
 
