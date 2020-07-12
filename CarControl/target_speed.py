@@ -48,7 +48,7 @@ if __name__ == "__main__":
             last_received = time_received
 
             ser.ChangePWM(new_pwm+low_th)
-            print(new_pwm, current_speed)
+            #print(new_pwm, current_speed)
 
     
 
