@@ -53,11 +53,16 @@ class data_visualization():
     def load_fe(self):
         fe = load_model(self.fename, custom_objects={"dir_loss":dir_loss})
 
-        inp = Input(shape=(120,160,3))
-        x = fe(inp)
-        x = Flatten()(x)
+        try:
+            inp = Input(shape=(120,160,3))
+            x = fe(inp)
+            x = Flatten()(x)
+            flat_fe = Model(inp, x)
 
-        flat_fe = Model(inp, x)
+        except:
+            inp = Input(shape=(120,160,3))
+            x = fe(inp)
+            flat_fe = Model(inp, x)
 
         return flat_fe
 

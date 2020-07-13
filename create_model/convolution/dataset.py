@@ -32,6 +32,26 @@ class Dataset():
         paths = sorted(paths, key=sort_function)
         return paths
 
+    def split_sorted_paths(self, paths, time_interval=1):
+        splitted = [[]]
+        n_split = 0
+
+        for i in range(1, len(paths)):
+            prev = paths[i-1]
+            actual = paths[i]
+
+            prev_t = self.load_component_item(prev, -1)
+            actual_t = self.load_component_item(actual, -1)
+
+            dt = actual_t-prev_t
+            if dt > time_interval:
+                n_split += 1
+                splitted.append([])
+
+            splitted[n_split].append(paths)
+
+        return splitted
+
     def load_dataset_sorted(self, doss, sort_component=-1):
         sorted_doss = []
         for dos in glob(doss+"*"):
@@ -58,41 +78,41 @@ class Dataset():
 class direction_component:
     def __init__(self, n_component):
         self.name = "direction"
-        self.index_in_string = n_component
+        self.__index_in_string = n_component
         self.do_flip = True
 
     def get_item(self, split_string):
-        item = split_string[self.index_in_string]
+        item = split_string[self.__index_in_string]
         return float(item)
 
 class speed_component:
     def __init__(self, n_component):
         self.name = "speed"
-        self.index_in_string = n_component
+        self.__index_in_string = n_component
         self.do_flip = False
 
     def get_item(self, split_string):
-        item = split_string[self.index_in_string]
+        item = split_string[self.__index_in_string]
         return float(item)
 
 class throttle_component:
     def __init__(self, n_component):
         self.name = "throttle"
-        self.index_in_string = n_component
+        self.__index_in_string = n_component
         self.do_flip = False
 
     def get_item(self, split_string):
-        item = split_string[self.index_in_string]
+        item = split_string[self.__index_in_string]
         return float(item)
 
 class time_component:
     def __init__(self, n_component):
         self.name = "time"
-        self.index_in_string = n_component
+        self.__index_in_string = n_component
         self.do_flip = False
 
     def get_item(self, split_string):
-        item = split_string[self.index_in_string]
+        item = split_string[self.__index_in_string]
         return float(item)
 
 def annotations_to_name(annotations):
@@ -122,7 +142,7 @@ def save(save_path, dts, annotations):
         name = annotations_to_name(annotations[i])
         shutil.copy(dts[i], save_path+name)
 
-def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45):
+def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45): # to transform old data format into new ones
     def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed): # Function from my Virtual Racing repo
         dt_throttle = max_throttle-min_throttle
 

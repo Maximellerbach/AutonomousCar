@@ -52,9 +52,12 @@ class control:
         self.__command = bytearray([0, 0])
         self.__rounds = 0
         self.__current_speed = 0
+        self.__pwm = 0
+        self.__dpwm = 0
         self.__time_last_received = time.time()
         self.__isRuning = True 
         self.__isOperation = False
+        self.__boosting = False
         self.__toSend = []
         try:
             self.__ser.open()
@@ -111,7 +114,17 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
+        self.__dpwn = pwm-self.__pwm
+        self.__pwm = pwm
         self.__toSend.append(self.__command)
+
+    def BoostPWM(self, boostpwm, pwm, duration):
+        self.__boosting = True
+        self.ChangePWM(boostpwm)
+        time.sleep(duration)
+
+        self.__boosting = False
+        self.ChangePWM(pwm)
 
     def ChangeAll(self, dir, motorA, motorB, pwm):
         "Change all the elements at the same time. Consider using the direction and motor enums. PWM is byte from 0 to 255."
@@ -123,6 +136,8 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
+        self.__dpwn = pwm-self.__pwm
+        self.__pwm = pwm
         self.__toSend.append(self.__command)
 
     def __ReadTurns__(self):
@@ -145,19 +160,25 @@ class control:
                         new_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
                         dspeed = new_speed-self.__current_speed
 
-                        if new_speed > 8.5: # speed never rises higher then 30 km/h ( 8.5m/s )
-                            # print("speed anomaly detected")
-                            pass
-
-                        elif (dspeed/self.__current_speed)>0.8 and self.__current_speed >= 1: # if 80% of the last speed is lost, then consider it's a crash
-                            # print("crash detected")
-                            pass
-                        
-                        else:
+                        if self.__boosting: # by enabling the boost you are desabling anomaly detection
                             self.__current_speed = new_speed
                             self.__time_last_received = new_time
                             self.__rounds = new_rounds
-                        self.__rounds = new_rounds
+                        else:
+                            if abs(new_speed) >= 8.5: # speed never rises higher then 30 km/h ( 8.5m/s )
+                                # print("speed anomaly detected", self.__pwm)
+                                pass
+
+                            elif (dspeed/self.__current_speed)<-0.8 and self.__current_speed >= 1: # if 80% of the last speed is lost, then consider it's a crash
+                                # print("crash detected", self.__pwm, self.__dpwm)
+                                # TODO: crash handling + "de-crash"
+                                pass
+                            
+                            else:
+                                self.__current_speed = new_speed
+                                self.__time_last_received = new_time
+                                self.__rounds = new_rounds
+                            self.__rounds = new_rounds
 
                 except:
                     pass
