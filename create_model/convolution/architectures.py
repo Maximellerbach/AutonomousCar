@@ -31,7 +31,7 @@ def cat2linear(ny):
     return averages
 
 
-def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="linear", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, load_speed=False, memory=49):
+def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="linear", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, load_speed=(False, False), sequence=False):
     inputs = []
     def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True, padding='same'):
         x = conv_type(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding=padding)(x)
@@ -79,9 +79,15 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     y = Activation(prev_act)(y)
     y = Dropout(drop_rate)(y)
 
-    y = Dense(75, use_bias=False)(y)
-    y = Activation(prev_act)(y)
-    y = Dropout(drop_rate)(y)
+    if sequence:
+        y = LSTM(75, use_bias=False)(y)
+        y = Activation(prev_act)(y)
+        y = Dropout(drop_rate)(y)
+
+    else:
+        y = Dense(75, use_bias=False)(y)
+        y = Activation(prev_act)(y)
+        y = Dropout(drop_rate)(y)
     
     if load_speed[0]:
         inp = Input((1, ))

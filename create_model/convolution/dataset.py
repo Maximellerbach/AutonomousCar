@@ -44,7 +44,7 @@ class Dataset():
             actual_t = self.load_component_item(actual, -1)
 
             dt = actual_t-prev_t
-            if dt > time_interval:
+            if abs(dt) > time_interval:
                 n_split += 1
                 splitted.append([])
 
@@ -55,13 +55,13 @@ class Dataset():
     def load_dataset_sorted(self, doss, sort_component=-1):
         sorted_doss = []
         for dos in glob(doss+"*"):
-            paths = glob(dos+"\\*")
+            paths = self.load_dos(dos+"\\")
             sorted_doss.append(self.sort_paths_by_component(paths, sort_component)) # -1 is time component
 
         return sorted_doss
     
     def load_dos_sorted(self, dos, sort_component=-1):
-        paths = glob(dos+"*")
+        paths = self.load_dos(dos)
         return self.sort_paths_by_component(paths, sort_component) # -1 is time component
     
     def load_dos(self, dos):
@@ -70,10 +70,18 @@ class Dataset():
     def load_dataset(self, doss):
         doss_paths = []
         for dos in glob(doss+"*"):
-            paths = glob(dos+"\\*")
-            doss_paths.append(paths) # -1 is time component
+            paths = self.load_dos(dos+"\\")
+            doss_paths.append(paths)
 
         return doss_paths
+
+    def load_dataset_sequence(self, doss):
+        doss_sequences = []
+        for dos in glob(doss+"*"):
+            paths = self.load_dos_sorted(dos+"\\")
+            paths_sequence = self.split_sorted_paths(paths)
+            doss_sequences.append(paths_sequence)
+        return doss_sequences
 
 class direction_component:
     def __init__(self, n_component):

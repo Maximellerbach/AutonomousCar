@@ -38,13 +38,13 @@ config.log_device_placement = True  # to log device placement (on which device t
 set_session(sess) # set this TensorFlow session as the default
 
 class classifier():
-    def __init__(self, name, dospath='', dosdir=True, memory_size=49, proportion=0.15, to_cat=True, weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
+    def __init__(self, name, dospath='', dosdir=True, proportion=0.15, to_cat=True, sequence=False, weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
         
         self.Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.throttle_component, dataset.time_component])
         self.name = name
         self.dospath = dospath
-        self.memory_size = memory_size
         self.dosdir = dosdir
+        self.sequence = sequence
 
         self.img_cols = 160
         self.img_rows = 120
@@ -60,8 +60,6 @@ class classifier():
         self.label_rdm = label_rdm
         self.load_speed = load_speed
 
-        self.av = []
-
     def build_classifier(self, load=False, load_fe=False):
         """
         load a model using architectures program
@@ -74,7 +72,7 @@ class classifier():
 
             model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, 
                                     prev_act="relu", last_act="linear", drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
-                                    last_bias=False, memory=self.memory_size, metrics=["mse"], load_speed=self.load_speed) # model used for the race
+                                    last_bias=False, metrics=["mse"], load_speed=self.load_speed, sequence=self.sequence) # model used for the race
             
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
@@ -90,37 +88,51 @@ class classifier():
         """
         trains the model loaded as self.model
         """
+        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip)
 
-        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat) # TODO: add folder weights
-
-        print(self.gdos.shape, self.valdos.shape)
+        print(self.gdos.shape, self.valdos.shape, self.datalen)
         self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
 
         earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
-                                validation_data=image_generator(self.valdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
+        self.model.fit_generator(image_generator(self.gdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
+                                validation_data=image_generator(self.valdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
                                 callbacks=[earlystop], max_queue_size=5, workers=8)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
 
-    def get_gdos(self, flip=True, cat=True):
+    def get_gdos(self, flip=True):
         if self.dosdir == True:
-            gdos = self.Dataset.load_dataset(self.dospath)
-            gdos = np.concatenate([i for i in gdos])
-            datalen = len(gdos)
+            if self.sequence:
+                gdos = self.Dataset.load_dataset_sequence(self.dospath)
+                gdos = np.concatenate([i for i in gdos])
+                datalen = 0
+                for s in gdos:
+                    datalen += len(s)
+            else:
+                gdos = self.Dataset.load_dataset(self.dospath)
+                gdos = np.concatenate([i for i in gdos])
+                datalen = len(gdos)
+
             np.random.shuffle(gdos)
             gdos, valdos = np.split(gdos, [datalen-datalen//20])
             
         else:
-            gdos = glob(self.dospath)
-            datalen = len(gdos)
+            if self.sequence:
+                gdos = self.Dataset.load_dos_sorted(self.dospath)
+                gdos = self.Dataset.split_sorted_paths(gdos)
+                datalen = 0
+                for s in gdos:
+                    datalen+=len(s)
+            else:
+                gdos = glob(self.dospath)
+                datalen = len(gdos)
+
             np.random.shuffle(gdos)
             gdos, valdos = np.split(gdos, [datalen-datalen//20])
 
-
-        if cat:
+        if self.to_cat:
             frc = self.get_frc_cat(self.dospath, flip=flip)
         else:
             frc = self.get_frc_lin(self.dospath, flip=flip)
@@ -191,7 +203,6 @@ class classifier():
                 Y.append(label[0])
                 if flip:
                     Y.append(label[1])
-
         d = dict(collections.Counter(Y))
         prc = [0]*5
         l = len(Y)
@@ -218,7 +229,7 @@ class classifier():
 
 if __name__ == "__main__":
     AI = classifier(name = 'test_model\\convolution\\linearv5_latency.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
-                    proportion=0.1, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(True, True))
+                    proportion=0.1, to_cat=False, sequence=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(True, True))
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function # 'C:\\Users\\maxim\\datasets\\'
                     # when weight_acc = 2, only one steering class is created
 
