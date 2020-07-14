@@ -6,7 +6,7 @@ from glob import glob
 from reorder_dataset import get_speed
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, gdos, Dataset, datalen, batch_size, frc, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, load_speed=(False, False)):
+    def __init__(self, gdos, Dataset, datalen, batch_size, frc, sequence=False, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, seq=False, load_speed=(False, False)):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -15,12 +15,10 @@ class image_generator(keras.utils.Sequence):
         self.gdos = gdos
         self.Dataset = Dataset
 
-
         self.frc = frc
         self.weight_acc = weight_acc
 
-        self.n_classes = n_classes
-        self.memory_size = memory+1
+        self.sequence = sequence
         self.datalen = datalen
         self.seq = seq
 
@@ -72,16 +70,30 @@ class image_generator(keras.utils.Sequence):
             ybatch = np.concatenate((ybatch, yflip))
         
         weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
-        X = [xbatch/255]
-        Y = [ybatch[:, 0]]
-        weights = [weight]
 
-        if self.load_speed[0]:
-            X.append(ybatch[:, 1])
+        if self.sequence:
+            X = [np.expand_dims(xbatch/255, axis=0)]
+            Y = [np.expand_dims(ybatch[:, 0], axis=0)]
+            weights = [np.expand_dims(weight, axis=0)]
 
-        if self.load_speed[1]:
-            Y.append(ybatch[:, 2])
-            weights.append(weight)
+            if self.load_speed[0]:
+                X.append(np.expand_dims(ybatch[:, 1], axis=0))
+
+            if self.load_speed[1]:
+                Y.append(np.expand_dims(ybatch[:, 2], axis=0))
+                weights.append(np.expand_dims(weight, axis=0))
+
+        else:
+            X = [xbatch/255]
+            Y = [ybatch[:, 0]]
+            weights = [weight]
+
+            if self.load_speed[0]:
+                X.append(ybatch[:, 1])
+
+            if self.load_speed[1]:
+                Y.append(ybatch[:, 2])
+                weights.append(weight)
 
         return X, Y, weights
 
