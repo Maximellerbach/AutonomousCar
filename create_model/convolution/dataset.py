@@ -32,7 +32,7 @@ class Dataset():
         paths = sorted(paths, key=sort_function)
         return paths
 
-    def split_sorted_paths(self, paths, time_interval=1):
+    def split_sorted_paths(self, paths, time_interval=0.2):
         splitted = [[]]
         n_split = 0
 
@@ -75,52 +75,52 @@ class Dataset():
 
         return doss_paths
 
-    def load_dataset_sequence(self, doss):
+    def load_dataset_sequence(self, doss, max_interval=0.2):
         doss_sequences = []
         for dos in glob(doss+"*"):
             paths = self.load_dos_sorted(dos+"\\")
-            paths_sequence = self.split_sorted_paths(paths)
+            paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
             doss_sequences.append(paths_sequence)
         return doss_sequences
 
 class direction_component:
     def __init__(self, n_component):
         self.name = "direction"
-        self.__index_in_string = n_component
+        self.index_in_string = n_component
         self.do_flip = True
 
     def get_item(self, split_string):
-        item = split_string[self.__index_in_string]
+        item = split_string[self.index_in_string]
         return float(item)
 
 class speed_component:
     def __init__(self, n_component):
         self.name = "speed"
-        self.__index_in_string = n_component
+        self.index_in_string = n_component
         self.do_flip = False
 
     def get_item(self, split_string):
-        item = split_string[self.__index_in_string]
+        item = split_string[self.index_in_string]
         return float(item)
 
 class throttle_component:
     def __init__(self, n_component):
         self.name = "throttle"
-        self.__index_in_string = n_component
+        self.index_in_string = n_component
         self.do_flip = False
 
     def get_item(self, split_string):
-        item = split_string[self.__index_in_string]
+        item = split_string[self.index_in_string]
         return float(item)
 
 class time_component:
     def __init__(self, n_component):
         self.name = "time"
-        self.__index_in_string = n_component
+        self.index_in_string = n_component
         self.do_flip = False
 
     def get_item(self, split_string):
-        item = split_string[self.__index_in_string]
+        item = split_string[self.index_in_string]
         return float(item)
 
 def annotations_to_name(annotations):
