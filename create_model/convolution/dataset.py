@@ -48,7 +48,7 @@ class Dataset():
                 n_split += 1
                 splitted.append([])
 
-            splitted[n_split].append(paths)
+            splitted[n_split].append(paths[i])
 
         return splitted
 
@@ -80,7 +80,8 @@ class Dataset():
         for dos in glob(doss+"*"):
             paths = self.load_dos_sorted(dos+"\\")
             paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
-            doss_sequences.append(paths_sequence)
+            doss_sequences.append(list(paths_sequence))
+
         return doss_sequences
 
 class direction_component:

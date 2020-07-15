@@ -79,23 +79,22 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     y = Activation(prev_act)(y)
     y = Dropout(drop_rate)(y)
 
-    if sequence:
-        y = LSTM(75, use_bias=False)(y)
-        y = Activation(prev_act)(y)
-        y = Dropout(drop_rate)(y)
-
-    else:
-        y = Dense(75, use_bias=False)(y)
-        y = Activation(prev_act)(y)
-        y = Dropout(drop_rate)(y)
+    y = Dense(75, use_bias=False)(y)
+    y = Activation(prev_act)(y)
+    y = Dropout(drop_rate)(y)
     
     if load_speed[0]:
         inp = Input((1, ))
         inputs.append(inp)
         y = Concatenate()([y, inp])
+    
+    if sequence:
+        y = LSTM(50, use_bias=False)(y)
+        y = Activation(prev_act)(y)
 
-    y = Dense(50, use_bias=False)(y)
-    y = Activation(prev_act)(y)
+    else:
+        y = Dense(50, use_bias=False)(y)
+        y = Activation(prev_act)(y)
 
     z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]), name="steering")(y) #  kernel_regularizer=l2(0.0005)
     
