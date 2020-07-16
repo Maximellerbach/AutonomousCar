@@ -2,6 +2,7 @@ import dataset
 import cv2
 import numpy as np
 
+
 Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
 gdos = Dataset.load_dataset_sequence("C:\\Users\\maxim\\datasets\\", max_interval=0.2)
 gdos = np.concatenate([i for i in gdos])

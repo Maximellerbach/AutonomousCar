@@ -47,7 +47,7 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     if load_fe == True:
         fe = load_model('test_model\\convolution\\fe.h5')
     
-    else:
+    else:    
         inp = Input(shape=img_shape)
         x = BatchNormalization()(inp)
         # x = GaussianNoise(0.2)(inp)
@@ -87,10 +87,15 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
         inp = Input((1, ))
         inputs.append(inp)
         y = Concatenate()([y, inp])
+        i = 76
+
+    else:
+        i = 75
     
     if sequence:
-        y = LSTM(50, use_bias=False)(y)
-        y = Activation(prev_act)(y)
+        y = Reshape((1, i))(y)
+        y = CuDNNLSTM(50)(y)
+        # y = Activation(prev_act)(y)
 
     else:
         y = Dense(50, use_bias=False)(y)

@@ -6,7 +6,7 @@ from glob import glob
 from reorder_dataset import get_speed
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, gdos, Dataset, datalen, batch_size, frc, sequence=False, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, load_speed=(False, False)):
+    def __init__(self, gdos, Dataset, datalen, batch_size, frc, sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, load_speed=(False, False)):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -101,7 +101,7 @@ class image_generator(keras.utils.Sequence):
                     xflip, yflip = autolib.generate_horizontal_flip(xbatch[i], ybatch[i], proportion=1)
                     xbatch.append(xflip)
                     ybatch.append(yflip)
-                    
+
                 xbatch = np.array(xbatch)/255
                 ybatch = np.array(ybatch)
 

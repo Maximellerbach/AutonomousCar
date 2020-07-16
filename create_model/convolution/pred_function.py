@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 import architectures
 import autolib
-import data_utils
 import reorder_dataset
 import dataset
 
@@ -170,14 +169,13 @@ def after_training_test_pred(self, dos='C:\\Users\\maxim\\random_data\\4 trackma
                 
 
 def speed_impact(self, dos, dt_range=(0, -1), sleeptime=33):
+    
     Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.time_component])
     paths = Dataset.load_dos_sorted(dos, sort_component=-1)
     paths = paths[dt_range[0]:dt_range[1]]
     dts_len = len(paths)
     
     Y = np.array(Dataset.repeat_function(Dataset.load_annotation, paths))[:, 0]
-    Y = data_utils.lab2linear_smooth(Y, cat2linear=False, window_size=(0,5), sq_factor=1, prev_factor=1, after_factor=1, offset=1)
-    
     for it, path in enumerate(paths):
         img = cv2.imread(path)/255
         img_pred = np.expand_dims(img, axis=0)
