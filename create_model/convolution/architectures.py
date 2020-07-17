@@ -4,6 +4,7 @@ from keras.layers import *
 from keras.losses import mse, mae
 from keras.models import Input, Model, Sequential, load_model
 from keras.optimizers import SGD, Adam
+from keras.layers.wrappers import TimeDistributed as TD
 
 def dir_loss(y_true, y_pred):
     """
@@ -30,9 +31,77 @@ def cat2linear(ny):
         averages.append(average)
     return averages
 
+def create_light_CRNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="linear", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, load_speed=(False, False)):
+    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True, padding='same'):
+        x = TD(conv_type(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding=padding))(x)
+        if batchnorm:
+            x = TD(BatchNormalization())(x)
+        x = TD(Activation(activation))(x)
+        if drop:
+            x = TD(Dropout(drop_rate))(x)
+        if flatten:
+            x = TD(Flatten())(x)
+        return x
+    
+    def dense_block(n_neurones, x, drop=True, activation=prev_act, use_bias=False, batchnorm=True):
+        x = TD(Dense(n_neurones, use_bias=use_bias))(x)
+        if batchnorm:
+            x = TD(BatchNormalization())(x)
+        x = TD(Activation(activation))(x)
+        if drop:
+            x = TD(Dropout(drop_rate))(x)
+        return x
 
-def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="linear", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, recurrence=False, load_speed=(False, False), sequence=False):
     inputs = []
+    
+    if load_fe == True:
+        fe = load_model('test_model\\convolution\\fe.h5')
+    
+    else:    
+        inp = Input(shape=img_shape)
+        x = TD(BatchNormalization())(inp)
+
+        x = conv_block(12, 5, 2, x, drop=False)
+        x = conv_block(16, 5, 2, x, drop=False)
+        x = conv_block(32, 3, 2, x, drop=True)
+        x = conv_block(48, 3, 2, x, drop=False)
+
+        x1 = conv_block(64, (8,10), (8,10), x, flatten=True, drop=False)
+        x2 = conv_block(24, (8,1), (8,1), x, flatten=True, drop=False)
+        x3 = conv_block(24, (1,10), (1,10), x, flatten=True, drop=False)
+        x = Concatenate()([x1, x2, x3])
+        x = TD(Dropout(drop_rate))(x)
+
+        fe = Model(inp, x)
+
+    inp = Input(shape=img_shape)
+    inputs.append(inp)
+    y = fe(inp)
+    
+    y = dense_block(150, y, batchnorm=False)
+    y = dense_block(75, y, batchnorm=False)
+    
+    if load_speed[0]:
+        inp = Input((img_shape[0], 1))
+        inputs.append(inp)
+        y = Concatenate()([y, inp])
+
+    y = dense_block(50, y, batchnorm=False, drop=False)
+
+    z = TD(Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]), name="steering"))(y) #  kernel_regularizer=l2(0.0005)
+    
+    if load_speed[1]:
+        y = Concatenate()([y, z])
+        th = TD(Dense(1, use_bias=last_bias, activation="sigmoid", activity_regularizer=l1_l2(regularizer[0], regularizer[1]), name="throttle"))(y)
+        model = Model(inputs, [z, th])
+
+    else:
+        model = Model(inputs, z)
+
+    model.compile(loss=loss, optimizer=optimizer(lr=lr) ,metrics=metrics)
+    return model, fe
+        
+def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", last_act="linear", drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001, loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss], last_bias=False, load_speed=(False, False)):
     def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True, padding='same'):
         x = conv_type(n_filter, kernel_size=kernel_size, strides=strides, use_bias=use_bias, padding=padding)(x)
         if batchnorm:
@@ -44,6 +113,8 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
             x = Flatten()(x)
         return x
 
+    inputs = []
+    
     if load_fe == True:
         fe = load_model('test_model\\convolution\\fe.h5')
     
@@ -84,22 +155,12 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     y = Dropout(drop_rate)(y)
     
     if load_speed[0]:
-        inp = Input((1, ))
+        inp = Input((img_shape[0], 1))
         inputs.append(inp)
         y = Concatenate()([y, inp])
-        i = 76
 
-    else:
-        i = 75
-    
-    if sequence:
-        y = Reshape((1, i))(y)
-        y = CuDNNLSTM(50)(y)
-        # y = Activation(prev_act)(y)
-
-    else:
-        y = Dense(50, use_bias=False)(y)
-        y = Activation(prev_act)(y)
+    y = Dense(50, use_bias=False)(y)
+    y = Activation(prev_act)(y)
 
     z = Dense(number_class, use_bias=last_bias, activation=last_act, activity_regularizer=l1_l2(regularizer[0], regularizer[1]), name="steering")(y) #  kernel_regularizer=l2(0.0005)
     

@@ -30,13 +30,24 @@ class motor(IntEnum):
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
 
+class compteTour():
+    AXES_SENSOR_RATIO = (1/84,)
+    AXES_LEN = len(AXES_SENSOR_RATIO)
+    MEA_ERROR = 0.1
+    INITIAL_STATE = (0)
+
+class accelerometer():
+    AXES_SENSOR_RATIO = (1, 1, 1)
+    AXES_LEN = len(AXES_SENSOR_RATIO)
+    MEA_ERROR = 0.01
+    INITIAL_STATE = (0, 0, 0)
+
 class car():
     WHEEL_BASE = 0.257
     REAR_DIAMETER = 0.105
     FRONT_DIAMETER = 0.082
     REAR_PERIMETER = REAR_DIAMETER*math.pi
     FRONT_PERIMETER = FRONT_DIAMETER*math.pi
-    SENSOR_RATIO = 1/(14*6)
 
 class control:    
     "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
@@ -157,7 +168,7 @@ class control:
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
 
-                        new_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
+                        new_speed = (car.REAR_PERIMETER*(dturn*compteTour.LEN_SENSOR_RATIO))/dt
                         dspeed = new_speed-self.__current_speed
 
                         if self.__boosting: # by enabling the boost you are desabling anomaly detection
@@ -193,3 +204,7 @@ class control:
 
     def GetCurrentSpeed(self):
         return self.__current_speed
+
+def start_serial(port="/dev/ttyUSB0"):
+    ser = control(port)
+    return ser

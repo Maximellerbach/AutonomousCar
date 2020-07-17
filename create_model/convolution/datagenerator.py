@@ -35,21 +35,25 @@ class image_generator(keras.utils.Sequence):
         ybatch = []
 
         for i in batchfiles:
-            try:
+            # try:
+            if True:
                 if self.sequence:
                     xseq = []
                     yseq = []
 
                     seq_len = len(i)
                     if seq_len > self.seq_batchsize:
-                        rdm_seq = np.random.randint(0, (seq_len-1)-self.seq_batchsize)
+                        rdm_seq = np.random.randint(0, seq_len-self.seq_batchsize)
                         i = i[rdm_seq:rdm_seq+self.seq_batchsize]
+
+                    elif seq_len < self.seq_batchsize: # ugly way to make sure every sequence has the same length
+                        i = [i[0]]*(self.seq_batchsize-seq_len)+i
                     
                     for impath in i:
-                        img = self.Dataset.load_image(i)
+                        img = self.Dataset.load_image(impath)
                         img = cv2.resize(img, (self.img_cols, self.img_rows))
 
-                        annotations = self.Dataset.load_annotation(i)
+                        annotations = self.Dataset.load_annotation(impath)
                         
                         xseq.append(img)
                         yseq.append(annotations)
@@ -66,10 +70,10 @@ class image_generator(keras.utils.Sequence):
                     xbatch.append(img)
                     ybatch.append(annotations)
 
-            except:
-                print(i)
+            # except:
+            #     print(i)
 
-        if self.augm == True:
+        if self.augm:
             # here are the old functions
             # X_bright, Y_bright = autolib.generate_brightness(xbatch, ybatch)
             # X_gamma, Y_gamma = autolib.generate_low_gamma(xbatch, ybatch)
@@ -114,24 +118,30 @@ class image_generator(keras.utils.Sequence):
         # removed the weight, useless ; weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
 
         if self.sequence:
-            X = [xbatch]
-            Y = [ybatch[:, :, 0]]
 
             if self.load_speed[0]:
-                X.append(ybatch[:, :, 1])
+                X = [xbatch, ybatch[:, :, 1]]
+            else:
+                X = xbatch
 
             if self.load_speed[1]:
-                Y.append(ybatch[:, :, 2])
+                Y = [ybatch[:, :, 0], ybatch[:, :, 2]]
+            else:
+                Y = ybatch[:, :, 0]
+
+            Y = np.expand_dims(Y, axis=-1)
 
         else:
-            X = [xbatch]
-            Y = [ybatch[:, 0]]
 
             if self.load_speed[0]:
-                X.append(ybatch[:, 1])
+                X = [xbatch, ybatch[:, 1]]
+            else:
+                X = xbatch
 
             if self.load_speed[1]:
-                Y.append(ybatch[:, 2])
+                Y = [ybatch[:, 0], ybatch[:, 2]]
+            else:
+                Y = ybatch[:, 0]
 
         return X, Y
 

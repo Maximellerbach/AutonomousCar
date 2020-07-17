@@ -45,9 +45,11 @@ def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt
     for path in tqdm(paths):
         img_annotation = Dataset.load_annotation(path)
         Y.append(img_annotation[0])
-
-
-        inputs = [np.expand_dims(cv2.imread(path)/255, axis=0)]
+        
+        if self.sequence:
+            inputs = [np.expand_dims(np.expand_dims(cv2.imread(path)/255, axis=0), axis=0)] # need to do something nicer..
+        else:
+            inputs = [np.expand_dims(cv2.imread(path)/255, axis=0)]
 
         if self.load_speed[0]:
             speeds.append(img_annotation[1])
