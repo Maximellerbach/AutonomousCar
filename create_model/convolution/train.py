@@ -258,7 +258,7 @@ if __name__ == "__main__":
     test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
     # test_dos = "C:\\Users\\maxim\\random_data\\throttle\\1 ironcar driving\\"
     pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 5000))
-    pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
-    pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
+    # pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
+    # pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
 
     cv2.destroyAllWindows()

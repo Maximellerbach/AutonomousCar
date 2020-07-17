@@ -4,6 +4,7 @@ import time
 from enum import IntEnum
 
 import serial
+from objects import sensor_compteTour
 
 lock = threading.RLock()
 
@@ -30,30 +31,12 @@ class motor(IntEnum):
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
 
-class compteTour():
-    AXES_SENSOR_RATIO = (1/84,)
-    AXES_LEN = len(AXES_SENSOR_RATIO)
-    MEA_ERROR = 0.1
-    INITIAL_STATE = (0)
-
-class accelerometer():
-    AXES_SENSOR_RATIO = (1, 1, 1)
-    AXES_LEN = len(AXES_SENSOR_RATIO)
-    MEA_ERROR = 0.01
-    INITIAL_STATE = (0, 0, 0)
-
-class car():
-    WHEEL_BASE = 0.257
-    REAR_DIAMETER = 0.105
-    FRONT_DIAMETER = 0.082
-    REAR_PERIMETER = REAR_DIAMETER*math.pi
-    FRONT_PERIMETER = FRONT_DIAMETER*math.pi
-
 class control:    
     "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
     def __init__(self, port):
         "Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows. Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0"
         self.__ser = serial.Serial()
+        self.__sensor_compteTour = sensor_compteTour()
         self.__ser.port = port
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS #number of bits per bytes
@@ -61,11 +44,7 @@ class control:
         self.__ser.stopbits = serial.STOPBITS_ONE #number of stop bits
         self.__ser.timeout = 0     #no timeout
         self.__command = bytearray([0, 0])
-        self.__rounds = 0
-        self.__current_speed = 0
         self.__pwm = 0
-        self.__dpwm = 0
-        self.__time_last_received = time.time()
         self.__isRuning = True 
         self.__isOperation = False
         self.__boosting = False
@@ -164,46 +143,31 @@ class control:
                     out = self.__ser.readlines()[-1]
                     if out != '':
                         new_rounds = -int(out.decode())
-                        new_time = time.time()
-                        dt = new_time-self.__time_last_received
-                        dturn = new_rounds-self.__rounds
-
-                        new_speed = (car.REAR_PERIMETER*(dturn*compteTour.LEN_SENSOR_RATIO))/dt
-                        dspeed = new_speed-self.__current_speed
-
-                        if self.__boosting: # by enabling the boost you are desabling anomaly detection
-                            self.__current_speed = new_speed
-                            self.__time_last_received = new_time
-                            self.__rounds = new_rounds
-                        else:
-                            if abs(new_speed) >= 8.5: # speed never rises higher then 30 km/h ( 8.5m/s )
-                                # print("speed anomaly detected", self.__pwm)
-                                pass
-
-                            elif (dspeed/self.__current_speed)<-0.8 and self.__current_speed >= 1: # if 80% of the last speed is lost, then consider it's a crash
-                                # print("crash detected", self.__pwm, self.__dpwm)
-                                # TODO: crash handling + "de-crash"
-                                pass
-                            
-                            else:
-                                self.__current_speed = new_speed
-                                self.__time_last_received = new_time
-                                self.__rounds = new_rounds
-                            self.__rounds = new_rounds
+                        self.__sensor_compteTour.update(new_rounds) 
 
                 except:
                     pass
+
                 finally:
                     self.__isOperation = False
+    
+    def GetSensor(self):
+        return self.__sensor_compteTour
 
     def GetTurns(self):
-        return self.__rounds
+        return self.__sensor_compteTour.measurement
 
     def GetTimeLastReceived(self):
-        return self.__time_last_received
+        return self.__sensor_compteTour.time_last_received
+
+    def GetCurrentPosition(self):
+        return self.__sensor_compteTour.position
 
     def GetCurrentSpeed(self):
-        return self.__current_speed
+        return self.__sensor_compteTour.speed
+        
+    def GetCurrentAcc(self):
+        return self.__sensor_compteTour.acc
 
 def start_serial(port="/dev/ttyUSB0"):
     ser = control(port)
