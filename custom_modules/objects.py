@@ -118,6 +118,14 @@ class sensor_magnetometer():
         self.time_last_received = new_time
         self.measurement = new_measurement
 
+
+class sensor_fusion():
+    def __init__(self, sensors):
+        self.sensors = sensors
+
+    def get_sensor_by_index(self, index):
+        return self.sensors[index]
+
 if __name__ == "__main__":
     # some tests
     sensor = sensor_compteTour()

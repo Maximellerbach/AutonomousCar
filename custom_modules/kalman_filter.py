@@ -3,10 +3,10 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import pykalman
-
+import objects
 
 if __name__ == "__main__":
-    sensor_list = [SerialCommand.compteTour]
+    sensor_list = [objects.sensor_compteTour()]
     
     KF = pykalman.KalmanFilter(initial_state_mean=[i.INITIAL_STATE for i in sensor_list],
     transition_covariance=[i.MEA_ERROR**2 for i in sensor_list],
@@ -25,10 +25,10 @@ if __name__ == "__main__":
 
     for i in range(1000):
         new_state = np.sin(np.deg2rad(it%360))
-        to_pred = new_state+np.random.normal()*SerialCommand.compteTour.MEA_ERROR
+        to_pred = new_state+np.random.normal()*0.05
 
         estimation, covariance = KF.filter_update(estimation, covariance, to_pred)
-        print(new_state, estimation, covariance)
+        # print(new_state, estimation, covariance)
         
         states.append(new_state)
         to_preds.append(to_pred)
