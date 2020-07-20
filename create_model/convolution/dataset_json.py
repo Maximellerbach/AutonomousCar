@@ -3,14 +3,14 @@ import json
 
 import cv2
 
-
 class DatasetJson():
     def __init__(self, lab_structure):
-        self.label_structure = [i(it) for it, i in enumerate(lab_structure)]
+        self.label_structure = [i() for i in lab_structure]
 
     def save_img_and_json(self, dos, img, annotations):
-        path = dos+annotations[-1]
-        cv2.imwrite(path+'.png', img)
+        path = dos+str(annotations[-1])
+        annotations.insert(-1, path+'.png') # add the img_name component
+        cv2.imwrite(annotations[-2], img)
 
         annotations_dict = self.annotations_to_dict(annotations)
         with open(path+'.json', 'w') as json_file:
@@ -30,14 +30,15 @@ class DatasetJson():
     
     def load_component_item(self, path, n_component):
         json_data = self.load_json(path)
-        return json_data[self.label_structure[n_component].name]
+        return self.label_structure[n_component].get_item(json_data)
 
     def load_annotations(self, path):
         json_data = self.load_json(path)
         annotations = []
         for component in self.label_structure:
-            key = component.name
-            lab_item = json_data[key]
+            # key = component.name
+            # lab_item = json_data[key]
+            lab_item = component.get_item(json_data)
             annotations.append(lab_item)
 
         return annotations
@@ -78,27 +79,42 @@ class DatasetJson():
         return doss_paths
 
 
-
 class direction_component:
-    def __init__(self, n_component):
+    def __init__(self):
         self.name = "direction"
-        self.index_in_json = n_component
         self.do_flip = True
 
+    def get_item(self, json_data):
+        return float(json_data[self.name])
+
 class speed_component:
-    def __init__(self, n_component):
+    def __init__(self):
         self.name = "speed"
-        self.index_in_json = n_component
         self.do_flip = False
+
+    def get_item(self, json_data):
+        return float(json_data[self.name])
 
 class throttle_component:
-    def __init__(self, n_component):
+    def __init__(self):
         self.name = "throttle"
-        self.index_in_json = n_component
         self.do_flip = False
 
-class time_component:
-    def __init__(self, n_component):
-        self.name = "time"
-        self.index_in_json = n_component
+    def get_item(self, json_data):
+        return float(json_data[self.name])
+
+class img_name_component:
+    def __init__(self):
+        self.name = "img_name"
         self.do_flip = False
+
+    def get_item(self, json_data):
+        return str(json_data[self.name])
+
+class time_component:
+    def __init__(self):
+        self.name = "time"
+        self.do_flip = False
+
+    def get_item(self, json_data):
+        return float(json_data[self.name])
