@@ -1,7 +1,12 @@
-from glob import glob
+import base64
+import io
 import json
+from glob import glob
 
 import cv2
+import numpy as np
+from PIL import Image
+
 
 class DatasetJson():
     def __init__(self, lab_structure):
@@ -12,6 +17,14 @@ class DatasetJson():
         annotations.insert(-1, path+'.png') # add the img_name component
         cv2.imwrite(annotations[-2], img)
 
+        annotations_dict = self.annotations_to_dict(annotations)
+        with open(path+'.json', 'w') as json_file:
+            json.dump(annotations_dict, json_file)
+
+    def save_img_encoded_json(self, dos, imgpath, annotations):
+        path = dos+str(annotations[-1])
+        annotations.insert(-1, self.label_structure[-2].encode_img(imgpath))
+        
         annotations_dict = self.annotations_to_dict(annotations)
         with open(path+'.json', 'w') as json_file:
             json.dump(annotations_dict, json_file)
@@ -83,6 +96,7 @@ class direction_component:
     def __init__(self):
         self.name = "direction"
         self.do_flip = True
+        self.is_label = True
 
     def get_item(self, json_data):
         return float(json_data[self.name])
@@ -91,6 +105,7 @@ class speed_component:
     def __init__(self):
         self.name = "speed"
         self.do_flip = False
+        self.is_label = True
 
     def get_item(self, json_data):
         return float(json_data[self.name])
@@ -99,6 +114,7 @@ class throttle_component:
     def __init__(self):
         self.name = "throttle"
         self.do_flip = False
+        self.is_label = True
 
     def get_item(self, json_data):
         return float(json_data[self.name])
@@ -107,14 +123,45 @@ class img_name_component:
     def __init__(self):
         self.name = "img_name"
         self.do_flip = False
+        self.is_label = False
 
     def get_item(self, json_data):
         return str(json_data[self.name])
+
+class imgbase64_component:
+    def __init__(self):
+        self.name = "img_base64"
+        self.do_flip = False
+        self.is_label = False
+
+    def get_item(self, json_data):
+        base64_img = json_data[self.name]
+        base64_img_decoded = base64.b64decode(base64_img)
+        return cv2.cvtColor(np.array(Image.open(io.BytesIO(base64_img_decoded))), cv2.COLOR_RGB2BGR) # getting the image from string and convert it to BGR
+    
+    def encode_img(self, imgpath):
+        with open(imgpath, "rb") as img_file:
+            img_encoded = base64.b64encode(img_file.read()).decode('utf-8')
+        return img_encoded
 
 class time_component:
     def __init__(self):
         self.name = "time"
         self.do_flip = False
+        self.is_label = False
 
     def get_item(self, json_data):
         return float(json_data[self.name])
+
+if __name__ == "__main__":
+    # quick code to test image decoding from string
+    dataset_json = DatasetJson([direction_component, imgbase64_component, time_component])
+
+    dos = "C:\\Users\\maxim\\random_data\\json_dataset\\"
+    gdos = dataset_json.load_dataset_sorted(dos)
+    for dos in gdos:
+        for path in dos:
+            annotations = dataset_json.load_annotations(path)
+            cv2.imshow('img', annotations[-2])
+            cv2.waitKey(1)
+            # print(annotations)
