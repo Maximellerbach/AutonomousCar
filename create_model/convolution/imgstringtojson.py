@@ -31,9 +31,7 @@ if __name__ == "__main__":
     dst_dos = "C:\\Users\\maxim\\random_data\\json_dataset\\"
     doss = glob(src_dos+"*")
 
-    # for dos in doss:
-    #     dos_name = dos.split('\\')[-1]
-    #     imgstring2json_dos(Dataset, DatasetJson, dos+"\\", dst_dos+dos_name+"\\")
-
     for dos in doss:
-        sorted_paths = DatasetJson.load_dos_sorted(dos+"\\")
+        dos_name = dos.split('\\')[-1]
+        imgstring2json_dos(Dataset, DatasetJson, dos+"\\", dst_dos+dos_name+"\\")
+
