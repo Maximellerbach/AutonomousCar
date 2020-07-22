@@ -1,6 +1,7 @@
 import base64
 import io
 import json
+import os
 from glob import glob
 
 import cv2
@@ -49,8 +50,6 @@ class DatasetJson():
         json_data = self.load_json(path)
         annotations = []
         for component in self.label_structure:
-            # key = component.name
-            # lab_item = json_data[key]
             lab_item = component.get_item(json_data)
             annotations.append(lab_item)
 
@@ -68,12 +67,28 @@ class DatasetJson():
 
         paths = sorted(paths, key=sort_function)
         return paths
+        
+    def save_json_sorted(self, sorted, path):
+        save_dict = dict(enumerate(sorted))
+        with open(path, 'w') as json_file:
+            json.dump(save_dict, json_file)
 
     def load_dos(self, dos):
         return glob(dos+"*.json")    
 
     def load_dos_sorted(self, dos):
-        return self.sort_paths_by_component(self.load_dos(dos), -1)
+        json_dos_name = dos[:-1]+'.json'
+        if os.path.isfile(json_dos_name):
+            sorted_path_json = self.load_json(json_dos_name)
+
+            if len(sorted_path_json) == len(os.listdir(dos))//2:
+                sorted_paths = [sorted_path_json[i] for i in sorted_path_json]
+                return sorted_paths
+
+        new_sorted_paths = self.sort_paths_by_component(self.load_dos(dos), -1)
+        self.save_json_sorted(new_sorted_paths, json_dos_name)
+        return new_sorted_paths
+
 
     def load_dataset(self, doss):
         doss_paths = []
@@ -86,8 +101,9 @@ class DatasetJson():
     def load_dataset_sorted(self, doss):
         doss_paths = []
         for dos in glob(doss+"*"):
-            paths = self.load_dos_sorted(dos+"\\")
-            doss_paths.append(paths)
+            if os.path.isdir(dos):
+                paths = self.load_dos_sorted(dos+"\\")
+                doss_paths.append(paths)
 
         return doss_paths
 
@@ -155,13 +171,12 @@ class time_component:
 
 if __name__ == "__main__":
     # quick code to test image decoding from string
-    dataset_json = DatasetJson([direction_component, imgbase64_component, time_component])
+    dataset_json = DatasetJson([direction_component, img_name_component, time_component])
 
     dos = "C:\\Users\\maxim\\random_data\\json_dataset\\"
     gdos = dataset_json.load_dataset_sorted(dos)
     for dos in gdos:
         for path in dos:
-            annotations = dataset_json.load_annotations(path)
-            cv2.imshow('img', annotations[-2])
+            img, annotations = dataset_json.load_img_ang_json(path)
+            cv2.imshow('img', img)
             cv2.waitKey(1)
-            # print(annotations)
