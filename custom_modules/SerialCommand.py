@@ -7,6 +7,7 @@ import serial
 
 lock = threading.RLock()
 
+
 class direction(IntEnum):
     DIR_LEFT_7 = 0
     DIR_LEFT_6 = 1
@@ -24,11 +25,13 @@ class direction(IntEnum):
     DIR_RIGHT_6 = 13
     DIR_RIGHT_7 = 14
 
+
 class motor(IntEnum):
     MOTOR_STOP = 0
     MOTOR_FORWARD = 1
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
+
 
 class car():
     WHEEL_BASE = 0.257
@@ -38,30 +41,36 @@ class car():
     FRONT_PERIMETER = FRONT_DIAMETER*math.pi
     SENSOR_RATIO = 1/(14*6)
 
-class control:    
-    "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
+
+class control:
+    """
+    This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor
+    """
     def __init__(self, port):
-        "Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows. Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0"
+        """
+        Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows.
+        Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0
+        """
         self.__ser = serial.Serial()
         self.__ser.port = port
         self.__ser.baudrate = 115200
-        self.__ser.bytesize = serial.EIGHTBITS #number of bits per bytes
-        self.__ser.parity = serial.PARITY_NONE #set parity check: no parity
-        self.__ser.stopbits = serial.STOPBITS_ONE #number of stop bits
-        self.__ser.timeout = 0     #no timeout
+        self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes
+        self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
+        self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
+        self.__ser.timeout = 0  # no timeout
         self.__command = bytearray([0, 0])
         self.__rounds = 0
         self.__current_speed = 0
         self.__time_last_received = time.time()
-        self.__isRuning = True 
+        self.__isRuning = True
         self.__isOperation = False
         self.__toSend = []
         try:
             self.__ser.open()
             print("Serial port open")
-            print(self.__ser.portstr)       # check which port was really used
+            print(self.__ser.portstr)  # check which port was really used
             self.__ser.write(self.__command)
-            self.__thread = threading.Thread(target = self.__ReadTurns__)
+            self.__thread = threading.Thread(target=self.__ReadTurns__)
             self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
@@ -70,13 +79,13 @@ class control:
 
     def __enter__(self):
         return self
-    
+
     def stop(self):
         self.__isRuning = False
         self.__thread.join()
         if (self.__ser.is_open):
             with lock:
-                self.__ser.close() # close port
+                self.__ser.close()  # close port
 
     def __safeWrite__(self, command):
         if (self.__ser.is_open):
@@ -86,7 +95,6 @@ class control:
             self.__ser.write(command)
             self.__ser.flush()
             self.__isOperation = False
-
 
     def ChangeDirection(self, dir):
         "Change direction, use the direction enum."
@@ -145,22 +153,24 @@ class control:
                         new_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
                         dspeed = new_speed-self.__current_speed
 
-                        if new_speed > 8.5: # speed never rises higher then 30 km/h ( 8.5m/s )
+                        if abs(new_speed) > 8.5:
+                            # speed never rises above 30 km/h ( 8.5m/s )
                             # print("speed anomaly detected")
                             pass
 
-                        elif (dspeed/self.__current_speed)>0.8 and self.__current_speed >= 1: # if 80% of the last speed is lost, then consider it's a crash
+                        elif (dspeed/self.__current_speed) < -0.8 and self.__current_speed >= 1:
+                            # if 80% of the last speed is lost, then consider it's a crash
                             # print("crash detected")
                             pass
-                        
+
                         else:
                             self.__current_speed = new_speed
                             self.__time_last_received = new_time
-                            self.__rounds = new_rounds
                         self.__rounds = new_rounds
 
                 except:
                     pass
+
                 finally:
                     self.__isOperation = False
 
