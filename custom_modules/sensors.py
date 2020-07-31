@@ -2,6 +2,7 @@ import math
 import time
 import numpy as np
 
+
 class car():
     WHEEL_BASE = 0.257
     REAR_DIAMETER = 0.105
@@ -9,24 +10,27 @@ class car():
     REAR_PERIMETER = REAR_DIAMETER*math.pi
     FRONT_PERIMETER = FRONT_DIAMETER*math.pi
 
+
 def transform_axes(axes, multiplier):
     return axes*multiplier
 
+
 def derivate_axes(axes, dt, axes_len=None):
-    axes_len = axes_len if axes_len != None else axes.shape
+    axes_len = axes_len if axes_len is not None else axes.shape
     return axes/np.full(axes_len, dt)
 
+
 def integrate_axes(integration, axes, dt, axes_len=None):
-    axes_len = axes_len if axes_len != None else axes.shape
+    axes_len = axes_len if axes_len is not None else axes.shape
     return integration+axes*np.full(axes_len, dt)
 
 
 class sensor_compteTour():
-    def __init__(self, ):
+    def __init__(self):
         self.AXES_TRANSFORMER = np.array([(1/84)*car.REAR_PERIMETER])
         self.MEA_ERROR = np.array([0.05])
         self.INITIAL_STATE = np.array([0])
-        self.DATA_LEVEL = 0 # (metric, speed, acc)
+        self.DATA_LEVEL = 0  # (metric, speed, acc)
 
         self.measurement = self.INITIAL_STATE
         self.position = self.INITIAL_STATE
@@ -35,9 +39,9 @@ class sensor_compteTour():
 
         self.datas = (self.position, self.speed, self.acc)
         self.time_last_received = time.time()
-        
+
     def update(self, new_measurement, new_time=None):
-        new_time = new_time if new_time!=None else time.time()
+        new_time = new_time if new_time is not None else time.time()
         new_measurement = transform_axes(np.array(new_measurement), self.AXES_TRANSFORMER)
 
         dt = new_time-self.time_last_received
@@ -53,12 +57,13 @@ class sensor_compteTour():
         self.time_last_received = new_time
         self.measurement = new_measurement
 
+
 class sensor_accelerometer():
     def __init__(self):
         self.AXES_TRANSFORMER = np.array([1, 1, 1])
         self.MEA_ERROR = np.array([0.05, 0.05, 0.05])
         self.INITIAL_STATE = np.array([0, 0, 0])
-        self.DATA_LEVEL = 2 # (metric, speed, acc)
+        self.DATA_LEVEL = 2  # (metric, speed, acc)
 
         self.measurement = self.INITIAL_STATE
         self.position = self.INITIAL_STATE
@@ -67,9 +72,9 @@ class sensor_accelerometer():
 
         self.datas = (self.position, self.speed, self.acc)
         self.time_last_received = time.time()
-        
+
     def update(self, new_measurement, new_time=None):
-        new_time = new_time if new_time!=None else time.time()
+        new_time = new_time if new_time is not None else time.time()
         new_measurement = transform_axes(np.array(new_measurement), self.AXES_TRANSFORMER)
 
         dt = new_time-self.time_last_received
@@ -85,7 +90,7 @@ class sensor_accelerometer():
         self.time_last_received = new_time
         self.measurement = new_measurement
 
-    
+
 class sensor_magnetometer():
     def __init__(self):
         self.AXES_TRANSFORMER = np.array([1, 1, 1])
@@ -100,9 +105,9 @@ class sensor_magnetometer():
 
         self.datas = (self.position, self.speed, self.acc)
         self.time_last_received = time.time()
-        
+
     def update(self, new_measurement, new_time=None):
-        new_time = new_time if new_time!=None else time.time()
+        new_time = new_time if new_time is not None else time.time()
         new_measurement = transform_axes(np.array(new_measurement), self.AXES_TRANSFORMER)
 
         dt = new_time-self.time_last_received
@@ -125,6 +130,7 @@ class sensor_fusion():
 
     def get_sensor_by_index(self, index):
         return self.sensors[index]
+
 
 if __name__ == "__main__":
     # some tests

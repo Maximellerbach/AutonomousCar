@@ -1,9 +1,11 @@
 import time
 import PID
 
+
 class PID_controller():
     def __init__(self, kp=1, ki=1, kd=1):
         self.pid = PID.PID(kp, ki, kd)
+        self.ser = None
 
         self.high_th = 127
         self.low_th = 30
@@ -16,17 +18,14 @@ class PID_controller():
 
     def init_ser(self, ser):
         self.ser = ser
-        time.sleep(1) # wait for the sensor data to come in
+        time.sleep(1)  # wait for the sensor data to come in
 
-        self.ser.ChangeMotorA(1) # set motor A to forward
-        self.ser.ChangePWM(0) # set motor to 0
-        self.ser.ChangeDirection(6) # set dir to straight
+        self.ser.ChangeMotorA(1)  # set motor A to forward
+        self.ser.ChangePWM(0)  # set motor to 0
+        self.ser.ChangeDirection(6)  # set dir to straight
 
         self.current_speed = self.ser.GetCurrentSpeed()
         self.last_received = self.ser.GetTimeLastReceived()
-
-    def changePWM(self, pwm):
-        self.ser.changePWM(pwm)
 
     def update(self, current_speed, time_received):
         if time_received != self.last_received:
@@ -43,12 +42,18 @@ class PID_controller():
                 self.pwm = self.high_th
 
             return self.pwm
-        
+
         else:
             return None
 
     def update_ser(self):
-        self.update(self.ser.GetCurrentSpeed(), self.ser.GetTimeLastReceived())
+        if self.ser is not None:
+            self.update(self.ser.GetCurrentSpeed(), self.ser.GetTimeLastReceived())
+        else:
+            raise ValueError('Ser is not initialized, please execute ')
+
+    def changePWM(self, pwm):
+        self.ser.changePWM(pwm)
 
     def update_target(self, new_target):
         self.pid.SetPoint = new_target

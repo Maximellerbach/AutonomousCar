@@ -30,6 +30,7 @@ More information about PID Controller: http://en.wikipedia.org/wiki/PID_controll
 """
 import time
 
+
 class PID:
     """PID Controller
     """
@@ -62,17 +63,18 @@ class PID:
         self.output = 0.0
 
     def update(self, feedback_value, current_time=None):
-        """Calculates PID value for given reference feedback
+        """
+        Calculates PID value for given reference feedback
 
         .. math::
-            u(t) = K_p e(t) + K_i \int_{0}^{t} e(t)dt + K_d {de}/{dt}
+            u(t) = K_p e(t) + K_i \ int_{0}^{t} e(t)dt + K_d {de}/{dt}
 
         .. figure:: images/pid_1.png
            :align:   center
 
            Test PID with Kp=1.2, Ki=1, Kd=0.001 (test_pid.py)
-
         """
+
         error = self.SetPoint - feedback_value
 
         self.current_time = current_time if current_time is not None else time.time()

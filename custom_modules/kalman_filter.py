@@ -9,8 +9,8 @@ if __name__ == "__main__":
     sensor_list = [objects.sensor_compteTour()]
     
     KF = pykalman.KalmanFilter(initial_state_mean=[i.INITIAL_STATE for i in sensor_list],
-    transition_covariance=[i.MEA_ERROR**2 for i in sensor_list],
-    observation_covariance=[i.MEA_ERROR for i in sensor_list])
+                               transition_covariance=[i.MEA_ERROR**2 for i in sensor_list],
+                               observation_covariance=[i.MEA_ERROR for i in sensor_list])
 
     states = []
     to_preds = []

@@ -25,7 +25,7 @@ class DatasetJson():
     def save_img_encoded_json(self, dos, imgpath, annotations):
         path = dos+str(annotations[-1])
         annotations.insert(-1, self.label_structure[-2].encode_img(imgpath))
-        
+
         annotations_dict = self.annotations_to_dict(annotations)
         with open(path+'.json', 'w') as json_file:
             json.dump(annotations_dict, json_file)
@@ -39,24 +39,23 @@ class DatasetJson():
 
     def load_json(self, path):
         with open(path, "r") as json_file:
-            json_data = json.load(json_file) # json -> dict
+            json_data = json.load(json_file)  # json -> dict
         return json_data
-    
+
     def load_component_item(self, path, n_component):
         json_data = self.load_json(path)
         return self.label_structure[n_component].get_item(json_data)
 
-    def load_annotations(self, path):
+    def load_annotation(self, path):
+        def get_item_comp(component):
+            return component.get_item(json_data)
         json_data = self.load_json(path)
-        annotations = []
-        for component in self.label_structure:
-            lab_item = component.get_item(json_data)
-            annotations.append(lab_item)
+        annotations = list(map(get_item_comp, self.label_structure))
 
         return annotations
-    
+
     def load_img_ang_json(self, path):
-        annotations = self.load_annotations(path)
+        annotations = self.load_annotation(path)
         img = cv2.imread(path.replace('.json', '.png'))
 
         return img, annotations
@@ -67,7 +66,7 @@ class DatasetJson():
 
         paths = sorted(paths, key=sort_function)
         return paths
-        
+
     def save_json_sorted(self, sorted, path):
         save_dict = dict(enumerate(sorted))
         with open(path, 'w') as json_file:
@@ -89,12 +88,12 @@ class DatasetJson():
         self.save_json_sorted(new_sorted_paths, json_dos_name)
         return new_sorted_paths
 
-
     def load_dataset(self, doss):
         doss_paths = []
         for dos in glob(doss+"*"):
-            paths = self.load_dos(dos+"\\")
-            doss_paths.append(paths)
+            if os.path.isdir(dos):
+                paths = self.load_dos(dos+"\\")
+                doss_paths.append(paths)
 
         return doss_paths
 
@@ -107,6 +106,24 @@ class DatasetJson():
 
         return doss_paths
 
+    def imgstring2json(self, dataset_obj, dst_dos, path):
+        img = dataset_obj.load_image(path)
+        annotations = dataset_obj.load_annotation(path)
+        self.save_img_and_json(dst_dos, img, annotations)
+
+    def imgstring2json_encoded(self, dataset_obj, dst_dos, path):
+        annotations = dataset_obj.load_annotation(path)
+        self.save_img_encoded_json(dst_dos, path, annotations)
+
+    def imgstring2json_dos(self, dataset_obj, imgstring2dos_function, src_dos, dst_dos):
+        try:
+            os.mkdir(dst_dos)
+        except:
+            pass
+        paths = dataset_obj.load_dos(src_dos)
+        for path in paths:
+            imgstring2dos_function(dataset_obj, dst_dos, path)
+
 
 class direction_component:
     def __init__(self):
@@ -117,6 +134,7 @@ class direction_component:
     def get_item(self, json_data):
         return float(json_data[self.name])
 
+
 class speed_component:
     def __init__(self):
         self.name = "speed"
@@ -125,6 +143,7 @@ class speed_component:
 
     def get_item(self, json_data):
         return float(json_data[self.name])
+
 
 class throttle_component:
     def __init__(self):
@@ -135,6 +154,7 @@ class throttle_component:
     def get_item(self, json_data):
         return float(json_data[self.name])
 
+
 class img_name_component:
     def __init__(self):
         self.name = "img_name"
@@ -143,6 +163,7 @@ class img_name_component:
 
     def get_item(self, json_data):
         return str(json_data[self.name])
+
 
 class imgbase64_component:
     def __init__(self):
@@ -153,12 +174,13 @@ class imgbase64_component:
     def get_item(self, json_data):
         base64_img = json_data[self.name]
         base64_img_decoded = base64.b64decode(base64_img)
-        return cv2.cvtColor(np.array(Image.open(io.BytesIO(base64_img_decoded))), cv2.COLOR_RGB2BGR) # getting the image from string and convert it to BGR
-    
+        return cv2.cvtColor(np.array(Image.open(io.BytesIO(base64_img_decoded))), cv2.COLOR_RGB2BGR)  # getting the image from string and convert it to BGR
+
     def encode_img(self, imgpath):
         with open(imgpath, "rb") as img_file:
             img_encoded = base64.b64encode(img_file.read()).decode('utf-8')
         return img_encoded
+
 
 class time_component:
     def __init__(self):
@@ -168,6 +190,7 @@ class time_component:
 
     def get_item(self, json_data):
         return float(json_data[self.name])
+
 
 if __name__ == "__main__":
     # quick code to test image decoding from string

@@ -18,8 +18,11 @@ class Dataset():
         return cv2.imread(img_string)
 
     def load_annotation(self, img_string):
+        def get_item_comp(component):
+            return component.get_item(split_string)
+
         split_string = self.split_string(img_string)
-        annotations = [label_type.get_item(split_string) for label_type in self.label_structure]
+        annotations = list(map(get_item_comp, self.label_structure))
         return annotations
 
     def repeat_function(self, function, items):

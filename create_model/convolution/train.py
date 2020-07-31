@@ -92,7 +92,7 @@ class classifier():
         """
         trains the model loaded as self.model
         """
-        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, delay=delay)
+        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip)
 
         print(self.gdos.shape, self.valdos.shape, self.datalen)
         self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
@@ -226,14 +226,14 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\rnn_linearv1.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
-                    proportion=0.1, to_cat=False, sequence=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(False, False))
+    AI = classifier(name = 'test_model\\convolution\\test.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
+                    proportion=0.1, to_cat=False, sequence=False, weight_acc=0.1, smoothing=0.0, label_rdm=0.0, load_speed=(False, False))
                     # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function # 'C:\\Users\\maxim\\datasets\\'
                     # when weight_acc = 2, only one steering class is created
 
     # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
 
-    AI.train(load=False, load_fe=False, flip=True, augm=False, epochs=3, batch_size=16, seq_batchsize=4)
+    AI.train(load=False, load_fe=False, flip=True, augm=True, epochs=3, batch_size=16, seq_batchsize=4)
     AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 

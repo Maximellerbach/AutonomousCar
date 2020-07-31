@@ -141,7 +141,7 @@ class control:
                 self.__isOperation = True
                 try:
                     out = self.__ser.readlines()[-1]
-                    if out != '':
+                    if out != '' or out is not None:
                         new_rounds = -int(out.decode())
                         self.__sensor_compteTour.update(new_rounds) 
 
