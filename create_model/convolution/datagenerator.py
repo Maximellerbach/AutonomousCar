@@ -6,7 +6,7 @@ from glob import glob
 from reorder_dataset import get_speed
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, gdos, Dataset, datalen, batch_size, frc, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, memory=49, seq=False, load_speed=(False, False)):
+    def __init__(self, gdos, Dataset, datalen, batch_size, frc, sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, load_speed=(False, False)):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -15,20 +15,18 @@ class image_generator(keras.utils.Sequence):
         self.gdos = gdos
         self.Dataset = Dataset
 
-
         self.frc = frc
         self.weight_acc = weight_acc
 
-        self.n_classes = n_classes
-        self.memory_size = memory+1
+        self.sequence = sequence
         self.datalen = datalen
-        self.seq = seq
 
         self.proportion = proportion
         self.smoothing = smoothing
         self.label_rdm = label_rdm
         self.flip = flip
         self.load_speed = load_speed 
+        self.seq_batchsize = seq_batchsize
 
 
     def __data_generation(self, gdos):
@@ -37,19 +35,45 @@ class image_generator(keras.utils.Sequence):
         ybatch = []
 
         for i in batchfiles:
-            try:
-                img = self.Dataset.load_image(i) 
-                img = cv2.resize(img, (self.img_cols, self.img_rows))
+            # try:
+            if True:
+                if self.sequence:
+                    xseq = []
+                    yseq = []
 
-                annotations = self.Dataset.load_annotation(i)
+                    seq_len = len(i)
+                    if seq_len > self.seq_batchsize:
+                        rdm_seq = np.random.randint(0, seq_len-self.seq_batchsize)
+                        i = i[rdm_seq:rdm_seq+self.seq_batchsize]
 
-                xbatch.append(img)
-                ybatch.append(annotations)
+                    elif seq_len < self.seq_batchsize: # ugly way to make sure every sequence has the same length
+                        i = [i[0]]*(self.seq_batchsize-seq_len)+i
+                    
+                    for impath in i:
+                        img = self.Dataset.load_image(impath)
+                        img = cv2.resize(img, (self.img_cols, self.img_rows))
 
-            except:
-                print(i)
+                        annotations = self.Dataset.load_annotation(impath)
+                        
+                        xseq.append(img)
+                        yseq.append(annotations)
 
-        if self.augm == True:
+                    xbatch.append(xseq)
+                    ybatch.append(yseq)
+                
+                else:
+                    img = self.Dataset.load_image(i) 
+                    img = cv2.resize(img, (self.img_cols, self.img_rows))
+
+                    annotations = self.Dataset.load_annotation(i)
+
+                    xbatch.append(img)
+                    ybatch.append(annotations)
+
+            # except:
+            #     print(i)
+
+        if self.augm:
             # here are the old functions
             # X_bright, Y_bright = autolib.generate_brightness(xbatch, ybatch)
             # X_gamma, Y_gamma = autolib.generate_low_gamma(xbatch, ybatch)
@@ -61,29 +85,65 @@ class image_generator(keras.utils.Sequence):
             # X_glow, Y_glow = autolib.generate_random_glow(xbatch, ybatch)
             # X_cut, Y_cut = autolib.generate_random_cut(xbatch, ybatch)
 
+            """ # this is the old "bourrin" way where we add transformed image to the clean one
             X_aug, Y_aug = autolib.generate_functions(xbatch, ybatch, proportion=self.proportion)
             
             xbatch = np.concatenate((xbatch, X_aug))
             ybatch = np.concatenate((ybatch, Y_aug))
+            """
+
+            # this is much nicer as we modify into the batch of clean image
+            if self.sequence:
+                for i in range(len(xbatch)):
+                    xbatch[i], ybatch[i] = autolib.generate_functions_replace(xbatch[i], ybatch[i], proportion=self.proportion)
+            else:
+                xbatch, ybatch = autolib.generate_functions_replace(xbatch, ybatch, proportion=self.proportion)
             
         if self.flip:
-            xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
-            xbatch = np.concatenate((xbatch, xflip))
-            ybatch = np.concatenate((ybatch, yflip))
+            if self.sequence:
+                for i in range(len(xbatch)):
+                    xflip, yflip = autolib.generate_horizontal_flip(xbatch[i], ybatch[i], proportion=1)
+                    xbatch.append(xflip)
+                    ybatch.append(yflip)
+
+                xbatch = np.array(xbatch)/255
+                ybatch = np.array(ybatch)
+
+            else:
+                xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
+                xbatch = np.concatenate((xbatch, xflip))/255
+                ybatch = np.concatenate((ybatch, yflip))
+
         
-        weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
-        X = [xbatch/255]
-        Y = [ybatch[:, 0]]
-        weights = [weight]
+        # removed the weight, useless ; weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
 
-        if self.load_speed[0]:
-            X.append(ybatch[:, 1])
+        if self.sequence:
 
-        if self.load_speed[1]:
-            Y.append(ybatch[:, 2])
-            weights.append(weight)
+            if self.load_speed[0]:
+                X = [xbatch, ybatch[:, :, 1]]
+            else:
+                X = xbatch
 
-        return X, Y, weights
+            if self.load_speed[1]:
+                Y = [ybatch[:, :, 0], ybatch[:, :, 2]]
+            else:
+                Y = ybatch[:, :, 0]
+
+            Y = np.expand_dims(Y, axis=-1)
+
+        else:
+
+            if self.load_speed[0]:
+                X = [xbatch, ybatch[:, 1]]
+            else:
+                X = xbatch
+
+            if self.load_speed[1]:
+                Y = [ybatch[:, 0], ybatch[:, 2]]
+            else:
+                Y = ybatch[:, 0]
+
+        return X, Y
 
     def __len__(self):
         return int(self.datalen/self.batch_size)

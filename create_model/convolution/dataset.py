@@ -32,16 +32,36 @@ class Dataset():
         paths = sorted(paths, key=sort_function)
         return paths
 
+    def split_sorted_paths(self, paths, time_interval=0.2):
+        splitted = [[]]
+        n_split = 0
+
+        for i in range(1, len(paths)):
+            prev = paths[i-1]
+            actual = paths[i]
+
+            prev_t = self.load_component_item(prev, -1)
+            actual_t = self.load_component_item(actual, -1)
+
+            dt = actual_t-prev_t
+            if abs(dt) > time_interval:
+                n_split += 1
+                splitted.append([])
+
+            splitted[n_split].append(paths[i])
+
+        return splitted
+
     def load_dataset_sorted(self, doss, sort_component=-1):
         sorted_doss = []
         for dos in glob(doss+"*"):
-            paths = glob(dos+"\\*")
+            paths = self.load_dos(dos+"\\")
             sorted_doss.append(self.sort_paths_by_component(paths, sort_component)) # -1 is time component
 
         return sorted_doss
     
     def load_dos_sorted(self, dos, sort_component=-1):
-        paths = glob(dos+"*")
+        paths = self.load_dos(dos)
         return self.sort_paths_by_component(paths, sort_component) # -1 is time component
     
     def load_dos(self, dos):
@@ -50,10 +70,19 @@ class Dataset():
     def load_dataset(self, doss):
         doss_paths = []
         for dos in glob(doss+"*"):
-            paths = glob(dos+"\\*")
-            doss_paths.append(paths) # -1 is time component
+            paths = self.load_dos(dos+"\\")
+            doss_paths.append(paths)
 
         return doss_paths
+
+    def load_dataset_sequence(self, doss, max_interval=0.2):
+        doss_sequences = []
+        for dos in glob(doss+"*"):
+            paths = self.load_dos_sorted(dos+"\\")
+            paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
+            doss_sequences.append(list(paths_sequence))
+
+        return doss_sequences
 
 class direction_component:
     def __init__(self, n_component):
@@ -122,7 +151,7 @@ def save(save_path, dts, annotations):
         name = annotations_to_name(annotations[i])
         shutil.copy(dts[i], save_path+name)
 
-def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45):
+def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45): # to transform old data format into new ones
     def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed): # Function from my Virtual Racing repo
         dt_throttle = max_throttle-min_throttle
 
@@ -152,7 +181,6 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
     return dts, Y
 
 def add_dummy_speed(dos, dummy_speed=10):
-
     dataset = Dataset([direction_component, time_component])
 
     dts = glob(dos+"*")
@@ -164,11 +192,28 @@ def add_dummy_speed(dos, dummy_speed=10):
 
     return dts, Y
 
+def cat2linear_dataset(dos):
+    dataset = Dataset([direction_component, time_component])
+    
+    dts = glob(dos+"*")
+    Y = []
+    for path in dts:
+        annotations = dataset.load_annotation(path)
+        annotations[0] = cat2linear(annotations[0])
+        Y.append(annotations)
+
+    return dts, Y
+
+def cat2linear(ny):
+    return (ny-7)/4
+
 
 if __name__ == "__main__":
-    dts, annotations = add_dummy_speed("C:\\Users\\maxim\\random_data\\linear\\1 ironcar driving\\", dummy_speed=1)
-    save("C:\\Users\\maxim\\random_data\\speed\\1 ironcar driving\\", dts, annotations)
-
+    # dts, annotations = add_dummy_speed("C:\\Users\\maxim\\random_data\\linear\\1 ironcar driving\\", dummy_speed=1)
+    # save("C:\\Users\\maxim\\random_data\\speed\\1 ironcar driving\\", dts, annotations)
+    
     # dts, annotations = angle_speed_to_throttle("C:\\Users\\maxim\\random_data\\17 custom maps\\")
     # save("C:\\Users\\maxim\\random_data\\throttle\\17 custom maps\\", dts, annotations)
     
+    dts, annotations = cat2linear_dataset("C:\\Users\\maxim\\random_data\\11 sim circuit 2\\")
+    save("C:\\Users\\maxim\\random_data\\linear\\11 sim circuit 2\\", dts, annotations)

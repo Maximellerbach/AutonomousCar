@@ -4,14 +4,11 @@ import time
 
 import numpy as np
 
+sys.path.append('C:\\Users\\maxim\\github\\AutonomousCar\\custom_modules\\')
 sys.path.append('../custom_modules/')
 import SerialCommand
 
 dico = [10,8,6,4,2]
-
-def start_serial(port="/dev/ttyUSB0"):
-    ser = SerialCommand.control(port)
-    return ser
 
 def plot_points(positions):
     import matplotlib.pyplot as plt
@@ -117,7 +114,7 @@ if __name__ == "__main__":
 
     angle, way, orientation = getParams(sys.argv[1:])
 
-    ser = start_serial()
+    ser = SerialCommand.start_serial()
     rotatecar(ser, angle, way, orientation=orientation)
 
     time.sleep(1)

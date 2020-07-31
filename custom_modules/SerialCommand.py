@@ -4,6 +4,7 @@ import time
 from enum import IntEnum
 
 import serial
+from objects import sensor_compteTour
 
 lock = threading.RLock()
 
@@ -32,6 +33,7 @@ class motor(IntEnum):
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
 
+<<<<<<< HEAD
 
 class car():
     WHEEL_BASE = 0.257
@@ -46,12 +48,17 @@ class control:
     """
     This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor
     """
+=======
+class control:    
+    "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
+>>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960
     def __init__(self, port):
         """
         Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows.
         Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0
         """
         self.__ser = serial.Serial()
+        self.__sensor_compteTour = sensor_compteTour()
         self.__ser.port = port
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes
@@ -59,11 +66,17 @@ class control:
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
         self.__ser.timeout = 0  # no timeout
         self.__command = bytearray([0, 0])
+<<<<<<< HEAD
         self.__rounds = 0
         self.__current_speed = 0
         self.__time_last_received = time.time()
         self.__isRuning = True
+=======
+        self.__pwm = 0
+        self.__isRuning = True 
+>>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960
         self.__isOperation = False
+        self.__boosting = False
         self.__toSend = []
         try:
             self.__ser.open()
@@ -119,7 +132,17 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
+        self.__dpwn = pwm-self.__pwm
+        self.__pwm = pwm
         self.__toSend.append(self.__command)
+
+    def BoostPWM(self, boostpwm, pwm, duration):
+        self.__boosting = True
+        self.ChangePWM(boostpwm)
+        time.sleep(duration)
+
+        self.__boosting = False
+        self.ChangePWM(pwm)
 
     def ChangeAll(self, dir, motorA, motorB, pwm):
         "Change all the elements at the same time. Consider using the direction and motor enums. PWM is byte from 0 to 255."
@@ -131,6 +154,8 @@ class control:
         if (pwm > 255):
             pwm = 255
         self.__command[1] = pwm
+        self.__dpwn = pwm-self.__pwm
+        self.__pwm = pwm
         self.__toSend.append(self.__command)
 
     def __ReadTurns__(self):
@@ -146,6 +171,7 @@ class control:
                     out = self.__ser.readlines()[-1]
                     if out != '':
                         new_rounds = -int(out.decode())
+<<<<<<< HEAD
                         new_time = time.time()
                         dt = new_time-self.__time_last_received
                         dturn = new_rounds-self.__rounds
@@ -167,18 +193,38 @@ class control:
                             self.__current_speed = new_speed
                             self.__time_last_received = new_time
                         self.__rounds = new_rounds
+=======
+                        self.__sensor_compteTour.update(new_rounds) 
+>>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960
 
                 except:
                     pass
 
                 finally:
                     self.__isOperation = False
+    
+    def GetSensor(self):
+        return self.__sensor_compteTour
 
     def GetTurns(self):
-        return self.__rounds
+        return self.__sensor_compteTour.measurement
 
     def GetTimeLastReceived(self):
-        return self.__time_last_received
+        return self.__sensor_compteTour.time_last_received
+
+    def GetCurrentPosition(self):
+        return self.__sensor_compteTour.position
 
     def GetCurrentSpeed(self):
+<<<<<<< HEAD
         return self.__current_speed
+=======
+        return self.__sensor_compteTour.speed
+        
+    def GetCurrentAcc(self):
+        return self.__sensor_compteTour.acc
+
+def start_serial(port="/dev/ttyUSB0"):
+    ser = control(port)
+    return ser
+>>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960

@@ -256,6 +256,22 @@ def generate_functions(X, Y, proportion=0.25):
 
     return X_aug, Y_aug
 
+def generate_functions_replace(X, Y, proportion=0.25): # same function as above, just replace images instead of adding more
+    functions = (change_brightness, rescut, inverse_color, night_effect, add_random_shadow, add_random_glow, rdm_noise)
+
+    X_aug = []
+    Y_aug = []
+    for f in functions:
+        indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
+        for index in range(len(X)):
+            if indexes[index] == True:
+                im, annotation = f(X[index], Y[index])
+                Y[index] = annotation
+                X[index] = im
+
+    return X_aug, Y_aug
+
+
 def generate_random_cut(X, Y, proportion=0.25):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
     
@@ -335,7 +351,7 @@ def generate_horizontal_flip(X, Y, proportion=0.25):
             Y_aug.append(angle)
             X_aug.append(im)
                 
-    return X_aug, Y_aug
+    return np.array(X_aug), np.array(Y_aug)
 
 
 def generate_random_shadows(X, Y, proportion=0.25):
