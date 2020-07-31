@@ -33,25 +33,10 @@ class motor(IntEnum):
     MOTOR_BACKWARD = 2
     MOTOR_IDLE = 3
 
-<<<<<<< HEAD
-
-class car():
-    WHEEL_BASE = 0.257
-    REAR_DIAMETER = 0.105
-    FRONT_DIAMETER = 0.082
-    REAR_PERIMETER = REAR_DIAMETER*math.pi
-    FRONT_PERIMETER = FRONT_DIAMETER*math.pi
-    SENSOR_RATIO = 1/(14*6)
-
-
-class control:
+class control:    
     """
     This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor
     """
-=======
-class control:    
-    "This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor"
->>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960
     def __init__(self, port):
         """
         Initialize the class. It does require a serial port name. it can be COMx where x is an interger on Windows.
@@ -66,15 +51,8 @@ class control:
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
         self.__ser.timeout = 0  # no timeout
         self.__command = bytearray([0, 0])
-<<<<<<< HEAD
-        self.__rounds = 0
-        self.__current_speed = 0
-        self.__time_last_received = time.time()
-        self.__isRuning = True
-=======
         self.__pwm = 0
         self.__isRuning = True 
->>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960
         self.__isOperation = False
         self.__boosting = False
         self.__toSend = []
@@ -171,31 +149,7 @@ class control:
                     out = self.__ser.readlines()[-1]
                     if out != '':
                         new_rounds = -int(out.decode())
-<<<<<<< HEAD
-                        new_time = time.time()
-                        dt = new_time-self.__time_last_received
-                        dturn = new_rounds-self.__rounds
-
-                        new_speed = (car.REAR_PERIMETER*(dturn*car.SENSOR_RATIO))/dt
-                        dspeed = new_speed-self.__current_speed
-
-                        if abs(new_speed) > 8.5:
-                            # speed never rises above 30 km/h ( 8.5m/s )
-                            # print("speed anomaly detected")
-                            pass
-
-                        elif (dspeed/self.__current_speed) < -0.8 and self.__current_speed >= 1:
-                            # if 80% of the last speed is lost, then consider it's a crash
-                            # print("crash detected")
-                            pass
-
-                        else:
-                            self.__current_speed = new_speed
-                            self.__time_last_received = new_time
-                        self.__rounds = new_rounds
-=======
                         self.__sensor_compteTour.update(new_rounds) 
->>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960
 
                 except:
                     pass
@@ -216,9 +170,6 @@ class control:
         return self.__sensor_compteTour.position
 
     def GetCurrentSpeed(self):
-<<<<<<< HEAD
-        return self.__current_speed
-=======
         return self.__sensor_compteTour.speed
         
     def GetCurrentAcc(self):
@@ -227,4 +178,3 @@ class control:
 def start_serial(port="/dev/ttyUSB0"):
     ser = control(port)
     return ser
->>>>>>> 30f918383069f75ed90b667967b2cf5ff6273960
