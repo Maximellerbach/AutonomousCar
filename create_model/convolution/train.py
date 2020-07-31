@@ -1,46 +1,38 @@
 import collections
-import os
-import random
-import threading
-import time
 from glob import glob
-from math import sqrt
 
 import cv2
-import h5py
-import keras
 import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
-from keras.callbacks import *
-from keras.models import Input, Model, Sequential, load_model
-from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical
-from sklearn.model_selection import train_test_split
+from keras.callbacks import EarlyStopping
+from keras.models import load_model
 from sklearn.utils import class_weight
 from tqdm import tqdm
 
 import architectures
 import autolib
-import pred_function
-import reorder_dataset
 import dataset
+import pred_function
 # from architectures import dir_loss
 from datagenerator import image_generator
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True # dynamically grow the memory used on the GPU
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
 sess = tf.Session(config=config)
 config.log_device_placement = True  # to log device placement (on which device the operation ran)
-set_session(sess) # set this TensorFlow session as the default
+set_session(sess)  # set this TensorFlow session as the default
+
 
 class classifier():
-    def __init__(self, name, dospath='', dosdir=True, memory_size=49, proportion=0.15, to_cat=True, weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
-        
-        self.Dataset = dataset.Dataset([dataset.direction_component, dataset.speed_component, dataset.throttle_component, dataset.time_component])
+    def __init__(self, name, dospath='', dosdir=True, memory_size=49, proportion=0.15, to_cat=True,
+                 weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
+        self.Dataset = dataset.Dataset([dataset.direction_component,
+                                        dataset.speed_component,
+                                        dataset.throttle_component,
+                                        dataset.time_component])
         self.name = name
         self.dospath = dospath
         self.memory_size = memory_size
@@ -51,7 +43,7 @@ class classifier():
         self.channels = 3
 
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
-        
+
         self.number_class = 5
         self.proportion = proportion
         self.to_cat = to_cat
@@ -66,16 +58,19 @@ class classifier():
         """
         load a model using architectures program
         """
-        if load == True:
-            model = load_model(self.name, custom_objects={"dir_loss":architectures.dir_loss})
+        if load:
+            model = load_model(self.name, custom_objects={"dir_loss": architectures.dir_loss})
             fe = load_model('test_model\\convolution\\fe.h5')
-        
-        else:
 
-            model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe, loss=architectures.dir_loss, 
-                                    prev_act="relu", last_act="linear", drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
-                                    last_bias=False, memory=self.memory_size, metrics=["mse"], load_speed=self.load_speed) # model used for the race
-            
+        else:
+            # model used for the race
+            model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe,
+                                                       loss=architectures.dir_loss, prev_act="relu",
+                                                       last_act="linear", drop_rate=0.15,
+                                                       regularizer=(0.0, 0.0), lr=0.001,
+                                                       last_bias=False, memory=self.memory_size,
+                                                       metrics=["mse"], load_speed=self.load_speed)
+
             # model, fe = architectures.create_DepthwiseConv2D_CNN((120, 160, 3), 5)
             # model, fe = architectures.create_heavy_CNN((100, 160, 3), 5)
             # model, fe = architectures.create_lightlatent_CNN((100, 160, 3), 5)
@@ -85,40 +80,55 @@ class classifier():
 
         return model, fe
 
-
     def train(self, load=False, load_fe=False, flip=True, epochs=5, batch_size=64):
         """
         trains the model loaded as self.model
         """
-
-        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat) # TODO: add folder weights
+        # TODO: add folder weights
+        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat)
 
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
 
-        earlystop = EarlyStopping(monitor = 'val_loss', min_delta = 0, patience = 3, verbose = 0, restore_best_weights = True)
+        earlystop = EarlyStopping(monitor='val_loss',
+                                  min_delta=0,
+                                  patience=3,
+                                  verbose=0,
+                                  restore_best_weights=True)
 
-        self.model.fit_generator(image_generator(self.gdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
-                                validation_data=image_generator(self.valdos, self.Dataset, self.datalen, batch_size, frc, load_speed=self.load_speed, weight_acc=self.weight_acc, augm=True, memory=self.memory_size, flip=flip, smoothing=self.smoothing, label_rdm=self.label_rdm), validation_steps=self.datalen//20//(batch_size),
-                                callbacks=[earlystop], max_queue_size=5, workers=8)
+        self.model.fit_generator(image_generator(self.gdos, self.Dataset,
+                                                 self.datalen, batch_size, frc,
+                                                 load_speed=self.load_speed, weight_acc=self.weight_acc,
+                                                 augm=True, memory=self.memory_size,
+                                                 flip=flip, smoothing=self.smoothing,
+                                                 label_rdm=self.label_rdm),
+                                 steps_per_epoch=self.datalen//(batch_size),
+                                 epochs=epochs,
+                                 validation_data=image_generator(self.valdos, self.Dataset,
+                                                                 self.datalen, batch_size, frc,
+                                                                 load_speed=self.load_speed, weight_acc=self.weight_acc,
+                                                                 augm=True, memory=self.memory_size,
+                                                                 flip=flip, smoothing=self.smoothing,
+                                                                 label_rdm=self.label_rdm),
+                                 validation_steps=self.datalen//20//(batch_size),
+                                 callbacks=[earlystop], max_queue_size=5, workers=8)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
 
     def get_gdos(self, flip=True, cat=True):
-        if self.dosdir == True:
+        if self.dosdir:
             gdos = self.Dataset.load_dataset(self.dospath)
             gdos = np.concatenate([i for i in gdos])
             datalen = len(gdos)
             np.random.shuffle(gdos)
             gdos, valdos = np.split(gdos, [datalen-datalen//20])
-            
+
         else:
             gdos = glob(self.dospath)
             datalen = len(gdos)
             np.random.shuffle(gdos)
             gdos, valdos = np.split(gdos, [datalen-datalen//20])
-
 
         if cat:
             frc = self.get_frc_cat(self.dospath, flip=flip)
@@ -130,7 +140,7 @@ class classifier():
     def get_frc_lin(self, dos, flip=True):
         """
         calculate stats from linear labels
-        and show label distribution 
+        and show label distribution
         """
         Y = []
 
@@ -143,8 +153,8 @@ class classifier():
                     if flip:
                         labels.append(-lab)
 
-                    for l in labels: # will add normal + reversed if flip == True
-                        Y.append(autolib.round_st(l, self.weight_acc))
+                    for label in labels:  # will add normal + reversed if flip is True
+                        Y.append(autolib.round_st(label, self.weight_acc))
 
         else:
             for i in tqdm(glob(dos+"*")):
@@ -154,8 +164,8 @@ class classifier():
                 if flip:
                     labels.append(-lab)
 
-                for l in labels: # will add normal + reversed if flip == True
-                    Y.append(autolib.round_st(l, self.weight_acc))
+                for label in labels:  # will add normal + reversed if flip is True
+                    Y.append(autolib.round_st(label, self.weight_acc))
         d = collections.Counter(Y)
 
         unique = np.unique(Y)
@@ -166,18 +176,18 @@ class classifier():
         plt.show()
         return dict_frc
 
-
-    def get_frc_cat(self, dos, flip=True): # old, now using linear labels
+    def get_frc_cat(self, dos, flip=True):  # old, now using linear labels
         """
         calculate stats from categorical labels
         returns the weight of the classes for a balanced training
         """
         Y = []
 
-        if self.dosdir == True:
+        if self.dosdir:
             for d in tqdm(glob(dos)):
                 for i in glob(d+'\\*'):
-                    label = autolib.get_label(i, flip=flip, cat=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+                    # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+                    label = autolib.get_label(i, flip=flip, cat=True)
 
                     Y.append(label[0])
                     if flip:
@@ -185,8 +195,8 @@ class classifier():
 
         else:
             for i in tqdm(glob(dos)):
-                
-                label = autolib.get_label(i, flip=flip, cat=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+                # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+                label = autolib.get_label(i, flip=flip, cat=True)
 
                 Y.append(label[0])
                 if flip:
@@ -194,9 +204,9 @@ class classifier():
 
         d = dict(collections.Counter(Y))
         prc = [0]*5
-        l = len(Y)
+        length = len(Y)
         for i in range(5):
-            prc[i] = d[i]/l
+            prc[i] = d[i]/length
         print(prc)
 
         unique = np.unique(Y)
@@ -205,7 +215,6 @@ class classifier():
 
         print(dict_frc)
         return dict_frc
-    
 
     def calculate_FLOPS(self):
         run_meta = tf.RunMetadata()
@@ -217,15 +226,18 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name = 'test_model\\convolution\\linearv5_latency.h5', dospath='C:\\Users\\maxim\\datasets\\', dosdir=True, 
-                    proportion=0.1, to_cat=False, weight_acc=2, smoothing=0.0, label_rdm=0.0, load_speed=(True, True))
-                    # name of the model, path to dir dataset, set dosdir for data loading, set proportion of augmented img per function # 'C:\\Users\\maxim\\datasets\\'
-                    # when weight_acc = 2, only one steering class is created
-
-    # without augm; normally, high batch_size = better comprehension but converge less, important setting to train a CNN
+    AI = classifier(name='test_model\\convolution\\linearv5_latency.h5',
+                    dospath='C:\\Users\\maxim\\datasets\\', dosdir=True,
+                    proportion=0.1, to_cat=False,
+                    weight_acc=2, smoothing=0.0,
+                    label_rdm=0.0, load_speed=(True, True))
+    # name of the model, path to dir dataset, set dosdir for data loading,
+    # set proportion of augmented img per augm function
+    # when weight_acc = 2, only one steering class is created
 
     AI.train(load=False, load_fe=True, flip=True, epochs=6, batch_size=16)
-    AI.model = load_model(AI.name, compile=False) # check if the saving did well # custom_objects={"dir_loss":architectures.dir_loss}
+    # check if the saving did well:
+    AI.model = load_model(AI.name, compile=False)  # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
     # print(AI.calculate_FLOPS(), "total ops")
@@ -236,6 +248,6 @@ if __name__ == "__main__":
     # test_dos = "C:\\Users\\maxim\\random_data\\throttle\\1 ironcar driving\\"
     pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 5000))
     pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
-    pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5,5), sleeptime=1)
+    pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5, 5), sleeptime=1)
 
     cv2.destroyAllWindows()
