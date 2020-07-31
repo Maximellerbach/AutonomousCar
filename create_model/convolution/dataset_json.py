@@ -12,10 +12,11 @@ from PIL import Image
 class DatasetJson():
     def __init__(self, lab_structure):
         self.label_structure = [i() for i in lab_structure]
+        self.format = '.json'
 
     def save_img_and_json(self, dos, img, annotations):
         path = dos+str(annotations[-1])
-        annotations.insert(-1, path+'.png') # add the img_name component
+        annotations.insert(-1, path+'.png')  # add the img_name component
         cv2.imwrite(annotations[-2], img)
 
         annotations_dict = self.annotations_to_dict(annotations)
@@ -54,7 +55,7 @@ class DatasetJson():
 
         return annotations
 
-    def load_img_ang_json(self, path):
+    def load_img_ang_annotation(self, path):
         annotations = self.load_annotation(path)
         img = cv2.imread(path.replace('.json', '.png'))
 
@@ -67,25 +68,45 @@ class DatasetJson():
         paths = sorted(paths, key=sort_function)
         return paths
 
+    def split_sorted_paths(self, paths, time_interval=0.2):
+        splitted = [[]]
+        n_split = 0
+
+        for i in range(1, len(paths)):
+            prev = paths[i-1]
+            actual = paths[i]
+
+            prev_t = self.load_component_item(prev, -1)
+            actual_t = self.load_component_item(actual, -1)
+
+            dt = actual_t-prev_t
+            if abs(dt) > time_interval:
+                n_split += 1
+                splitted.append([])
+
+            splitted[n_split].append(paths[i])
+
+        return splitted
+
     def save_json_sorted(self, sorted, path):
         save_dict = dict(enumerate(sorted))
         with open(path, 'w') as json_file:
             json.dump(save_dict, json_file)
 
     def load_dos(self, dos):
-        return glob(dos+"*.json")    
+        return glob(dos+"*.json")   
 
     def load_dos_sorted(self, dos):
-        json_dos_name = dos[:-1]+'.json'
+        json_dos_name = dos[:-1]
         if os.path.isfile(json_dos_name):
-            sorted_path_json = self.load_json(json_dos_name)
+            sorted_path_json = self.load_json(json_dos_name+'.json')
 
             if len(sorted_path_json) == len(os.listdir(dos))//2:
                 sorted_paths = [sorted_path_json[i] for i in sorted_path_json]
                 return sorted_paths
 
         new_sorted_paths = self.sort_paths_by_component(self.load_dos(dos), -1)
-        self.save_json_sorted(new_sorted_paths, json_dos_name)
+        self.save_json_sorted(new_sorted_paths, json_dos_name+'.json')
         return new_sorted_paths
 
     def load_dataset(self, doss):
@@ -105,6 +126,16 @@ class DatasetJson():
                 doss_paths.append(paths)
 
         return doss_paths
+
+    def load_dataset_sequence(self, doss, max_interval=0.2):
+        doss_sequences = []
+        for dos in glob(doss+"*"):
+            if os.path.isdir(dos):
+                paths = self.load_dos_sorted(dos+"\\")
+                paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
+                doss_sequences.append(list(paths_sequence))
+
+        return doss_sequences
 
     def imgstring2json(self, dataset_obj, dst_dos, path):
         img = dataset_obj.load_image(path)

@@ -6,6 +6,7 @@ import cv2
 class Dataset():
     def __init__(self, lab_structure):
         self.label_structure = [i(it) for it, i in enumerate(lab_structure)]
+        self.format = '.png'
 
     def split_string(self, img_string, sep1="\\", sep2="_", img_format=".png"):
         return img_string.split("\\")[-1].split(img_format)[0].split("_")
@@ -24,6 +25,12 @@ class Dataset():
         split_string = self.split_string(img_string)
         annotations = list(map(get_item_comp, self.label_structure))
         return annotations
+
+    def load_img_ang_annotation(self, path):
+        annotations = self.load_annotation(path)
+        img = self.load_image(path)
+
+        return img, annotations
 
     def repeat_function(self, function, items):
         return [function(item) for item in items]
@@ -62,14 +69,14 @@ class Dataset():
             sorted_doss.append(self.sort_paths_by_component(paths, sort_component)) # -1 is time component
 
         return sorted_doss
-    
+
     def load_dos_sorted(self, dos, sort_component=-1):
         paths = self.load_dos(dos)
         return self.sort_paths_by_component(paths, sort_component) # -1 is time component
-    
+
     def load_dos(self, dos):
         return glob(dos+"*")
-    
+
     def load_dataset(self, doss):
         doss_paths = []
         for dos in glob(doss+"*"):
@@ -87,6 +94,7 @@ class Dataset():
 
         return doss_sequences
 
+
 class direction_component:
     def __init__(self, n_component):
         self.name = "direction"
@@ -96,6 +104,7 @@ class direction_component:
     def get_item(self, split_string):
         item = split_string[self.index_in_string]
         return float(item)
+
 
 class speed_component:
     def __init__(self, n_component):
@@ -107,6 +116,7 @@ class speed_component:
         item = split_string[self.index_in_string]
         return float(item)
 
+
 class throttle_component:
     def __init__(self, n_component):
         self.name = "throttle"
@@ -116,6 +126,7 @@ class throttle_component:
     def get_item(self, split_string):
         item = split_string[self.index_in_string]
         return float(item)
+
 
 class time_component:
     def __init__(self, n_component):
@@ -127,17 +138,19 @@ class time_component:
         item = split_string[self.index_in_string]
         return float(item)
 
+
 def annotations_to_name(annotations):
     string = ""
     for it, component in enumerate(annotations):
-        string+=str(component)
+        string += str(component)
 
         if it != len(annotations)-1:
-            string+="_"
+            string += "_"
         else:
-            string+=".png"
+            string += ".png"
 
     return string
+
 
 def save(save_path, dts, annotations):
     import os
@@ -146,7 +159,7 @@ def save(save_path, dts, annotations):
     from tqdm import tqdm
     import shutil
 
-    if os.path.isdir(save_path) == False:
+    if os.path.isdir(save_path) is False:
         os.mkdir(save_path)
 
     for i in tqdm(range(len(dts))):
@@ -154,8 +167,9 @@ def save(save_path, dts, annotations):
         name = annotations_to_name(annotations[i])
         shutil.copy(dts[i], save_path+name)
 
-def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45): # to transform old data format into new ones
-    def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed): # Function from my Virtual Racing repo
+
+def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45):  # to transform old data format into new ones
+    def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed):  # Function from my Virtual Racing repo
         dt_throttle = max_throttle-min_throttle
 
         optimal_acc = ((target_speed-current_speed)/target_speed)
@@ -183,6 +197,7 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
         Y.append(annotations)
     return dts, Y
 
+
 def add_dummy_speed(dos, dummy_speed=10):
     dataset = Dataset([direction_component, time_component])
 
@@ -195,9 +210,10 @@ def add_dummy_speed(dos, dummy_speed=10):
 
     return dts, Y
 
+
 def cat2linear_dataset(dos):
     dataset = Dataset([direction_component, time_component])
-    
+
     dts = glob(dos+"*")
     Y = []
     for path in dts:
@@ -206,6 +222,7 @@ def cat2linear_dataset(dos):
         Y.append(annotations)
 
     return dts, Y
+
 
 def cat2linear(ny):
     return (ny-7)/4

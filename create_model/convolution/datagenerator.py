@@ -25,9 +25,8 @@ class image_generator(keras.utils.Sequence):
         self.smoothing = smoothing
         self.label_rdm = label_rdm
         self.flip = flip
-        self.load_speed = load_speed 
+        self.load_speed = load_speed
         self.seq_batchsize = seq_batchsize
-
 
     def __data_generation(self, gdos):
         batchfiles = np.random.choice(gdos, size=self.batch_size)
@@ -35,43 +34,34 @@ class image_generator(keras.utils.Sequence):
         ybatch = []
 
         for i in batchfiles:
-            # try:
-            if True:
-                if self.sequence:
-                    xseq = []
-                    yseq = []
+            if self.sequence:
+                xseq = []
+                yseq = []
 
-                    seq_len = len(i)
-                    if seq_len > self.seq_batchsize:
-                        rdm_seq = np.random.randint(0, seq_len-self.seq_batchsize)
-                        i = i[rdm_seq:rdm_seq+self.seq_batchsize]
+                seq_len = len(i)
+                if seq_len > self.seq_batchsize:
+                    rdm_seq = np.random.randint(0, seq_len-self.seq_batchsize)
+                    i = i[rdm_seq:rdm_seq+self.seq_batchsize]
 
-                    elif seq_len < self.seq_batchsize: # ugly way to make sure every sequence has the same length
-                        i = [i[0]]*(self.seq_batchsize-seq_len)+i
-                    
-                    for impath in i:
-                        img = self.Dataset.load_image(impath)
-                        img = cv2.resize(img, (self.img_cols, self.img_rows))
+                elif seq_len < self.seq_batchsize:  # ugly way to make sure every sequence has the same length
+                    i = [i[0]]*(self.seq_batchsize-seq_len)+i
 
-                        annotations = self.Dataset.load_annotation(impath)
-                        
-                        xseq.append(img)
-                        yseq.append(annotations)
-
-                    xbatch.append(xseq)
-                    ybatch.append(yseq)
-                
-                else:
-                    img = self.Dataset.load_image(i) 
+                for path in i:
+                    img, annotations = self.Dataset.load_img_ang_annotation(path)
                     img = cv2.resize(img, (self.img_cols, self.img_rows))
 
-                    annotations = self.Dataset.load_annotation(i)
+                    xseq.append(img)
+                    yseq.append(annotations)
 
-                    xbatch.append(img)
-                    ybatch.append(annotations)
+                xbatch.append(xseq)
+                ybatch.append(yseq)
 
-            # except:
-            #     print(i)
+            else:
+                img, annotations = self.Dataset.load_img_ang_annotation(i)
+                img = cv2.resize(img, (self.img_cols, self.img_rows))
+
+                xbatch.append(img)
+                ybatch.append(annotations)
 
         if self.augm:
             # here are the old functions
@@ -87,7 +77,7 @@ class image_generator(keras.utils.Sequence):
 
             """ # this is the old "bourrin" way where we add transformed image to the clean one
             X_aug, Y_aug = autolib.generate_functions(xbatch, ybatch, proportion=self.proportion)
-            
+
             xbatch = np.concatenate((xbatch, X_aug))
             ybatch = np.concatenate((ybatch, Y_aug))
             """
@@ -98,7 +88,7 @@ class image_generator(keras.utils.Sequence):
                     xbatch[i], ybatch[i] = autolib.generate_functions_replace(xbatch[i], ybatch[i], proportion=self.proportion)
             else:
                 xbatch, ybatch = autolib.generate_functions_replace(xbatch, ybatch, proportion=self.proportion)
-            
+
         if self.flip:
             if self.sequence:
                 for i in range(len(xbatch)):
@@ -113,8 +103,6 @@ class image_generator(keras.utils.Sequence):
                 xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
                 xbatch = np.concatenate((xbatch, xflip))/255
                 ybatch = np.concatenate((ybatch, yflip))
-
-        
         # removed the weight, useless ; weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
 
         if self.sequence:
