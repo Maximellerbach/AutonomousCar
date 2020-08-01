@@ -179,7 +179,7 @@ def add_random_shadow(image, label):
 
     cond1 = shadow_mask is True
     cond0 = shadow_mask is False
-        
+
     if np.random.randint(2) == 1:
         image_hls[:, :, 1][cond1] = image_hls[:, :, 1][cond1]*random_bright
     else:
@@ -199,12 +199,12 @@ def add_random_glow(image, label):
     bot_y = shape[1]*np.random.uniform()
 
     image_hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
-    shadow_glow = 0*image_hls[:,:,1]
+    shadow_glow = 0*image_hls[:, :, 1]
 
     X_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][0]
     Y_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][1]
 
-    shadow_glow[((X_m-top_x)*(bot_y-top_y) - (bot_x - top_x)*(Y_m-top_y) >=0)]=1
+    shadow_glow[((X_m-top_x)*(bot_y-top_y) - (bot_x - top_x)*(Y_m-top_y) >= 0)] = 1
     random_bright = 1+0.5*np.random.uniform()
 
     cond1 = shadow_glow is True
@@ -223,15 +223,15 @@ def add_random_glow(image, label):
 def night_effect(img,  label, vmin=150, vmax=230):
     limit = random.uniform(vmin, vmax)
     low_limit = vmin
-    int_img = sk.rescale_intensity(img, in_range=(low_limit, limit), out_range=(0,255))
+    int_img = sk.rescale_intensity(img, in_range=(low_limit, limit), out_range=(0, 255))
 
     return int_img, label
 
 
-def horizontal_flip(img, label, dico=[3,5,7,9,11], rev=[11,9,7,5,3]):
-    reversed_lab = list(label)
-    reversed_lab[0] = -reversed_lab[0]
-    return cv2.flip(img, 1), reversed_lab
+def horizontal_flip(img, label):
+    label = list(label)
+    label[0] = -label[0]
+    return cv2.flip(img, 1), label
 
 
 def rdm_noise(img, label):
@@ -255,34 +255,38 @@ def inverse_color(img, label):
 
 def generate_functions(X, Y, proportion=0.25):
     functions = (change_brightness, rescut, inverse_color, night_effect, add_random_shadow, add_random_glow, rdm_noise)
+    length_X = len(X)
 
     X_aug = []
     Y_aug = []
     for f in functions:
-        indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
-        for index in range(len(X)):
+        indexes = np.random.choice([True, False], length_X, p=[proportion, 1-proportion])
+
+        for index in range(length_X):
             if indexes[index]:
                 im, annotation = f(X[index], Y[index])
+                im = np.array(im, dtype=np.uint8)
                 Y_aug.append(annotation)
                 X_aug.append(im)
 
     return X_aug, Y_aug
 
 
-def generate_functions_replace(X, Y, proportion=0.25):  # same function as above, just replace images instead of adding more
+def generate_functions_replace(X, Y, proportion=0.25):
+    # same function as above, just replace images instead of adding more
     functions = (change_brightness, rescut, inverse_color, night_effect, add_random_shadow, add_random_glow, rdm_noise)
 
-    X_aug = []
-    Y_aug = []
     for f in functions:
+
         indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
         for index in range(len(X)):
             if indexes[index]:
                 im, annotation = f(X[index], Y[index])
+                im = np.array(im, dtype=np.uint8)
                 Y[index] = annotation
                 X[index] = im
 
-    return X_aug, Y_aug
+    return X, Y
 
 
 def generate_random_cut(X, Y, proportion=0.25):
@@ -306,7 +310,7 @@ def generate_brightness(X, Y, proportion=0.25):
     Y_aug = []
     for index in range(len(X)):
         if indexes[index]:
-            im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15,45), sign=True)
+            im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15, 45), sign=True)
             Y_aug.append(angle)
             X_aug.append(im)
 
@@ -334,14 +338,14 @@ def generate_low_gamma(X, Y, proportion=0.25):
     Y_aug = []
     for index in range(len(X)):
         if indexes[index]:
-            im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15,45), sign=False)
+            im, angle = change_brightness(X[index], Y[index], value=np.random.randint(15, 45), sign=False)
             Y_aug.append(angle)
             X_aug.append(im)
 
     return X_aug, Y_aug
 
 
-def generate_night_effect(X, Y, proportion=0.25):    
+def generate_night_effect(X, Y, proportion=0.25):
     indexes = np.random.choice([True, False], len(X), p=[proportion, 1-proportion])
 
     X_aug = []
@@ -392,7 +396,7 @@ def generate_chained_transformations(X, Y, proportion=0.25):
         if indexes[index]:
             im, angle = change_brightness(X[index], Y[index])
             im, angle = add_random_shadow(im, angle)
-        
+
             Y_aug.append(angle)
             X_aug.append(im)
 

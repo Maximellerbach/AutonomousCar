@@ -71,8 +71,8 @@ class classifier():
                                                             last_bias=False, metrics=["mse"],
                                                             load_speed=self.load_speed)
             else:
-                model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe, 
-                                                           loss=architectures.dir_loss, 
+                model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe,
+                                                           loss=architectures.dir_loss,
                                                            prev_act="relu", last_act="linear",
                                                            drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
                                                            last_bias=False, metrics=["mse"],
@@ -107,7 +107,7 @@ class classifier():
                                                  augm=augm, flip=flip,
                                                  smoothing=self.smoothing,
                                                  label_rdm=self.label_rdm),
-                                 steps_per_epoch=self.datalen//(batch_size*5), epochs=epochs,
+                                 steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
                                  validation_data=image_generator(self.valdos, self.Dataset,
                                                                  self.datalen, batch_size,
                                                                  frc, load_speed=self.load_speed,
@@ -118,7 +118,7 @@ class classifier():
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
                                  validation_steps=self.datalen//20//(batch_size),
-                                 callbacks=[earlystop], max_queue_size=5, workers=8)
+                                 callbacks=[earlystop], max_queue_size=4, workers=2)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')

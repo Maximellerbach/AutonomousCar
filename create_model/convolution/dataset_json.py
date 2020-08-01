@@ -55,7 +55,7 @@ class DatasetJson():
 
         return annotations
 
-    def load_img_ang_annotation(self, path):
+    def load_img_and_annotation(self, path):
         annotations = self.load_annotation(path)
         img = cv2.imread(path.replace('.json', '.png'))
 
@@ -231,6 +231,6 @@ if __name__ == "__main__":
     gdos = dataset_json.load_dataset_sorted(dos)
     for dos in gdos:
         for path in dos:
-            img, annotations = dataset_json.load_img_ang_json(path)
+            img, annotations = dataset_json.load_img_and_annotation(path)
             cv2.imshow('img', img)
             cv2.waitKey(1)

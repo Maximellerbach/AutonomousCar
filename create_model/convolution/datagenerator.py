@@ -47,7 +47,7 @@ class image_generator(keras.utils.Sequence):
                     i = [i[0]]*(self.seq_batchsize-seq_len)+i
 
                 for path in i:
-                    img, annotations = self.Dataset.load_img_ang_annotation(path)
+                    img, annotations = self.Dataset.load_img_and_annotation(path)
                     img = cv2.resize(img, (self.img_cols, self.img_rows))
 
                     xseq.append(img)
@@ -57,9 +57,8 @@ class image_generator(keras.utils.Sequence):
                 ybatch.append(yseq)
 
             else:
-                img, annotations = self.Dataset.load_img_ang_annotation(i)
+                img, annotations = self.Dataset.load_img_and_annotation(i)
                 img = cv2.resize(img, (self.img_cols, self.img_rows))
-
                 xbatch.append(img)
                 ybatch.append(annotations)
 
@@ -85,14 +84,17 @@ class image_generator(keras.utils.Sequence):
             # this is much nicer as we modify into the batch of clean image
             if self.sequence:
                 for i in range(len(xbatch)):
-                    xbatch[i], ybatch[i] = autolib.generate_functions_replace(xbatch[i], ybatch[i], proportion=self.proportion)
+                    xbatch[i], ybatch[i] = autolib.generate_functions_replace(xbatch[i], ybatch[i],
+                                                                              proportion=self.proportion)
             else:
-                xbatch, ybatch = autolib.generate_functions_replace(xbatch, ybatch, proportion=self.proportion)
+                xbatch, ybatch = autolib.generate_functions_replace(xbatch, ybatch,
+                                                                    proportion=self.proportion)
 
         if self.flip:
             if self.sequence:
                 for i in range(len(xbatch)):
-                    xflip, yflip = autolib.generate_horizontal_flip(xbatch[i], ybatch[i], proportion=1)
+                    xflip, yflip = autolib.generate_horizontal_flip(xbatch[i], ybatch[i],
+                                                                    proportion=1)
                     xbatch.append(xflip)
                     ybatch.append(yflip)
 
@@ -100,7 +102,8 @@ class image_generator(keras.utils.Sequence):
                 ybatch = np.array(ybatch)
 
             else:
-                xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch, proportion=1)
+                xflip, yflip = autolib.generate_horizontal_flip(xbatch, ybatch,
+                                                                proportion=1)
                 xbatch = np.concatenate((xbatch, xflip))/255
                 ybatch = np.concatenate((ybatch, yflip))
         # removed the weight, useless ; weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
@@ -138,5 +141,3 @@ class image_generator(keras.utils.Sequence):
 
     def __getitem__(self, index):
         return self.__data_generation(self.gdos)
-
-
