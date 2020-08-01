@@ -5,6 +5,7 @@ import cv2
 from glob import glob
 from reorder_dataset import get_speed
 
+
 class image_generator(keras.utils.Sequence):
     def __init__(self, gdos, Dataset, datalen, batch_size, frc, sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, load_speed=(False, False)):
         self.shape = shape

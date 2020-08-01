@@ -107,7 +107,7 @@ class classifier():
                                                  augm=augm, flip=flip,
                                                  smoothing=self.smoothing,
                                                  label_rdm=self.label_rdm),
-                                 steps_per_epoch=self.datalen//(batch_size), epochs=epochs,
+                                 steps_per_epoch=self.datalen//(batch_size*5), epochs=epochs,
                                  validation_data=image_generator(self.valdos, self.Dataset,
                                                                  self.datalen, batch_size,
                                                                  frc, load_speed=self.load_speed,
@@ -118,7 +118,7 @@ class classifier():
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
                                  validation_steps=self.datalen//20//(batch_size),
-                                 callbacks=[earlystop], max_queue_size=4, workers=2)
+                                 callbacks=[earlystop], max_queue_size=4, workers=4)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
@@ -205,7 +205,7 @@ class classifier():
             for d in tqdm(glob(dos+"*")):
                 if os.path.isdir(d):
                     for i in glob(f'{d}\\*{self.Dataset.format}'):
-                        label = autolib.get_label(i, flip=flip, cat=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+                        label = autolib.get_label(i, flip=flip, cat=True)
 
                         Y.append(label[0])
                         if flip:
@@ -214,7 +214,7 @@ class classifier():
         else:
             for i in tqdm(glob(f'{dos}*{self.Dataset.format}')):
 
-                label = autolib.get_label(i, flip=flip, cat=True) # for 42's images: dico= [0,1,2,3,4], rev=[4,3,2,1,0]
+                label = autolib.get_label(i, flip=flip, cat=True)
 
                 Y.append(label[0])
                 if flip:
@@ -245,7 +245,7 @@ class classifier():
 if __name__ == "__main__":
     AI = classifier(name='test_model\\convolution\\test.h5',
                     dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
-                    proportion=0.1, to_cat=False, sequence=False,
+                    proportion=0.2, to_cat=False, sequence=False,
                     weight_acc=2, smoothing=0.0, label_rdm=0.0,
                     load_speed=(False, False))
 
@@ -256,7 +256,7 @@ if __name__ == "__main__":
     # without augm; normally, high batch_size = better comprehension but converge less
     # important setting to train a CNN
 
-    AI.train(load=False, load_fe=False, flip=True, augm=True, epochs=3, batch_size=16, seq_batchsize=4)
+    AI.train(load=False, load_fe=False, flip=True, augm=True, epochs=15, batch_size=16, seq_batchsize=4)
     # check if the saving did well
     AI.model = load_model(AI.name, compile=False)  # custom_objects={"dir_loss":architectures.dir_loss}
     AI.fe = load_model('test_model\\convolution\\fe.h5')
