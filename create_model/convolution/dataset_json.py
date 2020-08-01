@@ -15,7 +15,7 @@ class DatasetJson():
         self.format = '.json'
 
     def save_img_and_json(self, dos, img, annotations):
-        path = dos+str(annotations[-1])
+        path = dos+str(annotations[-1])  # save json with time component
         annotations.insert(-1, path+'.png')  # add the img_name component
         cv2.imwrite(annotations[-2], img)
 
@@ -94,7 +94,7 @@ class DatasetJson():
             json.dump(save_dict, json_file)
 
     def load_dos(self, dos):
-        return glob(dos+"*.json")   
+        return glob(dos+"*.json")
 
     def load_dos_sorted(self, dos):
         json_dos_name = dos[:-1]
