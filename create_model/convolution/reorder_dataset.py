@@ -11,12 +11,13 @@ import autolib
 
 dire = [3, 5, 7, 9, 11]
 
+
 def pack_datasets(dos, new_dos, d_threshold=60):
     try:
         os.mkdir(new_dos)
     except:
         pass
-    
+
     dates = sort_by_date(dos)
 
     gaps = []
@@ -25,23 +26,23 @@ def pack_datasets(dos, new_dos, d_threshold=60):
             prev = i[0]
         else:
             gap = np.absolute(i[0]-prev)
-            if gap>d_threshold:
+            if gap > d_threshold:
                 gaps.append(it)
             prev = i[0]
 
-    print(gaps) # auto-detected gaps : differents datasets
+    print(gaps)  # auto-detected gaps : differents datasets
 
     datasets = [[]]
     d = 0
     for it, i in enumerate(dates):
         if it in gaps:
-            d+=1
+            d += 1
             datasets.append([])
         datasets[d].append(i)
 
     print(len(datasets))
     for dataset in datasets:
-        print(len(dataset)) 
+        print(len(dataset))
 
     for d, dataset in enumerate(datasets):
         try:
@@ -57,7 +58,8 @@ def pack_datasets(dos, new_dos, d_threshold=60):
             lab = dire[autolib.get_label(i[1], flip=False)[0]]
             im = cv2.imread(i[1])
             cv2.imwrite(tmp_save+str(lab)+"_"+str(i[0])+'.png', im)
-            
+
+
 def get_date(p):
     try:
         name = p.split('\\')[-1]
@@ -67,11 +69,13 @@ def get_date(p):
         return float(date)
     except Exception as e:
         print(p, e)
-        
+
+
 def get_speed(p):
     name = p.split('\\')[-1]
     lab, speed, date = name.split('_')
     return float(speed)
+
 
 def str2float(string, ancient_str, relative_path):
     try:
@@ -90,14 +94,16 @@ def str2float(string, ancient_str, relative_path):
 
     return f
 
+
 def sort_by_date(dos):
     dates = []
     for p in tqdm(glob(dos+'*')):
         date = str(get_date(p))
         dates.append([str2float(date, p, dos), p])
 
-    dates.sort(key= lambda x: x[0])
+    dates.sort(key=lambda x: x[0])
     return dates
+
 
 def load_dataset(dos, recursive=True):
     dataset = []
@@ -106,15 +112,16 @@ def load_dataset(dos, recursive=True):
         folds = glob(dos+"*")
         for folder in folds:
             g = glob(folder+'\\*')
-            d = sorted(g, key = get_date)
+            d = sorted(g, key=get_date)
             dataset.append(d)
-            datalen+=len(d)
+            datalen += len(d)
     else:
         g = glob(dos+'*')
-        dataset = sorted(g, key = get_date)
+        dataset = sorted(g, key=get_date)
         datalen = len(dataset)
 
     return np.array(dataset), datalen
+
 
 def json2angles(dirpath):
     angles = []
@@ -130,7 +137,7 @@ def json2angles(dirpath):
 
     return angles
 
+
 if __name__ == "__main__":
     angles = json2angles('C:\\Users\\maxim\\gen_track_user_drv_right_lane\\')
     print(angles)
-

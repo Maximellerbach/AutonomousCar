@@ -16,7 +16,8 @@ for i in glob(path+"*.jpg"):
 
 Y = [0]*len(X)
 for i in glob(path+"*.json"):
-    n_img = autolib.get_label(i, before=False, flip=False, dico=list(range(1, len(Y)+1)))[0]
+    n_img = autolib.get_label(
+        i, before=False, flip=False, dico=list(range(1, len(Y)+1)))[0]
 
     with open(i) as f:
         data = json.load(f)
@@ -26,7 +27,7 @@ for i in glob(path+"*.json"):
 
     less = 11
     for it, d in enumerate(dic):
-        if math.sqrt((angle-d)**2)<less:
+        if math.sqrt((angle-d)**2) < less:
             less = math.sqrt((angle-d)**2)
             lessit = it
 
@@ -36,4 +37,5 @@ for i in range(len(X)):
     img = X[i]
     lab = Y[i]
 
-    cv2.imwrite("C:\\Users\\maxim\\sim_robocar\\"+str(lab)+'_'+str(time.time())+'.png', img)
+    cv2.imwrite("C:\\Users\\maxim\\sim_robocar\\" +
+                str(lab)+'_'+str(time.time())+'.png', img)

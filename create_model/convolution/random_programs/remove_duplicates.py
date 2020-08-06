@@ -1,7 +1,7 @@
 ### USE ONLY IF YOU HAVE DUPLICATES AND CAN'T RECOVER IT ###
 import os
 import cv2
-from glob import glob 
+from glob import glob
 from tqdm import tqdm
 import numpy as np
 
@@ -19,12 +19,11 @@ counter = 0
 for path in tqdm(paths):
     img = cv2.imread(path)
 
-    if np.mean(np.square(singles[-1]-img)) != 0.: # check mean squared error
+    if np.mean(np.square(singles[-1]-img)) != 0.:  # check mean squared error
         singles.append(img)
         names.append(path)
 
-
-    if len(singles)>1:
+    if len(singles) > 1:
         name = names[0].split('\\')[-1]
         cv2.imwrite(f'{base_dir}{save_name}\\{name}', singles[0])
         del singles[0]

@@ -23,9 +23,11 @@ import dataset_json
 from datagenerator import image_generator
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+# dynamically grow the memory used on the GPU
+config.gpu_options.allow_growth = True
 sess = tf.Session(config=config)
-config.log_device_placement = True  # to log device placement (on which device the operation ran)
+# to log device placement (on which device the operation ran)
+config.log_device_placement = True
 set_session(sess)  # set this TensorFlow session as the default
 
 
@@ -34,7 +36,8 @@ class classifier():
                  weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
 
         # self.Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
-        self.Dataset = dataset_json.DatasetJson([dataset_json.direction_component, dataset_json.time_component])
+        self.Dataset = dataset_json.DatasetJson(
+            [dataset_json.direction_component, dataset_json.time_component])
         self.name = name
         self.dospath = dospath
         self.dosdir = dosdir
@@ -59,7 +62,8 @@ class classifier():
         load a model using architectures program
         """
         if load:
-            model = load_model(self.name, custom_objects={"dir_loss": architectures.dir_loss})
+            model = load_model(self.name, custom_objects={
+                               "dir_loss": architectures.dir_loss})
             fe = load_model('test_model\\convolution\\fe.h5')
 
         else:
@@ -117,7 +121,8 @@ class classifier():
                                                                  augm=augm, flip=flip,
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
-                                 validation_steps=self.datalen//20//(batch_size),
+                                 validation_steps=self.datalen//20//(
+                                     batch_size),
                                  callbacks=[earlystop], max_queue_size=4, workers=4)
 
         self.model.save(self.name)
@@ -238,7 +243,8 @@ class classifier():
         opts = tf.profiler.ProfileOptionBuilder.float_operation()
 
         # We use the Keras session graph in the call to the profiler.
-        flops = tf.profiler.profile(graph=K.get_session().graph, run_meta=run_meta, cmd='op', options=opts)
+        flops = tf.profiler.profile(graph=K.get_session(
+        ).graph, run_meta=run_meta, cmd='op', options=opts)
         return flops.total_float_ops
 
 
@@ -256,9 +262,11 @@ if __name__ == "__main__":
     # without augm; normally, high batch_size = better comprehension but converge less
     # important setting to train a CNN
 
-    AI.train(load=False, load_fe=False, flip=True, augm=True, epochs=15, batch_size=16, seq_batchsize=4)
+    AI.train(load=False, load_fe=False, flip=True, augm=True,
+             epochs=15, batch_size=16, seq_batchsize=4)
     # check if the saving did well
-    AI.model = load_model(AI.name, compile=False)  # custom_objects={"dir_loss":architectures.dir_loss}
+    # custom_objects={"dir_loss":architectures.dir_loss}
+    AI.model = load_model(AI.name, compile=False)
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
     # print(AI.calculate_FLOPS(), "total ops")
@@ -269,6 +277,7 @@ if __name__ == "__main__":
     # test_dos = "C:\\Users\\maxim\\random_data\\throttle\\1 ironcar driving\\"
     pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 5000))
     pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
-    pred_function.after_training_test_pred(AI, test_dos, nimg_size=(5, 5), sleeptime=1)
+    pred_function.after_training_test_pred(
+        AI, test_dos, nimg_size=(5, 5), sleeptime=1)
 
     cv2.destroyAllWindows()

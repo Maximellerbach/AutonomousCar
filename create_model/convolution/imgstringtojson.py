@@ -6,9 +6,9 @@ if __name__ == "__main__":
     from tqdm import tqdm
     from glob import glob
 
-    Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
+    Dataset = dataset.Dataset(
+        [dataset.direction_component, dataset.time_component])
     DatasetJson = dataset_json.DatasetJson([dataset_json.direction_component,
-                                            dataset_json.img_name_component,
                                             dataset_json.time_component])
 
     src_dos = "C:\\Users\\maxim\\datasets\\"
@@ -17,4 +17,5 @@ if __name__ == "__main__":
 
     for dos in doss:
         dos_name = dos.split('\\')[-1]
-        DatasetJson.imgstring2json_dos(Dataset, DatasetJson.imgstring2json, dos+"\\", dst_dos+dos_name+"\\")
+        DatasetJson.imgstring2json_dos(
+            Dataset, DatasetJson.imgstring2json, dos+"\\", dst_dos+dos_name+"\\")

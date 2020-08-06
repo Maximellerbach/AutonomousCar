@@ -7,7 +7,7 @@ from reorder_dataset import get_speed
 
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, gdos, Dataset, datalen, batch_size, frc, sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160,120,3), n_classes=5, load_speed=(False, False)):
+    def __init__(self, gdos, Dataset, datalen, batch_size, frc, sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160, 120, 3), n_classes=5, load_speed=(False, False)):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -48,7 +48,8 @@ class image_generator(keras.utils.Sequence):
                     i = [i[0]]*(self.seq_batchsize-seq_len)+i
 
                 for path in i:
-                    img, annotations = self.Dataset.load_img_and_annotation(path)
+                    img, annotations = self.Dataset.load_img_and_annotation(
+                        path)
                     img = cv2.resize(img, (self.img_cols, self.img_rows))
 
                     xseq.append(img)

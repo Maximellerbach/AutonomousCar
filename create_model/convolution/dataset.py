@@ -66,13 +66,15 @@ class Dataset():
         sorted_doss = []
         for dos in glob(doss+"*"):
             paths = self.load_dos(dos+"\\")
-            sorted_doss.append(self.sort_paths_by_component(paths, sort_component)) # -1 is time component
+            sorted_doss.append(self.sort_paths_by_component(
+                paths, sort_component))  # -1 is time component
 
         return sorted_doss
 
     def load_dos_sorted(self, dos, sort_component=-1):
         paths = self.load_dos(dos)
-        return self.sort_paths_by_component(paths, sort_component) # -1 is time component
+        # -1 is time component
+        return self.sort_paths_by_component(paths, sort_component)
 
     def load_dos(self, dos):
         return glob(dos+"*")
@@ -89,7 +91,8 @@ class Dataset():
         doss_sequences = []
         for dos in glob(doss+"*"):
             paths = self.load_dos_sorted(dos+"\\")
-            paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
+            paths_sequence = self.split_sorted_paths(
+                paths, time_interval=max_interval)
             doss_sequences.append(list(paths_sequence))
 
         return doss_sequences
@@ -168,8 +171,10 @@ def save(save_path, dts, annotations):
         shutil.copy(dts[i], save_path+name)
 
 
-def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45):  # to transform old data format into new ones
-    def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed):  # Function from my Virtual Racing repo
+# to transform old data format into new ones
+def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45):
+    # Function from my Virtual Racing repo
+    def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed):
         dt_throttle = max_throttle-min_throttle
 
         optimal_acc = ((target_speed-current_speed)/target_speed)
@@ -191,7 +196,8 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
     Y = []
     for path in dts:
         annotations = dataset.load_annotation(path)
-        converted_throttle = opt_acc(annotations[0], annotations[1], max_throttle, min_throttle, target_speed)
+        converted_throttle = opt_acc(
+            annotations[0], annotations[1], max_throttle, min_throttle, target_speed)
         annotations.insert(2, converted_throttle)
 
         Y.append(annotations)
@@ -231,9 +237,10 @@ def cat2linear(ny):
 if __name__ == "__main__":
     # dts, annotations = add_dummy_speed("C:\\Users\\maxim\\random_data\\linear\\1 ironcar driving\\", dummy_speed=1)
     # save("C:\\Users\\maxim\\random_data\\speed\\1 ironcar driving\\", dts, annotations)
-    
+
     # dts, annotations = angle_speed_to_throttle("C:\\Users\\maxim\\random_data\\17 custom maps\\")
     # save("C:\\Users\\maxim\\random_data\\throttle\\17 custom maps\\", dts, annotations)
-    
-    dts, annotations = cat2linear_dataset("C:\\Users\\maxim\\random_data\\11 sim circuit 2\\")
+
+    dts, annotations = cat2linear_dataset(
+        "C:\\Users\\maxim\\random_data\\11 sim circuit 2\\")
     save("C:\\Users\\maxim\\random_data\\linear\\11 sim circuit 2\\", dts, annotations)

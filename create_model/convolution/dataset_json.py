@@ -12,26 +12,42 @@ from PIL import Image
 class DatasetJson():
     def __init__(self, lab_structure):
         self.label_structure = [i() for i in lab_structure]
+        self.other_components = [img_path_component()]
         self.format = '.json'
 
-    def save_img_and_json(self, dos, img, annotations):
+    def save_img_and_annotations(self, dos, img, annotations):
+        assert(len(annotations) == len(self.label_structure))
+
+        to_save_dict = {'dos': dos}
+        for component, annotation in zip(self.label_structure, annotations):
+            to_save_dict = component.add_item_to_dict(annotation, to_save_dict)
+
+        for component in self.other_components:
+            to_save_dict = component.add_item_to_dict(to_save_dict)
+
+        time = to_save_dict['time']
+        cv2.imwrite(to_save_dict['img_path'], img)
+        with open(os.path.normpath(f'{dos}{time}{self.format}'), 'w') as json_file:
+            json.dump(to_save_dict, json_file)
+
+    def save_img_and_annotations_deprecated(self, dos, img, annotations):
         path = dos+str(annotations[-1])  # save json with time component
-        annotations.insert(-1, path+'.png')  # add the img_name component
+        annotations.insert(-1, path+'.png')  # add the img_path component
         cv2.imwrite(annotations[-2], img)
 
-        annotations_dict = self.annotations_to_dict(annotations)
-        with open(path+'.json', 'w') as json_file:
+        annotations_dict = self.annotations_to_dict_deprecated(annotations)
+        with open(path+self.format, 'w') as json_file:
             json.dump(annotations_dict, json_file)
 
-    def save_img_encoded_json(self, dos, imgpath, annotations):
+    def save_img_encoded_json_deprecated(self, dos, imgpath, annotations):
         path = dos+str(annotations[-1])
         annotations.insert(-1, self.label_structure[-2].encode_img(imgpath))
 
-        annotations_dict = self.annotations_to_dict(annotations)
-        with open(path+'.json', 'w') as json_file:
+        annotations_dict = self.annotations_to_dict_deprecated(annotations)
+        with open(path+self.format, 'w') as json_file:
             json.dump(annotations_dict, json_file)
 
-    def annotations_to_dict(self, annotations):
+    def annotations_to_dict_deprecated(self, annotations):
         annotations_dict = {}
         for it, component in enumerate(self.label_structure):
             annotations_dict[component.name] = annotations[it]
@@ -98,15 +114,16 @@ class DatasetJson():
 
     def load_dos_sorted(self, dos):
         json_dos_name = dos[:-1]
+        json_path = f'{json_dos_name}{self.format}'
         if os.path.isfile(json_dos_name):
-            sorted_path_json = self.load_json(json_dos_name+'.json')
+            sorted_path_json = self.load_json(json_path)
 
             if len(sorted_path_json) == len(os.listdir(dos))//2:
                 sorted_paths = [sorted_path_json[i] for i in sorted_path_json]
                 return sorted_paths
 
         new_sorted_paths = self.sort_paths_by_component(self.load_dos(dos), -1)
-        self.save_json_sorted(new_sorted_paths, json_dos_name+'.json')
+        self.save_json_sorted(new_sorted_paths, json_path)
         return new_sorted_paths
 
     def load_dataset(self, doss):
@@ -132,7 +149,8 @@ class DatasetJson():
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 paths = self.load_dos_sorted(dos+"\\")
-                paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
+                paths_sequence = self.split_sorted_paths(
+                    paths, time_interval=max_interval)
                 doss_sequences.append(list(paths_sequence))
 
         return doss_sequences
@@ -140,92 +158,137 @@ class DatasetJson():
     def imgstring2json(self, dataset_obj, dst_dos, path):
         img = dataset_obj.load_image(path)
         annotations = dataset_obj.load_annotation(path)
-        self.save_img_and_json(dst_dos, img, annotations)
+        self.save_img_and_annotations(dst_dos, img, annotations)
 
-    def imgstring2json_encoded(self, dataset_obj, dst_dos, path):
+    def imgstring2json_encoded_deprecated(self, dataset_obj, dst_dos, path):
         annotations = dataset_obj.load_annotation(path)
-        self.save_img_encoded_json(dst_dos, path, annotations)
+        self.save_img_encoded_json_deprecated(dst_dos, path, annotations)
 
     def imgstring2json_dos(self, dataset_obj, imgstring2dos_function, src_dos, dst_dos):
+        from tqdm import tqdm
         try:
             os.mkdir(dst_dos)
         except:
             pass
         paths = dataset_obj.load_dos(src_dos)
-        for path in paths:
+        for path in tqdm(paths):
             imgstring2dos_function(dataset_obj, dst_dos, path)
 
 
 class direction_component:
     def __init__(self):
         self.name = "direction"
+        self.type = float
         self.do_flip = True
-        self.is_label = True
 
     def get_item(self, json_data):
         return float(json_data[self.name])
+
+    def add_item_to_dict(self, item, annotations_dict):
+        if isinstance(item, self.type):
+            annotations_dict[self.name] = item
+        else:
+            ValueError(f'item type: {type(item)} should match {self.type}')
+        return annotations_dict
 
 
 class speed_component:
     def __init__(self):
         self.name = "speed"
+        self.type = float
         self.do_flip = False
-        self.is_label = True
 
     def get_item(self, json_data):
-        return float(json_data[self.name])
+        return self.type(json_data[self.name])
+
+    def add_item_to_dict(self, item, annotations_dict):
+        if isinstance(item, self.type):
+            annotations_dict[self.name] = item
+        else:
+            ValueError(f'item type: {type(item)} should match {self.type}')
+        return annotations_dict
 
 
 class throttle_component:
     def __init__(self):
         self.name = "throttle"
+        self.type = float
         self.do_flip = False
-        self.is_label = True
+
+    def get_item(self, json_data):
+        return self.type(json_data[self.name])
+
+    def add_item_to_dict(self, item, annotations_dict):
+        if isinstance(item, self.type):
+            annotations_dict[self.name] = item
+        else:
+            ValueError(f'item type: {type(item)} should match {self.type}')
+        return annotations_dict
+
+
+class time_component:
+    def __init__(self):
+        self.name = "time"
+        self.type = float
+        self.do_flip = False
 
     def get_item(self, json_data):
         return float(json_data[self.name])
 
+    def add_item_to_dict(self, item, annotations_dict):
+        if isinstance(item, self.type):
+            annotations_dict[self.name] = item
+        else:
+            ValueError(f'item type: {type(item)} should match {self.type}')
+        return annotations_dict
 
-class img_name_component:
+
+class img_path_component:
     def __init__(self):
-        self.name = "img_name"
+        self.name = "img_path"
+        self.type = str
         self.do_flip = False
-        self.is_label = False
 
     def get_item(self, json_data):
-        return str(json_data[self.name])
+        return self.type(json_data[self.name])
+
+    def add_item_to_dict(self, annotations_dict):
+        time = annotations_dict['time']
+        dos = annotations_dict['dos']
+        img_path = os.path.normpath(f'{dos}/{time}.png')
+
+        annotations_dict[self.name] = img_path
+        return annotations_dict
 
 
 class imgbase64_component:
     def __init__(self):
         self.name = "img_base64"
+        self.type = str
         self.do_flip = False
-        self.is_label = False
 
     def get_item(self, json_data):
-        base64_img = json_data[self.name]
+        # getting the image from string and convert it to BGR
+        base64_img = self.type(json_data[self.name])
         base64_img_decoded = base64.b64decode(base64_img)
-        return cv2.cvtColor(np.array(Image.open(io.BytesIO(base64_img_decoded))), cv2.COLOR_RGB2BGR)  # getting the image from string and convert it to BGR
+        return cv2.cvtColor(np.array(Image.open(io.BytesIO(base64_img_decoded))), cv2.COLOR_RGB2BGR)
 
     def encode_img(self, imgpath):
         with open(imgpath, "rb") as img_file:
             img_encoded = base64.b64encode(img_file.read()).decode('utf-8')
         return img_encoded
 
+    def add_item_to_dict(self, img_path, annotations_dict):
+        encoded = self.encode_img(img_path)
+        annotations_dict[self.name] = encoded
 
-class time_component:
-    def __init__(self):
-        self.name = "time"
-        self.do_flip = False
-        self.is_label = False
-
-    def get_item(self, json_data):
-        return float(json_data[self.name])
+        return annotations_dict
 
 
 if __name__ == "__main__":
     # quick code to test image decoding from string
-    dataset_json = DatasetJson([direction_component, img_name_component, time_component])
+    dataset_json = DatasetJson(
+        [direction_component, img_path_component, time_component])
 
     dos = "C:\\Users\\maxim\\random_data\\json_dataset\\"
     gdos = dataset_json.load_dataset_sorted(dos)

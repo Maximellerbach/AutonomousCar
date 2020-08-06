@@ -14,8 +14,8 @@ path = glob('C:\\Users\\maxim\\image_raw\\*')
 # model.summary()
 
 for i in path:
-    
+
     img = cv2.imread(i)
-    cv2.imshow('img',img)
+    cv2.imshow('img', img)
 
     cv2.waitKey(1)

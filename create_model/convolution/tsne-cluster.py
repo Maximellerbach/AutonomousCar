@@ -22,23 +22,25 @@ from tqdm import tqdm
 from architectures import dir_loss
 
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True # dynamically grow the memory used on the GPU
+# dynamically grow the memory used on the GPU
+config.gpu_options.allow_growth = True
 sess = tf.Session(config=config)
-config.log_device_placement = True  # to log device placement (on which device the operation ran)
-set_session(sess) # set this TensorFlow session as the default
+# to log device placement (on which device the operation ran)
+config.log_device_placement = True
+set_session(sess)  # set this TensorFlow session as the default
 
 # TODO: OPTICS/DBSCAN clustering for anomaly detection
 
+
 class data_visualization():
     def __init__(self, fename):
-        
+
         self.img_cols = 160
         self.img_rows = 120
         self.channels = 3
-        
+
         self.fename = fename
-    
-    
+
     def get_img(self, dos, flip=False):
         X = []
         for i in tqdm(dos):
@@ -49,18 +51,17 @@ class data_visualization():
                 X.append(imgflip/255)
         return X
 
-
     def load_fe(self):
-        fe = load_model(self.fename, custom_objects={"dir_loss":dir_loss})
+        fe = load_model(self.fename, custom_objects={"dir_loss": dir_loss})
 
         try:
-            inp = Input(shape=(120,160,3))
+            inp = Input(shape=(120, 160, 3))
             x = fe(inp)
             x = Flatten()(x)
             flat_fe = Model(inp, x)
 
         except:
-            inp = Input(shape=(120,160,3))
+            inp = Input(shape=(120, 160, 3))
             x = fe(inp)
             flat_fe = Model(inp, x)
 
@@ -69,7 +70,7 @@ class data_visualization():
     def get_batchs(self, doss, max_img=2000, scramble=True):
         paths = []
         for dos in doss:
-            paths+=glob(dos)
+            paths += glob(dos)
 
         if scramble:
             random.shuffle(paths)
@@ -106,15 +107,16 @@ class data_visualization():
                 y = method.predict(X_encoded)
 
             for it in range(len(X_encoded)):
-                img = X[0] # as you delete imgs, the last img will be [0]
+                img = X[0]  # as you delete imgs, the last img will be [0]
                 label = y[it]
                 try:
                     os.makedirs('C:\\Users\\maxim\\clustering\\'+str(label))
                 except:
                     pass
-                cv2.imwrite('C:\\Users\\maxim\\clustering\\'+str(label)+'\\'+str(time.time())+'.png', img*255)
+                cv2.imwrite('C:\\Users\\maxim\\clustering\\' +
+                            str(label)+'\\'+str(time.time())+'.png', img*255)
 
-                del X[0] # clear memory
+                del X[0]  # clear memory
 
     def imscatter(self, x, y, ax, imageData, zoom):
         for i in range(len(x)):
@@ -125,13 +127,15 @@ class data_visualization():
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             image = OffsetImage(img, zoom=zoom)
-            ab = AnnotationBbox(image, (x0, y0), xycoords='data', frameon=False)
+            ab = AnnotationBbox(
+                image, (x0, y0), xycoords='data', frameon=False)
             ax.add_artist(ab)
-        
+
         ax.update_datalim(np.column_stack([x, y]))
         ax.autoscale()
 
-    def computeTSNEProjectionOfLatentSpace(self, doss, display=True): # X is here the latent representation
+    # X is here the latent representation
+    def computeTSNEProjectionOfLatentSpace(self, doss, display=True):
         batchs = self.get_batchs(doss, max_img=1000)
         model = self.load_fe()
 
@@ -144,15 +148,18 @@ class data_visualization():
             X_encoded = self.normalize(X_encoded)
 
             # print("Computing t-SNE embedding...")
-            tsne = manifold.TSNE(n_components=2, init="pca", random_state=0, learning_rate=200)
+            tsne = manifold.TSNE(n_components=2, init="pca",
+                                 random_state=0, learning_rate=200)
             X_tsne = tsne.fit_transform(X_encoded)
 
             if display:
                 fig, ax = plt.subplots()
-                self.imscatter(X_tsne[:, 0], X_tsne[:, 1], imageData=X, ax=ax, zoom=0.4)
+                self.imscatter(X_tsne[:, 0], X_tsne[:, 1],
+                               imageData=X, ax=ax, zoom=0.4)
                 plt.show()
             else:
                 return X_tsne
+
 
 if __name__ == "__main__":
 

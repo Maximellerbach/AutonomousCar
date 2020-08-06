@@ -13,8 +13,10 @@ import architectures
 from datagenerator import image_generator
 import reorder_dataset
 
+
 def custom_loss(y_true, y_pred):
     return mse(y_true, y_pred) + mae(y_true, y_pred)
+
 
 class anomaly_AE():
     def __init__(self, name, dospath, load=True):
@@ -35,36 +37,43 @@ class anomaly_AE():
             self.encoder.trainable = False
 
     def create_model(self):
-        input_shape = (120,160,3)
+        input_shape = (120, 160, 3)
         _, encoder = architectures.create_light_CNN(input_shape, 5)
         inp = Input(input_shape)
         y = encoder(inp)
 
-        y = Conv2DTranspose(48, kernel_size=(8,2), strides=(8,2), use_bias=False, padding='same')(y)
+        y = Conv2DTranspose(48, kernel_size=(8, 2), strides=(
+            8, 2), use_bias=False, padding='same')(y)
         y = BatchNormalization()(y)
         y = Activation("relu")(y)
 
-        y = Conv2DTranspose(48, kernel_size=(3,3), strides=(2,2), use_bias=False, padding='same')(y)
-        y = BatchNormalization()(y)
-        y = Activation("relu")(y)
-        
-        y = Conv2DTranspose(32, kernel_size=(3,3), strides=(2,2), use_bias=False, padding='same')(y)
+        y = Conv2DTranspose(48, kernel_size=(3, 3), strides=(
+            2, 2), use_bias=False, padding='same')(y)
         y = BatchNormalization()(y)
         y = Activation("relu")(y)
 
-        y = Conv2DTranspose(16, kernel_size=(5,5), strides=(2,2), use_bias=False, padding='same')(y)
+        y = Conv2DTranspose(32, kernel_size=(3, 3), strides=(
+            2, 2), use_bias=False, padding='same')(y)
         y = BatchNormalization()(y)
         y = Activation("relu")(y)
 
-        y = Conv2DTranspose(8, kernel_size=(5,5), strides=(2,2), use_bias=False, padding='same')(y)
+        y = Conv2DTranspose(16, kernel_size=(5, 5), strides=(
+            2, 2), use_bias=False, padding='same')(y)
+        y = BatchNormalization()(y)
+        y = Activation("relu")(y)
+
+        y = Conv2DTranspose(8, kernel_size=(5, 5), strides=(
+            2, 2), use_bias=False, padding='same')(y)
         y = BatchNormalization()(y)
         y = Activation("relu")(y)
         y = Cropping2D((4, 0))(y)
-        
-        y = Conv2D(3, kernel_size=1, strides=1, use_bias=False, padding='same', activation='sigmoid')(y)
+
+        y = Conv2D(3, kernel_size=1, strides=1, use_bias=False,
+                   padding='same', activation='sigmoid')(y)
 
         decoder = Model(inp, y)
-        decoder.compile('adam', custom_loss, metrics=['mse', 'mae', 'binary_crossentropy'])
+        decoder.compile('adam', custom_loss, metrics=[
+                        'mse', 'mae', 'binary_crossentropy'])
         decoder.summary()
 
         return encoder, decoder
@@ -77,10 +86,11 @@ class anomaly_AE():
         self.gdos = self.gdos[1]
         self.datalen = len(self.gdos)
         np.random.shuffle(self.gdos)
-        self.gdos, self.valdos = np.split(self.gdos, [self.datalen-self.datalen//20])
+        self.gdos, self.valdos = np.split(
+            self.gdos, [self.datalen-self.datalen//20])
 
-        self.decoder.fit_generator(image_generator(self.gdos, self.datalen, batch_size, augm=True, reconstruction=True), steps_per_epoch=(self.datalen//batch_size), epochs=self.epochs, 
-                                                    validation_data=image_generator(self.valdos, self.datalen, batch_size, augm=True, reconstruction=True), validation_steps=(self.datalen//20)//batch_size, max_queue_size=5, workers=8)
+        self.decoder.fit_generator(image_generator(self.gdos, self.datalen, batch_size, augm=True, reconstruction=True), steps_per_epoch=(self.datalen//batch_size), epochs=self.epochs,
+                                   validation_data=image_generator(self.valdos, self.datalen, batch_size, augm=True, reconstruction=True), validation_steps=(self.datalen//20)//batch_size, max_queue_size=5, workers=8)
 
         self.decoder.save(self.name)
 
@@ -102,7 +112,7 @@ class anomaly_AE():
 
             av_mse = np.sqrt(np.mean((pred - to_pred) ** 2))
 
-            if av_mse>0.15:
+            if av_mse > 0.15:
                 print(it, av_mse)
                 anomalies.append(path)
 
@@ -111,6 +121,7 @@ class anomaly_AE():
             cv2.waitKey(1)
 
         print(len(paths), len(anomalies))
+
 
 if __name__ == "__main__":
     AE = anomaly_AE("anomaly.h5", 'C:\\Users\\maxim\\datasets\\*', load=False)

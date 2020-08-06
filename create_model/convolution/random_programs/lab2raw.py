@@ -14,6 +14,6 @@ for p in tqdm(path):
     lab, date = name.split('_')
     date = date.split('.png')[0]
 
-    #cv2.imwrite(save+date+'_'+lab+'.png', img)
-    #cv2.imwrite(save+date, img)
+    # cv2.imwrite(save+date+'_'+lab+'.png', img)
+    # cv2.imwrite(save+date, img)
     cv2.imwrite(save+date+'.png', img)
