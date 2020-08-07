@@ -15,12 +15,12 @@ def concatenate(img, img2, axis=0):
     shimg2 = img2.shape
     if axis == 0:
         img3 = np.zeros((shimg[0]+shimg2[0], shimg[1], shimg[2]))
-        img3[:shimg[0] , :, :] = img
-        img3[shimg[0]: , :, :] = img2
+        img3[:shimg[0], :, :] = img
+        img3[shimg[0]:, :, :] = img2
     elif axis == 1:
         img3 = np.zeros((shimg[0], shimg[1]+shimg2[1], shimg[2]))
-        img3[: , :shimg[1], :] = img
-        img3[: , shimg[1]:, :] = img2
+        img3[:, :shimg[1], :] = img
+        img3[:, shimg[1]:, :] = img2
 
     return img3
 

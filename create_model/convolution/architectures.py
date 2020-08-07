@@ -1,10 +1,13 @@
 import keras.backend as K
-from keras.regularizers import l1, l2, l1_l2
-from keras.layers import *
-from keras.losses import mse, mae
+from keras.layers import (Activation, BatchNormalization, Concatenate, Conv2D,
+                          Dense, DepthwiseConv2D, Dropout, Flatten,
+                          GlobalAveragePooling2D, SpatialDropout2D,
+                          ZeroPadding2D)
+from keras.layers.wrappers import TimeDistributed as TD
+from keras.losses import mae, mse
 from keras.models import Input, Model, Sequential, load_model
 from keras.optimizers import SGD, Adam
-from keras.layers.wrappers import TimeDistributed as TD
+from keras.regularizers import l1, l1_l2, l2
 
 
 def dir_loss(y_true, y_pred):

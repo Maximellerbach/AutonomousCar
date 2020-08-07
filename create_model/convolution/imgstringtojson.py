@@ -1,15 +1,14 @@
 import dataset
-import dataset_json
+from customDataset import DatasetJson, direction_component, time_component
 import os
 
 if __name__ == "__main__":
     from tqdm import tqdm
     from glob import glob
 
-    Dataset = dataset.Dataset(
+    dataset = dataset.Dataset(
         [dataset.direction_component, dataset.time_component])
-    DatasetJson = dataset_json.DatasetJson([dataset_json.direction_component,
-                                            dataset_json.time_component])
+    datasetJson = DatasetJson([direction_component, time_component])
 
     src_dos = "C:\\Users\\maxim\\datasets\\"
     dst_dos = "C:\\Users\\maxim\\random_data\\json_dataset\\"
@@ -17,5 +16,5 @@ if __name__ == "__main__":
 
     for dos in doss:
         dos_name = dos.split('\\')[-1]
-        DatasetJson.imgstring2json_dos(
-            Dataset, DatasetJson.imgstring2json, dos+"\\", dst_dos+dos_name+"\\")
+        datasetJson.imgstring2json_dos(
+            dataset, datasetJson.imgstring2json, dos+"\\", dst_dos+dos_name+"\\")

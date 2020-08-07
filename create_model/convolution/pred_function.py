@@ -5,7 +5,7 @@ from glob import glob
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.utils import to_categorical
+from keras.utils import is_categorical
 from tqdm import tqdm
 
 import architectures
@@ -112,7 +112,7 @@ def pred_img(self, img, size, sleeptime, speed=0, nimg_size=(5, 5)):
     else:
         ny = self.model.predict(pred)[0]
 
-    if self.to_cat:
+    if self.is_cat:
         lab = np.argmax(ny)
 
         # average softmax direction

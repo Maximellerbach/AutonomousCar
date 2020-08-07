@@ -84,10 +84,10 @@ def round_st(st, acc=0.5):
     return round(st*n_val, 0)/n_val
 
 
-def get_weight(Y, frc, to_cat, acc=0.5):
+def get_weight(Y, frc, is_cat, acc=0.5):
     w = []
     for y in Y:
-        if to_cat:
+        if is_cat:
             w.append(frc[y])
         else:
             r = round_st(y[0], acc)

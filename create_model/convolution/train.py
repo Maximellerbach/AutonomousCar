@@ -18,8 +18,7 @@ import architectures
 import autolib
 import pred_function
 import dataset
-import dataset_json
-# from architectures import dir_loss
+from customDataset import *
 from datagenerator import image_generator
 
 config = tf.ConfigProto()
@@ -31,13 +30,29 @@ config.log_device_placement = True
 set_session(sess)  # set this TensorFlow session as the default
 
 
-class classifier():
-    def __init__(self, name, dospath='', dosdir=True, proportion=0.15, to_cat=True, sequence=False,
-                 weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
+class model_trainer():
+    """model trainer class."""
 
+    def __init__(self, name, dospath='', dosdir=True, proportion=0.15, is_cat=True, sequence=False,
+                 weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
+        """Init the trainer parameters.
+
+        Args:
+            name (str): the name you want your model to be called
+            dospath (str, optional): path to the directory where the images are stored. Defaults to ''.
+            dosdir (bool, optional): is the dospath a directory of directory ? Defaults to True.
+            proportion (float, optional): proportion of augmented images for every augmentation functions. Defaults to 0.15.
+            is_cat (bool, optional): wether the labels are categorical. Defaults to True.
+            sequence (bool, optional): wether to process the image in sequence. Defaults to False.
+            weight_acc (float, optional): for weighted distribution, accuracy of each steps. Defaults to 0.5.
+            smoothing (int, optional): value for label smoothing. Defaults to 0.
+            label_rdm (int, optional): value for label randomization. Defaults to 0.
+            load_speed (tuple, optional): (wether to train with speed, wether to train with throttle),
+                if one param is set to True, requires the dataset to contain speed or throttle. Defaults to (False, False).
+        """
         # self.Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
-        self.Dataset = dataset_json.DatasetJson(
-            [dataset_json.direction_component, dataset_json.time_component])
+        self.Dataset = DatasetJson(
+            [direction_component, time_component])
         self.name = name
         self.dospath = dospath
         self.dosdir = dosdir
@@ -51,16 +66,14 @@ class classifier():
 
         self.number_class = 5
         self.proportion = proportion
-        self.to_cat = to_cat
+        self.is_cat = is_cat
         self.weight_acc = weight_acc
         self.smoothing = smoothing
         self.label_rdm = label_rdm
         self.load_speed = load_speed
 
     def build_classifier(self, load=False, load_fe=False):
-        """
-        load a model using architectures program
-        """
+        """Load a model using a model architectures from architectures.py."""
         if load:
             model = load_model(self.name, custom_objects={
                                "dir_loss": architectures.dir_loss})
@@ -88,9 +101,7 @@ class classifier():
 
     def train(self, load=False, load_fe=False, flip=True, augm=True,
               epochs=5, batch_size=64, seq_batchsize=4, delay=0.2):
-        """
-        trains the model loaded as self.model
-        """
+        """Train the model loaded as self.model."""
         self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip)
 
         print(self.gdos.shape, self.valdos.shape, self.datalen)
@@ -129,6 +140,14 @@ class classifier():
         self.fe.save('test_model\\convolution\\fe.h5')
 
     def get_gdos(self, flip=True):
+        """Get list of paths in self.dospath
+
+        Args:
+            flip (bool, optional): wether to flip images, used to calculate the total number of images. Defaults to True.
+
+        Returns:
+            tuple: (train_paths, test_paths, weighted_distribution, total number of images)
+        """
         if self.dosdir:
             gdos = self.Dataset.load_dataset_sequence(self.dospath)
             gdos = np.concatenate([i for i in gdos])
@@ -143,87 +162,93 @@ class classifier():
                 datalen += len(s)
 
             np.random.shuffle(gdos)
-            gdos, valdos = np.split(gdos, [len(gdos)-len(gdos)//20])
+            traindos, valdos = np.split(gdos, [len(gdos)-len(gdos)//20])
 
         else:
             gdos = np.concatenate([i for i in gdos])
             datalen = len(gdos)
 
             np.random.shuffle(gdos)
-            gdos, valdos = np.split(gdos, [datalen-datalen//20])
+            traindos, valdos = np.split(gdos, [datalen-datalen//20])
 
-        if self.to_cat:
-            frc = self.get_frc_cat(self.dospath, flip=flip)
+        if self.is_cat:
+            frc = self.get_frc_cat(gdos, flip=flip)
         else:
-            frc = self.get_frc_lin(self.dospath, flip=flip)
+            frc = self.get_frc_lin(gdos, flip=flip)
 
-        return gdos, valdos, frc, datalen
+        return traindos, valdos, frc, datalen
 
-    def get_frc_lin(self, dos, flip=True):
-        """
-        calculate stats from linear labels
-        and show label distribution
+    def get_frc_lin(self, gdos, flip=True, show=False):
+        """Get the frc dict from gdos with linear labels.
+
+        Args:
+            gdos (list): list of paths, could also be a list of paths sequence
+            flip (bool, optional): wether to flip images. Defaults to True.
+
+        Returns:
+            dict: dictionnary of label frequency
         """
         Y = []
-
-        if self.dosdir:
-            for d in tqdm(glob(dos+"*")):
-                if os.path.isdir(d):
-                    for i in glob(f'{d}\\*{self.Dataset.format}'):
-                        labels = []
-                        lab = self.Dataset.load_annotation(i)[0]
-                        labels.append(lab)
-                        if flip:
-                            labels.append(-lab)
-
-                        for label in labels:  # will add normal + reversed if flip == True
-                            Y.append(autolib.round_st(label, self.weight_acc))
+        if self.sequence:
+            for s in gdos:
+                for path in s:
+                    lab = self.Dataset.load_annotation(path, to_list=False)[
+                        self.Dataset.label_structure[0]]
+                    if flip:
+                        labels = [lab, -lab]
+                    else:
+                        labels = [lab]
+                    for label in labels:
+                        Y.append(autolib.round_st(label, self.weight_acc))
 
         else:
-            for i in tqdm(glob(f'{dos}*{self.Dataset.format}')):
-                labels = []
-                lab = self.Dataset.load_annotation(i)[0]
-                labels.append(lab)
+            for path in gdos:
+                lab = self.Dataset.load_annotation(path, to_list=False)[
+                    self.Dataset.label_structure[0]]
                 if flip:
-                    labels.append(-lab)
-
-                for label in labels:  # will add normal + reversed if flip == True
+                    labels = [lab, -lab]
+                else:
+                    labels = [lab]
+                for label in labels:
                     Y.append(autolib.round_st(label, self.weight_acc))
+
         d = collections.Counter(Y)
 
         unique = np.unique(Y)
         frc = class_weight.compute_class_weight('balanced', unique, Y)
         dict_frc = dict(zip(unique, frc))
 
-        plt.bar(list(d.keys()), list(d.values()), width=0.2)
-        plt.show()
+        if show:
+            plt.bar(list(d.keys()), list(d.values()), width=0.2)
+            plt.show()
         return dict_frc
 
-    def get_frc_cat(self, dos, flip=True):  # old, now using linear labels
-        """
-        calculate stats from categorical labels
-        returns the weight of the classes for a balanced training
+    def get_frc_cat(self, gdos, flip=True):  # old, now using linear labels
+        """Get the frc dict from gdos with linear labels.
+
+        Args:
+            gdos (list): list of paths, could also be a list of paths sequence
+            flip (bool, optional): wether to flip images. Defaults to True.
+
+        Returns:
+            dict: dictionnary of label frequency
         """
         Y = []
-
-        if self.dosdir:
-            for d in tqdm(glob(dos+"*")):
-                if os.path.isdir(d):
-                    for i in glob(f'{d}\\*{self.Dataset.format}'):
-                        label = autolib.get_label(i, flip=flip, cat=True)
-
-                        Y.append(label[0])
-                        if flip:
-                            Y.append(label[1])
+        if self.sequence:
+            for s in gdos:
+                for path in s:
+                    label = autolib.get_label(path, flip=flip, cat=True)
+                    Y.append(label[0])
+                    if flip:
+                        Y.append(label[1])
 
         else:
-            for i in tqdm(glob(f'{dos}*{self.Dataset.format}')):
-
+            for path in gdos:
                 label = autolib.get_label(i, flip=flip, cat=True)
-
                 Y.append(label[0])
                 if flip:
                     Y.append(label[1])
+
         d = dict(collections.Counter(Y))
         prc = [0]*5
         length = len(Y)
@@ -249,11 +274,11 @@ class classifier():
 
 
 if __name__ == "__main__":
-    AI = classifier(name='test_model\\convolution\\test.h5',
-                    dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
-                    proportion=0.2, to_cat=False, sequence=False,
-                    weight_acc=2, smoothing=0.0, label_rdm=0.0,
-                    load_speed=(False, False))
+    AI = model_trainer(name='test_model\\convolution\\test.h5',
+                       dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
+                       proportion=0.2, is_cat=False, sequence=False,
+                       weight_acc=2, smoothing=0.0, label_rdm=0.0,
+                       load_speed=(False, False))
 
     # name of the model, path to dir dataset, set dosdir for data loading
     # set proportion of augmented img per function
