@@ -34,35 +34,38 @@ class image_generator(keras.utils.Sequence):
         xbatch = []
         ybatch = []
 
-        for i in batchfiles:
-            if self.sequence:
-                xseq = []
-                yseq = []
+        try:
+            for i in batchfiles:
+                if self.sequence:
+                    xseq = []
+                    yseq = []
 
-                seq_len = len(i)
-                if seq_len > self.seq_batchsize:
-                    rdm_seq = np.random.randint(0, seq_len-self.seq_batchsize)
-                    i = i[rdm_seq:rdm_seq+self.seq_batchsize]
+                    seq_len = len(i)
+                    if seq_len > self.seq_batchsize:
+                        rdm_seq = np.random.randint(0, seq_len-self.seq_batchsize)
+                        i = i[rdm_seq:rdm_seq+self.seq_batchsize]
 
-                elif seq_len < self.seq_batchsize:  # ugly way to make sure every sequence has the same length
-                    i = [i[0]]*(self.seq_batchsize-seq_len)+i
+                    elif seq_len < self.seq_batchsize:  # ugly way to make sure every sequence has the same length
+                        i = [i[0]]*(self.seq_batchsize-seq_len)+i
 
-                for path in i:
-                    img, annotations = self.Dataset.load_img_and_annotation(
-                        path)
+                    for path in i:
+                        img, annotations = self.Dataset.load_img_and_annotation(
+                            path)
+                        img = cv2.resize(img, (self.img_cols, self.img_rows))
+
+                        xseq.append(img)
+                        yseq.append(annotations)
+
+                    xbatch.append(xseq)
+                    ybatch.append(yseq)
+
+                else:
+                    img, annotations = self.Dataset.load_img_and_annotation(i)
                     img = cv2.resize(img, (self.img_cols, self.img_rows))
-
-                    xseq.append(img)
-                    yseq.append(annotations)
-
-                xbatch.append(xseq)
-                ybatch.append(yseq)
-
-            else:
-                img, annotations = self.Dataset.load_img_and_annotation(i)
-                img = cv2.resize(img, (self.img_cols, self.img_rows))
-                xbatch.append(img)
-                ybatch.append(annotations)
+                    xbatch.append(img)
+                    ybatch.append(annotations)
+        except:
+            print(i)
 
         if self.augm:
             # here are the old functions

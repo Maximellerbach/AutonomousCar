@@ -13,7 +13,7 @@ from sklearn.utils import class_weight
 import architectures
 import autolib
 # import pred_function
-from customDataset import DatasetJson, direction_component, time_component
+from customDataset import DatasetJson, direction_component, speed_component, throttle_component, time_component
 from datagenerator import image_generator
 
 config = tf.ConfigProto()
@@ -47,7 +47,7 @@ class model_trainer():
         """
         # self.Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
         self.Dataset = DatasetJson(
-            [direction_component, time_component])
+            [direction_component, speed_component, throttle_component, time_component])
         self.name = name
         self.dospath = dospath
         self.dosdir = dosdir
@@ -280,7 +280,7 @@ if __name__ == "__main__":
                        load_speed=(False, False))
 
     AI.train(load=False, load_fe=False, flip=True, augm=True,
-             epochs=15, batch_size=16, seq_batchsize=4)
+             epochs=5, batch_size=64, seq_batchsize=16)
 
     # custom_objects={"dir_loss":architectures.dir_loss}
     AI.model = load_model(AI.name, compile=False)
