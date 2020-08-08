@@ -273,11 +273,11 @@ class model_trainer():
 
 
 if __name__ == "__main__":
-    AI = model_trainer(name='test_model\\convolution\\test.h5',
+    AI = model_trainer(name='test_model\\convolution\\linearv6_latency.h5',
                        dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
                        proportion=0.2, is_cat=False, sequence=False,
                        weight_acc=2, smoothing=0.0, label_rdm=0.0,
-                       load_speed=(False, False))
+                       load_speed=(True, True))
 
     AI.train(load=False, load_fe=False, flip=True, augm=True,
              epochs=5, batch_size=64, seq_batchsize=16)

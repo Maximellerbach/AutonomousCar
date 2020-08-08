@@ -167,7 +167,7 @@ def create_light_CNN(img_shape, number_class, load_fe=False, prev_act="relu", la
     y = Dropout(drop_rate)(y)
 
     if load_speed[0]:
-        inp = Input((img_shape[0], 1))
+        inp = Input((1,))
         inputs.append(inp)
         y = Concatenate()([y, inp])
 

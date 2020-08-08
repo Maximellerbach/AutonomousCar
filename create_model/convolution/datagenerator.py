@@ -128,7 +128,6 @@ class image_generator(keras.utils.Sequence):
             Y = np.expand_dims(Y, axis=-1)
 
         else:
-
             if self.load_speed[0]:
                 X = [xbatch, ybatch[:, 1]]
             else:
