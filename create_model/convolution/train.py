@@ -1,9 +1,6 @@
 import collections
 from glob import glob
-import os
 
-import cv2
-import keras
 import keras.backend as K
 import numpy as np
 import tensorflow as tf
@@ -12,13 +9,11 @@ from keras.backend.tensorflow_backend import set_session
 from keras.callbacks import EarlyStopping
 from keras.models import load_model
 from sklearn.utils import class_weight
-from tqdm import tqdm
 
 import architectures
 import autolib
-import pred_function
-import dataset
-from customDataset import *
+# import pred_function
+from customDataset import DatasetJson, direction_component, time_component
 from datagenerator import image_generator
 
 config = tf.ConfigProto()
@@ -122,7 +117,7 @@ class model_trainer():
                                                  augm=augm, flip=flip,
                                                  smoothing=self.smoothing,
                                                  label_rdm=self.label_rdm),
-                                 steps_per_epoch=self.datalen//(batch_size*5), epochs=epochs,
+                                 steps_per_epoch=self.datalen//batch_size, epochs=epochs,
                                  validation_data=image_generator(self.valdos, self.Dataset,
                                                                  self.datalen, batch_size,
                                                                  frc, load_speed=self.load_speed,
@@ -132,15 +127,14 @@ class model_trainer():
                                                                  augm=augm, flip=flip,
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
-                                 validation_steps=self.datalen//20//(
-                                     batch_size),
+                                 validation_steps=self.datalen//20//batch_size,
                                  callbacks=[earlystop], max_queue_size=4, workers=4)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
 
     def get_gdos(self, flip=True):
-        """Get list of paths in self.dospath
+        """Get list of paths in self.dospath.
 
         Args:
             flip (bool, optional): wether to flip images, used to calculate the total number of images. Defaults to True.
@@ -193,7 +187,7 @@ class model_trainer():
             for s in gdos:
                 for path in s:
                     lab = self.Dataset.load_annotation(path, to_list=False)[
-                        self.Dataset.label_structure[0]]
+                        self.Dataset.label_structure[0].name]
                     if flip:
                         labels = [lab, -lab]
                     else:
@@ -204,7 +198,7 @@ class model_trainer():
         else:
             for path in gdos:
                 lab = self.Dataset.load_annotation(path, to_list=False)[
-                    self.Dataset.label_structure[0]]
+                    self.Dataset.label_structure[0].name]
                 if flip:
                     labels = [lab, -lab]
                 else:
@@ -244,7 +238,7 @@ class model_trainer():
 
         else:
             for path in gdos:
-                label = autolib.get_label(i, flip=flip, cat=True)
+                label = autolib.get_label(path, flip=flip, cat=True)
                 Y.append(label[0])
                 if flip:
                     Y.append(label[1])
@@ -264,6 +258,11 @@ class model_trainer():
         return dict_frc
 
     def calculate_FLOPS(self):
+        """Calculate the number of flops in a self.model.
+
+        Returns:
+            int: total number of flops
+        """
         run_meta = tf.RunMetadata()
         opts = tf.profiler.ProfileOptionBuilder.float_operation()
 
@@ -280,29 +279,20 @@ if __name__ == "__main__":
                        weight_acc=2, smoothing=0.0, label_rdm=0.0,
                        load_speed=(False, False))
 
-    # name of the model, path to dir dataset, set dosdir for data loading
-    # set proportion of augmented img per function
-    # when weight_acc = 2, only one steering class is created
-
-    # without augm; normally, high batch_size = better comprehension but converge less
-    # important setting to train a CNN
-
     AI.train(load=False, load_fe=False, flip=True, augm=True,
              epochs=15, batch_size=16, seq_batchsize=4)
-    # check if the saving did well
+
     # custom_objects={"dir_loss":architectures.dir_loss}
     AI.model = load_model(AI.name, compile=False)
     AI.fe = load_model('test_model\\convolution\\fe.h5')
 
-    # print(AI.calculate_FLOPS(), "total ops")
-    # iteration_speed = pred_function.evaluate_speed(AI)
-    # print(iteration_speed)
+    print(AI.calculate_FLOPS(), "total ops")
 
-    test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
-    # test_dos = "C:\\Users\\maxim\\random_data\\throttle\\1 ironcar driving\\"
-    pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 5000))
-    pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
-    pred_function.after_training_test_pred(
-        AI, test_dos, nimg_size=(5, 5), sleeptime=1)
+    # TODO refactor pred_functions
+    # test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
 
-    cv2.destroyAllWindows()
+    # pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 5000))
+    # pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
+    # pred_function.after_training_test_pred(
+    #     AI, test_dos, nimg_size=(5, 5), sleeptime=1)
+    # cv2.destroyAllWindows()

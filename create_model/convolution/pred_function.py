@@ -5,13 +5,15 @@ from glob import glob
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.utils import is_categorical
+from keras.utils import to_categorical
 from tqdm import tqdm
 
 import architectures
 import autolib
 import reorder_dataset
-import dataset
+import customDataset
+
+# TODO refactor those functions broke it by changing dataset
 
 
 def average_data(data, window_size=10, sq_factor=1):
