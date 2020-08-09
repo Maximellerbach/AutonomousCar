@@ -68,17 +68,6 @@ class image_generator(keras.utils.Sequence):
             print(i)
 
         if self.augm:
-            # here are the old functions
-            # X_bright, Y_bright = autolib.generate_brightness(xbatch, ybatch)
-            # X_gamma, Y_gamma = autolib.generate_low_gamma(xbatch, ybatch)
-            # X_night, Y_night = autolib.generate_night_effect(xbatch, ybatch)
-            # X_shadow, Y_shadow = autolib.generate_random_shadows(xbatch, ybatch)
-            # X_chain, Y_chain = autolib.generate_chained_transformations(xbatch, ybatch)
-            # X_noise, Y_noise = autolib.generate_random_noise(xbatch, ybatch)
-            # X_rev, Y_rev = autolib.generate_inversed_color(xbatch, ybatch)
-            # X_glow, Y_glow = autolib.generate_random_glow(xbatch, ybatch)
-            # X_cut, Y_cut = autolib.generate_random_cut(xbatch, ybatch)
-
             """ # this is the old "bourrin" way where we add transformed image to the clean one
             X_aug, Y_aug = autolib.generate_functions(xbatch, ybatch, proportion=self.proportion)
 

@@ -28,7 +28,7 @@ set_session(sess)  # set this TensorFlow session as the default
 class model_trainer():
     """model trainer class."""
 
-    def __init__(self, name, dospath='', dosdir=True, proportion=0.15, is_cat=True, sequence=False,
+    def __init__(self, name, dataset, dospath='', dosdir=True, proportion=0.15, is_cat=True, sequence=False,
                  weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
         """Init the trainer parameters.
 
@@ -46,8 +46,7 @@ class model_trainer():
                 if one param is set to True, requires the dataset to contain speed or throttle. Defaults to (False, False).
         """
         # self.Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
-        self.Dataset = DatasetJson(
-            [direction_component, speed_component, throttle_component, time_component])
+        self.Dataset = dataset
         self.name = name
         self.dospath = dospath
         self.dosdir = dosdir
@@ -273,7 +272,15 @@ class model_trainer():
 
 
 if __name__ == "__main__":
+    Dataset = DatasetJson(
+        [direction_component, speed_component, throttle_component, time_component])
+
+    # those are indexes
+    input_components = [1]
+    output_components = [0, 2]
+
     AI = model_trainer(name='test_model\\convolution\\linearv6_latency.h5',
+                       dataset=Dataset,
                        dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
                        proportion=0.2, is_cat=False, sequence=False,
                        weight_acc=2, smoothing=0.0, label_rdm=0.0,
