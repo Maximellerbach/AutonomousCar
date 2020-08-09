@@ -1,7 +1,6 @@
 import collections
 from glob import glob
 
-import keras.backend as K
 from keras.callbacks import TensorBoard
 import numpy as np
 import tensorflow as tf
@@ -14,7 +13,7 @@ from sklearn.utils import class_weight
 import architectures
 import autolib
 # import pred_function
-from customDataset import DatasetJson, direction_component, speed_component, throttle_component, time_component
+from customDataset import DatasetJson
 from datagenerator import image_generator
 
 config = tf.ConfigProto()
