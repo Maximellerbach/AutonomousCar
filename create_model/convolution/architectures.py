@@ -198,10 +198,9 @@ def create_light_CNN(dataset, img_shape, number_class, load_fe=False, prev_act="
         y = Concatenate()([y, z])
 
     if 'throttle' in output_components_names:
-        th = Dense(1, use_bias=False, activation="sigmoid", activity_regularizer=l1_l2(
+        z = Dense(1, use_bias=False, activation="sigmoid", activity_regularizer=l1_l2(
             regularizer[0], regularizer[1]), name="throttle")(y)
-        outputs.append(th)
-        y = Concatenate()([y, th])
+        outputs.append(z)
 
     model = Model(inputs, outputs)
     model.compile(loss=loss, optimizer=optimizer(lr=lr), metrics=metrics)

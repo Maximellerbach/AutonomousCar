@@ -2,6 +2,7 @@ import collections
 from glob import glob
 
 import keras.backend as K
+from keras.callbacks import TensorBoard
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -102,6 +103,9 @@ class model_trainer():
         print(self.gdos.shape, self.valdos.shape, self.datalen)
         self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
 
+        tensorboard_callback = TensorBoard(log_dir="logs\\",
+                                           update_freq='batch')
+
         earlystop = EarlyStopping(monitor='val_loss',
                                   min_delta=0,
                                   patience=3,
@@ -128,7 +132,7 @@ class model_trainer():
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
                                  validation_steps=self.datalen//20//batch_size,
-                                 callbacks=[earlystop], max_queue_size=4, workers=4)
+                                 callbacks=[earlystop, tensorboard_callback], max_queue_size=4, workers=4)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
@@ -278,7 +282,6 @@ if __name__ == "__main__":
     # those are indexes
     input_components = [1]
     output_components = [0, 2]
-    print(Dataset.label_structure)
 
     trainer = model_trainer(name='test_model\\convolution\\linearv6_latency.h5',
                             dataset=Dataset,
@@ -295,7 +298,7 @@ if __name__ == "__main__":
     trainer.model = load_model(trainer.name, compile=False)
     trainer.fe = load_model('test_model\\convolution\\fe.h5')
 
-    print(trainer.calculate_FLOPS(), "total ops")
+    # print(trainer.calculate_FLOPS(), "total ops")
 
     # TODO refactor pred_functions
     # test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
