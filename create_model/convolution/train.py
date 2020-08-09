@@ -29,7 +29,7 @@ class model_trainer():
     """model trainer class."""
 
     def __init__(self, name, dataset, dospath='', dosdir=True, proportion=0.15, is_cat=True, sequence=False,
-                 weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
+                 weight_acc=0.5, smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
         """Init the trainer parameters.
 
         Args:
@@ -42,8 +42,6 @@ class model_trainer():
             weight_acc (float, optional): for weighted distribution, accuracy of each steps. Defaults to 0.5.
             smoothing (int, optional): value for label smoothing. Defaults to 0.
             label_rdm (int, optional): value for label randomization. Defaults to 0.
-            load_speed (tuple, optional): (wether to train with speed, wether to train with throttle),
-                if one param is set to True, requires the dataset to contain speed or throttle. Defaults to (False, False).
         """
         # self.Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
         self.Dataset = dataset
@@ -64,7 +62,8 @@ class model_trainer():
         self.weight_acc = weight_acc
         self.smoothing = smoothing
         self.label_rdm = label_rdm
-        self.load_speed = load_speed
+        self.input_components = input_components
+        self.output_components = output_components
 
     def build_classifier(self, load=False, load_fe=False):
         """Load a model using a model architectures from architectures.py."""
@@ -75,19 +74,21 @@ class model_trainer():
 
         else:
             if self.sequence:
-                model, fe = architectures.create_light_CRNN((None, 120, 160, 3), 1, load_fe=load_fe,
+                model, fe = architectures.create_light_CRNN(self.Dataset, (None, 120, 160, 3), 1, load_fe=load_fe,
                                                             loss=architectures.dir_loss,
                                                             prev_act="relu", last_act="linear",
                                                             drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
-                                                            last_bias=False, metrics=["mse"],
-                                                            load_speed=self.load_speed)
+                                                            metrics=["mse"],
+                                                            input_components=self.input_components,
+                                                            output_components=self.output_components)
             else:
-                model, fe = architectures.create_light_CNN((120, 160, 3), 1, load_fe=load_fe,
+                model, fe = architectures.create_light_CNN(self.Dataset, (120, 160, 3), 1, load_fe=load_fe,
                                                            loss=architectures.dir_loss,
                                                            prev_act="relu", last_act="linear",
                                                            drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
-                                                           last_bias=False, metrics=["mse"],
-                                                           load_speed=self.load_speed)
+                                                           metrics=["mse"],
+                                                           input_components=self.input_components,
+                                                           output_components=self.output_components)
         fe.summary()
         model.summary()
 
@@ -108,8 +109,8 @@ class model_trainer():
                                   restore_best_weights=True)
 
         self.model.fit_generator(image_generator(self.gdos, self.Dataset,
-                                                 self.datalen, batch_size,
-                                                 frc, load_speed=self.load_speed,
+                                                 self.input_components, self.output_components,
+                                                 self.datalen, batch_size, frc,
                                                  sequence=self.sequence,
                                                  seq_batchsize=seq_batchsize,
                                                  weight_acc=self.weight_acc,
@@ -118,8 +119,8 @@ class model_trainer():
                                                  label_rdm=self.label_rdm),
                                  steps_per_epoch=self.datalen//batch_size, epochs=epochs,
                                  validation_data=image_generator(self.valdos, self.Dataset,
-                                                                 self.datalen, batch_size,
-                                                                 frc, load_speed=self.load_speed,
+                                                                 self.input_components, self.output_components,
+                                                                 self.datalen, batch_size, frc,
                                                                  sequence=self.sequence,
                                                                  seq_batchsize=seq_batchsize,
                                                                  weight_acc=self.weight_acc,
@@ -272,28 +273,29 @@ class model_trainer():
 
 
 if __name__ == "__main__":
-    Dataset = DatasetJson(
-        [direction_component, speed_component, throttle_component, time_component])
+    Dataset = DatasetJson(['direction', 'speed', 'throttle', 'time'])
 
     # those are indexes
     input_components = [1]
     output_components = [0, 2]
+    print(Dataset.label_structure)
 
-    AI = model_trainer(name='test_model\\convolution\\linearv6_latency.h5',
-                       dataset=Dataset,
-                       dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
-                       proportion=0.2, is_cat=False, sequence=False,
-                       weight_acc=2, smoothing=0.0, label_rdm=0.0,
-                       load_speed=(True, True))
+    trainer = model_trainer(name='test_model\\convolution\\linearv6_latency.h5',
+                            dataset=Dataset,
+                            dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
+                            proportion=0.2, is_cat=False, sequence=False,
+                            weight_acc=2, smoothing=0.0, label_rdm=0.0,
+                            input_components=input_components,
+                            output_components=output_components)
 
-    AI.train(load=False, load_fe=False, flip=True, augm=True,
-             epochs=5, batch_size=64, seq_batchsize=16)
+    trainer.train(load=False, load_fe=False, flip=True, augm=True,
+                  epochs=5, batch_size=64, seq_batchsize=16)
 
     # custom_objects={"dir_loss":architectures.dir_loss}
-    AI.model = load_model(AI.name, compile=False)
-    AI.fe = load_model('test_model\\convolution\\fe.h5')
+    trainer.model = load_model(trainer.name, compile=False)
+    trainer.fe = load_model('test_model\\convolution\\fe.h5')
 
-    print(AI.calculate_FLOPS(), "total ops")
+    print(trainer.calculate_FLOPS(), "total ops")
 
     # TODO refactor pred_functions
     # test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
