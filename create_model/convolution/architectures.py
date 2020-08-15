@@ -39,11 +39,11 @@ def cat2linear(ny):
 
 
 def create_light_CRNN(dataset, img_shape, number_class, load_fe=False, prev_act="relu", last_act="linear",
-                      drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001,
+                      drop_rate=0.1, use_bias=False, regularizer=(0, 0), optimizer=Adam, lr=0.001,
                       loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
                       input_components=[], output_components=[]):
 
-    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True, padding='same'):
+    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=use_bias, flatten=False, batchnorm=True, padding='same'):
         x = TD(conv_type(n_filter, kernel_size=kernel_size,
                          strides=strides, use_bias=use_bias, padding=padding))(x)
         if batchnorm:
@@ -55,7 +55,7 @@ def create_light_CRNN(dataset, img_shape, number_class, load_fe=False, prev_act=
             x = TD(Flatten())(x)
         return x
 
-    def dense_block(n_neurones, x, drop=True, activation=prev_act, use_bias=False, batchnorm=True):
+    def dense_block(n_neurones, x, drop=True, activation=prev_act, use_bias=use_bias, batchnorm=True):
         x = TD(Dense(n_neurones, use_bias=use_bias))(x)
         if batchnorm:
             x = TD(BatchNormalization())(x)
@@ -89,7 +89,8 @@ def create_light_CRNN(dataset, img_shape, number_class, load_fe=False, prev_act=
     inputs = []
     outputs = []
     input_components_names = dataset.indexes2components_names(input_components)
-    output_components_names = dataset.indexes2components_names(output_components)
+    output_components_names = dataset.indexes2components_names(
+        output_components)
 
     inp = Input(shape=img_shape)
     inputs.append(inp)
@@ -106,13 +107,13 @@ def create_light_CRNN(dataset, img_shape, number_class, load_fe=False, prev_act=
     y = dense_block(50, y, batchnorm=False, drop=False)
 
     if 'direction' in input_components_names:
-        z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(
+        z = Dense(number_class, use_bias=use_bias, activation=last_act, activity_regularizer=l1_l2(
             regularizer[0], regularizer[1]), name="steering")(y)  # kernel_regularizer=l2(0.0005)
         outputs.append(z)
         y = Concatenate()([y, z])
 
     if 'throttle' in output_components_names:
-        th = Dense(1, use_bias=False, activation="sigmoid", activity_regularizer=l1_l2(
+        th = Dense(1, use_bias=use_bias, activation="sigmoid", activity_regularizer=l1_l2(
             regularizer[0], regularizer[1]), name="throttle")(y)
         outputs.append(th)
         y = Concatenate()([y, th])
@@ -123,11 +124,11 @@ def create_light_CRNN(dataset, img_shape, number_class, load_fe=False, prev_act=
 
 
 def create_light_CNN(dataset, img_shape, number_class, load_fe=False, prev_act="relu", last_act="linear",
-                     drop_rate=0.1, regularizer=(0, 0), optimizer=Adam, lr=0.001,
+                     drop_rate=0.1, use_bias=False, regularizer=(0, 0), optimizer=Adam, lr=0.001,
                      loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
                      input_components=[], output_components=[]):
 
-    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=False, flatten=False, batchnorm=True, padding='same'):
+    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=use_bias, flatten=False, batchnorm=True, padding='same'):
         x = conv_type(n_filter, kernel_size=kernel_size,
                       strides=strides, use_bias=use_bias, padding=padding)(x)
         if batchnorm:
@@ -169,17 +170,18 @@ def create_light_CNN(dataset, img_shape, number_class, load_fe=False, prev_act="
     inputs = []
     outputs = []
     input_components_names = dataset.indexes2components_names(input_components)
-    output_components_names = dataset.indexes2components_names(output_components)
+    output_components_names = dataset.indexes2components_names(
+        output_components)
 
     inp = Input(shape=img_shape)
     inputs.append(inp)
     y = fe(inp)
 
-    y = Dense(150, use_bias=False)(y)
+    y = Dense(150, use_bias=use_bias)(y)
     y = Activation(prev_act)(y)
     y = Dropout(drop_rate)(y)
 
-    y = Dense(75, use_bias=False)(y)
+    y = Dense(75, use_bias=use_bias)(y)
     y = Activation(prev_act)(y)
     y = Dropout(drop_rate)(y)
 
@@ -188,17 +190,17 @@ def create_light_CNN(dataset, img_shape, number_class, load_fe=False, prev_act="
         inputs.append(inp)
         y = Concatenate()([y, inp])
 
-    y = Dense(50, use_bias=False)(y)
+    y = Dense(50, use_bias=use_bias)(y)
     y = Activation(prev_act)(y)
 
     if 'direction' in output_components_names:
-        z = Dense(number_class, use_bias=False, activation=last_act, activity_regularizer=l1_l2(
+        z = Dense(number_class, use_bias=use_bias, activation=last_act, activity_regularizer=l1_l2(
             regularizer[0], regularizer[1]), name="steering")(y)  # kernel_regularizer=l2(0.0005)
         outputs.append(z)
         y = Concatenate()([y, z])
 
     if 'throttle' in output_components_names:
-        z = Dense(1, use_bias=False, activation="sigmoid", activity_regularizer=l1_l2(
+        z = Dense(1, use_bias=use_bias, activation="sigmoid", activity_regularizer=l1_l2(
             regularizer[0], regularizer[1]), name="throttle")(y)
         outputs.append(z)
 

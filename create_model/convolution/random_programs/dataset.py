@@ -2,8 +2,6 @@ from glob import glob
 
 import cv2
 
-# TODO refactor this
-
 
 class Dataset():
     def __init__(self, lab_structure):
@@ -25,8 +23,7 @@ class Dataset():
             return component.get_item(split_string)
 
         split_string = self.split_string(img_string)
-        annotations = list(map(get_item_comp, self.label_structure))
-        return annotations
+        return list(map(get_item_comp, self.label_structure))
 
     def load_img_ang_annotation(self, path):
         annotations = self.load_annotation(path)
@@ -237,12 +234,6 @@ def cat2linear(ny):
 
 
 if __name__ == "__main__":
-    # dts, annotations = add_dummy_speed("C:\\Users\\maxim\\random_data\\linear\\1 ironcar driving\\", dummy_speed=1)
-    # save("C:\\Users\\maxim\\random_data\\speed\\1 ironcar driving\\", dts, annotations)
-
-    # dts, annotations = angle_speed_to_throttle("C:\\Users\\maxim\\random_data\\17 custom maps\\")
-    # save("C:\\Users\\maxim\\random_data\\throttle\\17 custom maps\\", dts, annotations)
-
     dts, annotations = cat2linear_dataset(
         "C:\\Users\\maxim\\random_data\\11 sim circuit 2\\")
     save("C:\\Users\\maxim\\random_data\\linear\\11 sim circuit 2\\", dts, annotations)

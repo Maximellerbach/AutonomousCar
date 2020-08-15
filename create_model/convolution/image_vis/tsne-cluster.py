@@ -19,8 +19,6 @@ from sklearn.cluster import *
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from architectures import dir_loss
-
 config = tf.ConfigProto()
 # dynamically grow the memory used on the GPU
 config.gpu_options.allow_growth = True
@@ -52,7 +50,7 @@ class data_visualization():
         return X
 
     def load_fe(self):
-        fe = load_model(self.fename, custom_objects={"dir_loss": dir_loss})
+        fe = load_model(self.fename, compile=False)
 
         try:
             inp = Input(shape=(120, 160, 3))
