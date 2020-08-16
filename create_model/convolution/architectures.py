@@ -43,7 +43,10 @@ def create_light_CRNN(dataset, img_shape, number_class, load_fe=False, prev_act=
                       loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
                       input_components=[], output_components=[]):
 
-    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=use_bias, flatten=False, batchnorm=True, padding='same'):
+    def conv_block(n_filter, kernel_size, strides, x,
+                   conv_type=Conv2D, drop=True,
+                   activation=prev_act, use_bias=use_bias,
+                   flatten=False, batchnorm=True, padding='same'):
         x = TD(conv_type(n_filter, kernel_size=kernel_size,
                          strides=strides, use_bias=use_bias, padding=padding))(x)
         if batchnorm:
@@ -128,7 +131,10 @@ def create_light_CNN(dataset, img_shape, number_class, load_fe=False, prev_act="
                      loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
                      input_components=[], output_components=[]):
 
-    def conv_block(n_filter, kernel_size, strides, x, conv_type=Conv2D, drop=True, activation=prev_act, use_bias=use_bias, flatten=False, batchnorm=True, padding='same'):
+    def conv_block(n_filter, kernel_size, strides, x,
+                   conv_type=Conv2D, drop=True,
+                   activation=prev_act, use_bias=use_bias,
+                   flatten=False, batchnorm=True, padding='same'):
         x = conv_type(n_filter, kernel_size=kernel_size,
                       strides=strides, use_bias=use_bias, padding=padding)(x)
         if batchnorm:
@@ -148,15 +154,15 @@ def create_light_CNN(dataset, img_shape, number_class, load_fe=False, prev_act="
         x = BatchNormalization()(inp)
         # x = GaussianNoise(0.2)(inp)
 
-        x = conv_block(12, 5, 2, x, drop=False)
-        x = conv_block(16, 5, 2, x, drop=False)
+        x = conv_block(16, 3, 2, x, drop=False)
+        x = conv_block(16, 3, 2, x, drop=False)
         x = conv_block(32, 3, 2, x, drop=True)
         x = conv_block(48, 3, 2, x, drop=False)
 
-        x1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
+        # x1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
         x2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
         x3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
-        x = Concatenate()([x1, x2, x3])
+        x = Concatenate()([x2, x3])
         x = Dropout(drop_rate)(x)
 
         # n_out = 64+16*10+16*8

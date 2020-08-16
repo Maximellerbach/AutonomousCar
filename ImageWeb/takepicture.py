@@ -1,8 +1,9 @@
-
+import datetime
 import os
+
 import cv2
 import numpy as np
-import datetime
+
 
 class camera:
     "take a picture and saved it in the static folder"
@@ -12,8 +13,8 @@ class camera:
         self.cam = cv2.VideoCapture(0)
         pass
 
-    def TakePicture(self):     
-        # read a frame            
+    def TakePicture(self):
+        # read a frame
         ret, frame = self.cam.read()
         # where the code is running should be /app
         img_name = os.getcwd() + os.path.normpath("/static/image.jpg")
@@ -21,9 +22,7 @@ class camera:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         # close camera
         self.cam.release()
-
-

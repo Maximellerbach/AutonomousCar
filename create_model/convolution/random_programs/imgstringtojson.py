@@ -7,7 +7,7 @@ dataset = dataset.Dataset(
 datasetJson = DatasetJson(
     ["direction", "speed", "throttle", "time"])
 
-src_dos = "C:\\Users\\maxim\\random_data\\7 sim slow+normal"
+src_dos = "C:\\Users\\maxim\\random_data\\1 ironcar driving"
 dst_dos = "C:\\Users\\maxim\\random_data\\json_dataset\\"
 dosdir = False
 

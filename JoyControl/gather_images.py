@@ -1,3 +1,4 @@
+from SerialCommand import control, motor
 import getopt
 import os
 import sys
@@ -7,11 +8,11 @@ import cv2
 import xbox
 
 sys.path.append('../custom_modules/')
-from SerialCommand import control, motor
 
 MAXSPEED = 120
-dico_save = [3,5,7,9,11]
-dico = [10,8,6,4,2]
+dico_save = [3, 5, 7, 9, 11]
+dico = [10, 8, 6, 4, 2]
+
 
 def create_save_string(components, path="../../image_raw/"):
     path = ""
@@ -24,6 +25,7 @@ def create_save_string(components, path="../../image_raw/"):
             path += ".png"
     return path
 
+
 def printusage():
     print(__file__ + " -c <COM_Port>")
     print("  Windows: COMx where x is a number")
@@ -33,7 +35,7 @@ def printusage():
 
 comPort = ""
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"c:h",["com", "help"])
+    opts, args = getopt.getopt(sys.argv[1:], "c:h", ["com", "help"])
 except getopt.GetoptError:
     printusage()
     sys.exit(2)
@@ -52,7 +54,7 @@ for opt, arg in opts:
 if (comPort == ""):
     try:
         comPort = os.environ["COM_PORT"]
-    except KeyError: 
+    except KeyError:
         pass
 
 # Give full access to the serial port
@@ -71,22 +73,22 @@ while not joy.Back():
     thethrottle = throttle - throttle2
     rec = joy.A()
     do_dir = joy.X()
-    
+
     if cat_mode:
         if direction < -0.4:
-            direc= 0
+            direc = 0
 
         elif direction > 0.4:
-            direc= 4
+            direc = 4
 
         elif direction < -0.2:
-            direc= 1
+            direc = 1
 
         elif direction > 0.2:
-            direc= 3
+            direc = 3
 
         else:
-            direc= 2
+            direc = 2
 
         if not do_dir:
             ser.ChangeDirection(dico[direc])
@@ -97,9 +99,8 @@ while not joy.Back():
         else:
             direc = 0
 
-    
     if abs(thethrottle) > 0.2:
-        #print("increase speed")  
+        #print("increase speed")
         ser.ChangeMotorA(motor.MOTOR_BACKWARD)
         pwm = int(MAXSPEED * thethrottle)
         ser.ChangePWM(pwm)
@@ -108,11 +109,10 @@ while not joy.Back():
         ser.ChangePWM(0)
 
     if rec:
-        #read cam and resize the image
-        _, img= cap.read()
-        img= cv2.resize(img,(160,120))
-        
-        
+        # read cam and resize the image
+        _, img = cap.read()
+        img = cv2.resize(img, (160, 120))
+
         if cat_mode:
             # save it with for label, the joystick values mapped on 5 directions
             save_string = create_save_string([dico_save[direc], time.time()])
@@ -124,4 +124,3 @@ while not joy.Back():
 
 joy.close()
 print('terminated')
-

@@ -1,8 +1,11 @@
-import numpy as np
-import autolib
-import keras
-import cv2
+import time
 from glob import glob
+
+import cv2
+import keras
+import numpy as np
+
+import autolib
 from reorder_dataset import get_speed
 
 
@@ -34,6 +37,7 @@ class image_generator(keras.utils.Sequence):
         self.label_rdm = label_rdm
         self.flip = flip
         self.seq_batchsize = seq_batchsize
+        self.creation_time = time.time()
 
     def __data_generation(self, gdos):
         batchfiles = np.random.choice(gdos, size=self.batch_size)
@@ -72,7 +76,8 @@ class image_generator(keras.utils.Sequence):
 
         if self.augm:
             """ # this is the old "bourrin" way where we add transformed image to the clean one
-            X_aug, Y_aug = autolib.generate_functions(xbatch, ybatch, proportion=self.proportion)
+            X_aug, Y_aug = autolib.generate_functions(
+                xbatch, ybatch, proportion=self.proportion)
 
             xbatch = np.concatenate((xbatch, X_aug))
             ybatch = np.concatenate((ybatch, Y_aug))
@@ -82,10 +87,22 @@ class image_generator(keras.utils.Sequence):
             if self.sequence:
                 for i in range(len(xbatch)):
                     xbatch[i], ybatch[i] = autolib.generate_functions_replace(xbatch[i], ybatch[i],
-                                                                              proportion=self.proportion)
+                                                                              proportion=self.proportion,
+                                                                              functions=(autolib.change_brightness,
+                                                                                         autolib.rescut,
+                                                                                         autolib.inverse_color,
+                                                                                         autolib.add_random_shadow,
+                                                                                         autolib.add_random_glow,
+                                                                                         autolib.rdm_noise))
             else:
                 xbatch, ybatch = autolib.generate_functions_replace(xbatch, ybatch,
-                                                                    proportion=self.proportion)
+                                                                    proportion=self.proportion,
+                                                                    functions=(autolib.change_brightness,
+                                                                               autolib.rescut,
+                                                                               autolib.inverse_color,
+                                                                               autolib.add_random_shadow,
+                                                                               autolib.add_random_glow,
+                                                                               autolib.rdm_noise))
 
         if self.flip:
             if self.sequence:
@@ -103,21 +120,17 @@ class image_generator(keras.utils.Sequence):
                                                                 proportion=1)
                 xbatch = np.concatenate((xbatch, xflip))/255
                 ybatch = np.concatenate((ybatch, yflip))
+
         # removed the weight, useless ; weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
 
         if self.sequence:
+            X = [xbatch]
+            for i in self.input_components:
+                X.append(ybatch[:, :, i])
 
-            if self.load_speed[0]:
-                X = [xbatch, ybatch[:, :, 1]]
-            else:
-                X = xbatch
-
-            if self.load_speed[1]:
-                Y = [ybatch[:, :, 0], ybatch[:, :, 2]]
-            else:
-                Y = ybatch[:, :, 0]
-
-            Y = np.expand_dims(Y, axis=-1)
+            Y = []
+            for i in self.output_components:
+                Y.append(ybatch[:, :, i])
 
         else:
             X = [xbatch]
@@ -127,7 +140,7 @@ class image_generator(keras.utils.Sequence):
             Y = []
             for i in self.output_components:
                 Y.append(ybatch[:, i])
-            
+
         return X, Y
 
     def __len__(self):

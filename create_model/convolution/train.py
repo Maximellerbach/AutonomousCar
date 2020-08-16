@@ -1,18 +1,18 @@
 import collections
 from glob import glob
 
-from keras.callbacks import TensorBoard
 import numpy as np
+import cv2
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from keras.backend.tensorflow_backend import set_session
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, TensorBoard
 from keras.models import load_model
 from sklearn.utils import class_weight
 
+import pred_function
 import architectures
 import autolib
-# import pred_function
 from customDataset import DatasetJson
 from datagenerator import image_generator
 
@@ -130,7 +130,7 @@ class model_trainer():
                                                                  sequence=self.sequence,
                                                                  seq_batchsize=seq_batchsize,
                                                                  weight_acc=self.weight_acc,
-                                                                 augm=augm, flip=flip,
+                                                                 augm=False, flip=flip,
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
                                  validation_steps=self.datalen//20//batch_size,
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     trainer = model_trainer(name='test_model\\convolution\\linear_trackmania.h5',
                             dataset=Dataset,
                             dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
-                            proportion=0.2, is_cat=False, sequence=False,
+                            proportion=0.4, is_cat=False, sequence=False,
                             weight_acc=2, smoothing=0.0, label_rdm=0.0,
                             input_components=input_components,
                             output_components=output_components)
@@ -299,16 +299,5 @@ if __name__ == "__main__":
                   epochs=5, batch_size=64)
 
     # custom_objects={"dir_loss":architectures.dir_loss}
-    trainer.model = load_model(trainer.name, compile=False)
-    trainer.fe = load_model('test_model\\convolution\\fe.h5')
-
-    # print(trainer.calculate_FLOPS(), "total ops")
-
-    # TODO refactor pred_functions
-    # test_dos = glob('C:\\Users\\maxim\\datasets\\*')[0]+"\\"
-
-    # pred_function.compare_pred(AI, dos=test_dos, dt_range=(0, 5000))
-    # pred_function.speed_impact(AI, test_dos, dt_range=(0, 5000))
-    # pred_function.after_training_test_pred(
-    #     AI, test_dos, nimg_size=(5, 5), sleeptime=1)
-    # cv2.destroyAllWindows()
+    # trainer.model = load_model(trainer.name, compile=False)
+    # trainer.fe = load_model('test_model\\convolution\\fe.h5')

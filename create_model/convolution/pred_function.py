@@ -5,7 +5,7 @@ from glob import glob
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.utils import to_categorical
+from keras.models import Model
 from tqdm import tqdm
 
 import architectures
@@ -27,134 +27,91 @@ def average_data(data, window_size=10, sq_factor=1):
     return data
 
 
-def compare_pred(self, dos='C:\\Users\\maxim\\datasets\\1 ironcar driving\\', dt_range=(0, -1)):
-    components = [dataset.direction_component, dataset.time_component]
-    if self.load_speed[0]:
-        components.insert(1, dataset.speed_component)
-    if self.load_speed[1]:
-        components.insert(2, dataset.throttle_component)
-
-    Dataset = dataset.Dataset(components)
-
-    # paths, dts_len = reorder_dataset.load_dataset(dos, recursive=False)
-    # sort directory by last component (time)
-    paths = Dataset.load_dos_sorted(dos, sort_component=-1)
+def compare_pred(self, Dataset, dos, dt_range=(0, -1)):
+    paths = Dataset.generator_load_dataset_sorted(dos)
     paths = paths[dt_range[0]:dt_range[1]]
     dts_len = len(paths)
 
-    Y = []
-    speeds = []
-    throttle = []
-    pred_throttle = []
-    sts = []
+    preds = []
+    annotations = []
     for path in tqdm(paths):
-        img_annotation = Dataset.load_annotation(path)
-        Y.append(img_annotation[0])
+        img, annotation = Dataset.load_img_and_annotation(path)
+        annotations.append(annotation)
 
-        if self.sequence:
-            # need to do something nicer..
-            inputs = [np.expand_dims(np.expand_dims(
-                cv2.imread(path)/255, axis=0), axis=0)]
-        else:
-            inputs = [np.expand_dims(cv2.imread(path)/255, axis=0)]
+        inputs = [np.expand_dims(img/255, axis=0)]
+        for index in self.input_components:
+            inputs.append(np.expand_dims(annotations[index], axis=0))
 
-        if self.load_speed[0]:
-            speeds.append(img_annotation[1])
-            inputs.append(np.expand_dims([img_annotation[1]], axis=0))
+        pred = self.model.predict(inputs)[0]
+        preds.append(pred)
 
-        pred = self.model.predict(inputs)
-        sts.append(pred[0][0])
+    preds = np.array(preds)
+    annotations = np.arra(annotations)
+    its = [i for i in range(dts_len)]
 
-        if self.load_speed[1]:
-            throttle.append(img_annotation[2])
-            pred_throttle.append(pred[1][0])
-
-    plt.plot([i for i in range(dts_len)], Y, sts)
-
-    if self.load_speed[0]:
-        plt.plot([i for i in range(dts_len)], speeds)
-
-    if self.load_speed[1]:
-        plt.plot([i for i in range(dts_len)], throttle, pred_throttle)
+    for index in self.output_components:
+        plt.plot(its, annotations[:, index], preds[:, index])
 
     plt.show()
 
 
-# not suited for multiple inputs
-def evaluate_speed(self, data_path='C:\\Users\\maxim\\datasets\\1 ironcar driving\\'):
-    paths = glob(data_path+"*")
-    X = np.array([cv2.resize(cv2.imread(i), (160, 120))
-                  for i in tqdm(paths[:5000])])
+def visualize_fe_output(self, img, input_size=(160, 120), waitkey=True):
+    img = cv2.resize(img, input_size)
+    fe_img = self.fe.predict(np.expand_dims(img, axis=0))[0]
+    square_root = int(math.sqrt(fe_img.shape[-1]))+1
 
-    st = time.time()
-    preds = self.model.predict(X/255)
-    et = time.time()
-    dt = et-st
+    square_img = np.zeros((square_root, square_root))
+    for i in range(square_root):
+        square_img[i, :] = fe_img[i*square_root:(i+1)*square_root]
 
-    pred_dt = dt/len(X)
-    frc = 1/pred_dt
-
-    return (dt, pred_dt, frc)
+    cv2.imshow('tot', square_img)
+    if waitkey:
+        cv2.waitKey(1)
 
 
-def pred_img(self, img, size, sleeptime, speed=0, nimg_size=(5, 5)):
-    """
-    predict an image and visualize the prediction
-    """
-    img = cv2.resize(img, size)
-    pred = np.expand_dims(img/255, axis=0)
-
-    nimg = self.fe.predict(pred)[0]
-    nimg = np.expand_dims(cv2.resize(nimg, nimg_size), axis=0)
-    n = nimg.shape[-1]
-
-    if self.load_speed:
-        ny = self.model.predict([pred, np.expand_dims(speed, axis=0)])
-
+def visualize_model_layer_filter(model, img, layer_index,
+                                 input_size=(160, 120), fig_size=(32, 24),
+                                 layer_outputs=None):
+    img = cv2.resize(img, input_size)
+    if layer_outputs is None:
+        layer_output = model.layers[layer_index].output
     else:
-        ny = self.model.predict(pred)[0]
+        layer_output = layer_outputs[layer_index]
+    tmp_model = Model(model.input, layer_output)
 
-    if self.is_cat:
-        lab = np.argmax(ny)
+    activation = tmp_model.predict(np.expand_dims(img, axis=0))[0]
+    activation = np.transpose(activation, (-1, 0, 1))
+    print(activation.shape)
 
-        # average softmax direction
-        # here you convert a list of cat to a list of linear
-        average = architectures.cat2linear([ny])[0]
-        ny = [round(i, 3) for i in ny]
-        # print(ny, average)
-    else:
-        average = ny[0]
+    plt.figure()
+    # for activation in activations:
+    n_filter = len(activation)
+    columns = int(n_filter ** 0.5)
+    for i, filter_img in enumerate(activation):
+        plt.subplot(n_filter / columns + 1, columns, i + 1)
+        # filter_img = cv2.resize(filter_img, fig_size, interpolation=cv2.INTER)
+        plt.imshow(filter_img)
 
-    if len(self.av) < self.memory_size:
-        self.av.append(ny)
-    else:
-        self.av.append(ny)
-        del self.av[0]
+    plt.show()
 
-    square_root = int(math.sqrt(n))+1
-    tot_img = np.zeros((nimg.shape[1]*square_root, nimg.shape[2]*square_root))
 
-    try:
-        for x in range(square_root):
-            for y in range(square_root):
-                tot_img[nimg.shape[1]*x:nimg.shape[1]*(x+1), nimg.shape[2]*y:nimg.shape[2]*(
-                    y+1)] = (nimg[0, :, :, x*square_root+y])
-    except:
-        pass
+def pred_img(self, Dataset, path, sleeptime):
+    img, annotations = Dataset.load_img_and_annotation(path)
+    to_pred_img = np.expand_dims(img/255, axis=0)
+
+    inputs = [to_pred_img]
+    for index in self.input_components:
+        inputs.append(np.expand_dims())
+
+    pred = self.model.predict(inputs)[0]
+    visualize_fe_output(self, img, waitkey=False)
 
     c = np.copy(img)
-    cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1] /
-                                                      2+average*30), img.shape[0]-50), color=[255, 0, 0], thickness=4)
-    c = c/255
+    cv2.line(c,
+             (img.shape[1]//2, img.shape[0]),
+             (int(img.shape[1] / 2+average*30), img.shape[0]-50),
+             color=[255, 0, 0], thickness=4)/255
 
-    if n == 1:
-        av = nimg[0]
-        av = cv2.resize(av, size)
-        cv2.imshow('im', nimg[0, :, :])
-    else:
-        av = np.sum(nimg[0], axis=-1)
-        av = cv2.resize(av/(nimg.shape[-1]/2), size)
-        cv2.imshow('tot', tot_img)
     cv2.imshow('img', c)
     cv2.waitKey(sleeptime)
 
