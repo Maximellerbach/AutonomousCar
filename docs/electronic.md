@@ -14,13 +14,13 @@ The electronic is an important part of the car. There are few important elements
 
 And of course, all this needs to be at a reasonable cost!
 
-![the car](/docs/thecar.jpg)
+![the car](/docs_image/thecar.jpg)
 
 As you can see the car is mounted with screws and acrylic glass (can be done with Plexiglas as well). Advantage of acrylic is that it's more robust than the Plexiglas. When cutting and making the holes the acrylic, keep the plastic protection so you won't damage your work. Note that it takes about 1 day to cut, make the holes and assemble all what is needed to make the car nice. Make sure when you’ll assemble everything, you'll screw strongly everything, the vibration of the car will clearly unscrew them if not done properly. This can damage the electronic or have component going out of the car while driving!
 
 Note that the first prototype was done with hard paper and glue gun to make is fast on prototyping.
 
-![the old car](/docs/oldcar.jpg)
+![the old car](/docs_image/oldcar.jpg)
 
 ## Choice of boards
 
@@ -51,11 +51,11 @@ The Raspberry solution can be working and has been quickly tested but the proces
 
 So based on those various choices, the fact we needed a board with a fast webcam transfer, fast processing for the images, support for basic IO, we've decided to go for the [RockPro64 from Pine64](http://www.pine64.org). Cost for the board is 80$ so when adding the shipment, you arrive at 80€.
 
-![rockpro64](/docs/ROCKPro64_slide.jpg)
+![rockpro64](/docs_image/ROCKPro64_slide.jpg)
 
 We've decided as well to use a simple Arduino for the low level hardware piloting taking advantages of very low cost (3€) for a mini Arduino, easy development, easy flash, easy to send orders thru serial port. Making a separation between the main RockPro64 board, the motors and the rest of the low level electronic.
 
-![arduino](/docs/arduino.jpg)
+![arduino](/docs_image/arduino.jpg)
 
 ## Electrical consumption
 
@@ -65,7 +65,7 @@ The good news is that the RockPro64 consumption is less than 500 m4 even with th
 
 This converter can be found easily on sites like Banggood for less than 3 euros. For example, it looks like:
 
-![image](/docs/converterup.png)
+![image](/docs_image/converterup.png)
 
 You can easily regulate the output with a small screw driver and a voltmeter. Using this converter allow to make sure the board will be isolated in terms of electricity from the motors as well having a secured regulated tension all the time with 80W max so 6A at 12V as needed.
 
@@ -87,11 +87,11 @@ So, we measured the intensity that motors are asking and it is about 4A! Yes, **
 
 So all up cost to pilot the motors is the double hbridge already fully created which costs 4 € on Banggood.
 
-![hbridge](/docs/hbridge.png)
+![hbridge](/docs_image/hbridge.png)
 
 Now, during the race and after some usage, this h-bridge was too limited and the current was higher than the 4A over heating the hbridge which then just stopped working. So we choose another h-bridge with a max 43A current which was more than largely sufficient :-). The new module is based on BTS7960 with 1 very large heat dissipator.
 
-![hbridge](/docs/BTS7960-Modules-2.jpg)
+![hbridge](/docs_image/BTS7960-Modules-2.jpg)
 
 Documentation of the board is far from perfect so it took a bit of time to understand how best to use it. See the full schematic to understand the usage. The most disturbing part is the naming on the board with PWM entries while they are the selection for the hbridge and the EN part is actually the PWM! So all up, if you follow the documentation, you'll have to use 2 PWM and always select the hbridge while the reality is different, you have to select the hbridge and then use the PWM for the entry.
 
@@ -109,7 +109,7 @@ Even if the Arduino pin out is 3.3V (when alimentation is 3.3V), the low signal 
 
 On top of the electronic, a bit of mechanic has been needed to reuse the existing direction and as many elements as possible.
 
-![servo](/docs/servomc410.png)
+![servo](/docs_image/servomc410.png)
 
 ## On/Off
 
@@ -188,7 +188,7 @@ So, all up, we bought for 363 € and reused for about 147.50 €, so a total co
 
 The full electronic schema looks like that for the first version:
 
-![schema](/docs/schema.png)
+![schema](/docs_image/schema.png)
 
 Few comments:
 
@@ -199,7 +199,7 @@ Few comments:
 
 The full schematic is like that for the second version running on Raspberry Pi:
 
-![schema](/docs/schema2.png)
+![schema](/docs_image/schema2.png)
 
 Few comments:
 
@@ -208,6 +208,6 @@ Few comments:
 
 Picture of the main electronic board where the Arduino, the 5V power alimentation and the connectors are located:
 
-![main board](/docs/board1.jpg)
+![main board](/docs_image/board1.jpg)
 
-![main board](/docs/board2.jpg)
+![main board](/docs_image/board2.jpg)
