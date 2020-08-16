@@ -76,7 +76,7 @@ class model_trainer():
             if self.sequence:
                 model, fe = architectures.create_light_CRNN(self.Dataset, (None, 120, 160, 3), 1, load_fe=load_fe,
                                                             loss=architectures.dir_loss,
-                                                            prev_act="relu", last_act="linear",
+                                                            prev_act="relu", last_act="linear", use_bias=True,
                                                             drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
                                                             metrics=["mse"],
                                                             input_components=self.input_components,
@@ -84,7 +84,7 @@ class model_trainer():
             else:
                 model, fe = architectures.create_light_CNN(self.Dataset, (120, 160, 3), 1, load_fe=load_fe,
                                                            loss=architectures.dir_loss,
-                                                           prev_act="relu", last_act="linear",
+                                                           prev_act="relu", last_act="linear", use_bias=True,
                                                            drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
                                                            metrics=["mse"],
                                                            input_components=self.input_components,
@@ -102,14 +102,17 @@ class model_trainer():
         print(self.gdos.shape, self.valdos.shape, self.datalen)
         self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
 
-        tensorboard_callback = TensorBoard(log_dir="logs\\",
-                                           update_freq='batch')
-
+        callbacks = []
         earlystop = EarlyStopping(monitor='val_loss',
                                   min_delta=0,
                                   patience=3,
                                   verbose=0,
                                   restore_best_weights=True)
+        callbacks.append(earlystop)
+
+        # tensorboard = TensorBoard(log_dir="logs\\",
+        #                                    update_freq='batch')
+        # callbacks.append(earlysttensorboardop)
 
         self.model.fit_generator(image_generator(self.gdos, self.Dataset,
                                                  self.input_components, self.output_components,
@@ -131,7 +134,7 @@ class model_trainer():
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
                                  validation_steps=self.datalen//20//batch_size,
-                                 callbacks=[earlystop, tensorboard_callback], max_queue_size=4, workers=4)
+                                 callbacks=callbacks, max_queue_size=4, workers=4)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
@@ -276,13 +279,15 @@ class model_trainer():
 
 
 if __name__ == "__main__":
-    Dataset = DatasetJson(['direction', 'speed', 'throttle', 'time'])
+    Dataset = DatasetJson(['direction', 'time'])
+    Dataset.label_structure[0].offset = -7
+    Dataset.label_structure[0].scale = 1/4
 
     # those are indexes
-    input_components = [1]
-    output_components = [0, 2]
+    input_components = []
+    output_components = [0]
 
-    trainer = model_trainer(name='test_model\\convolution\\linearv6_latency.h5',
+    trainer = model_trainer(name='test_model\\convolution\\linear_trackmania.h5',
                             dataset=Dataset,
                             dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
                             proportion=0.2, is_cat=False, sequence=False,
@@ -291,7 +296,7 @@ if __name__ == "__main__":
                             output_components=output_components)
 
     trainer.train(load=False, load_fe=False, flip=True, augm=True,
-                  epochs=5, batch_size=64, seq_batchsize=16)
+                  epochs=5, batch_size=64)
 
     # custom_objects={"dir_loss":architectures.dir_loss}
     trainer.model = load_model(trainer.name, compile=False)

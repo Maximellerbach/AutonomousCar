@@ -7,7 +7,10 @@ from reorder_dataset import get_speed
 
 
 class image_generator(keras.utils.Sequence):
-    def __init__(self, gdos, Dataset, input_components, output_components, datalen, batch_size, frc, sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15, flip=True, smoothing=0.1, label_rdm=0, shape=(160, 120, 3), n_classes=5):
+    def __init__(self, gdos, Dataset, input_components, output_components, datalen, batch_size, frc,
+                 sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15,
+                 flip=True, smoothing=0.1, label_rdm=0, n_classes=5, lab_scale=1, lab_bias=0,
+                 shape=(160, 120, 3)):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -18,6 +21,8 @@ class image_generator(keras.utils.Sequence):
 
         self.frc = frc
         self.weight_acc = weight_acc
+        self.lab_scale = lab_scale
+        self.lab_bias = lab_bias
 
         self.input_components = input_components
         self.output_components = output_components
@@ -115,15 +120,13 @@ class image_generator(keras.utils.Sequence):
             Y = np.expand_dims(Y, axis=-1)
 
         else:
-            if len(self.input_components) > 0:
-                X = [xbatch]
-                for i in self.input_components:
-                    X.append(ybatch[:, i])
+            X = [xbatch]
+            for i in self.input_components:
+                X.append(ybatch[:, i])
 
-            if len(self.output_components) > 0:
-                Y = []
-                for i in self.output_components:
-                    Y.append(ybatch[:, i])
+            Y = []
+            for i in self.output_components:
+                Y.append(ybatch[:, i])
             
         return X, Y
 
