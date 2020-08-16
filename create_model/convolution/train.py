@@ -1,13 +1,7 @@
 import collections
 from glob import glob
 
-<<<<<<< HEAD
 from keras.callbacks import TensorBoard
-=======
-import cv2
-import keras.backend as K
-import matplotlib.pyplot as plt
->>>>>>> 02601bdbedcb09876a509216a295f7fed44ead98
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -18,7 +12,6 @@ from sklearn.utils import class_weight
 
 import architectures
 import autolib
-<<<<<<< HEAD
 # import pred_function
 from customDataset import DatasetJson
 from datagenerator import image_generator
@@ -52,27 +45,6 @@ class model_trainer():
         """
         # self.Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
         self.Dataset = dataset
-=======
-import dataset
-import pred_function
-# from architectures import dir_loss
-from datagenerator import image_generator
-
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
-sess = tf.Session(config=config)
-config.log_device_placement = True  # to log device placement (on which device the operation ran)
-set_session(sess)  # set this TensorFlow session as the default
-
-
-class classifier():
-    def __init__(self, name, dospath='', dosdir=True, memory_size=49, proportion=0.15, to_cat=True,
-                 weight_acc=0.5, smoothing=0, label_rdm=0, load_speed=(False, False)):
-        self.Dataset = dataset.Dataset([dataset.direction_component,
-                                        dataset.speed_component,
-                                        dataset.throttle_component,
-                                        dataset.time_component])
->>>>>>> 02601bdbedcb09876a509216a295f7fed44ead98
         self.name = name
         self.dospath = dospath
         self.dosdir = dosdir
@@ -94,18 +66,10 @@ class classifier():
         self.output_components = output_components
 
     def build_classifier(self, load=False, load_fe=False):
-<<<<<<< HEAD
         """Load a model using a model architectures from architectures.py."""
         if load:
             model = load_model(self.name, custom_objects={
                                "dir_loss": architectures.dir_loss})
-=======
-        """
-        load a model using architectures program
-        """
-        if load:
-            model = load_model(self.name, custom_objects={"dir_loss": architectures.dir_loss})
->>>>>>> 02601bdbedcb09876a509216a295f7fed44ead98
             fe = load_model('test_model\\convolution\\fe.h5')
 
         else:
@@ -130,33 +94,20 @@ class classifier():
 
         return model, fe
 
-<<<<<<< HEAD
     def train(self, load=False, load_fe=False, flip=True, augm=True,
               epochs=5, batch_size=64, seq_batchsize=4, delay=0.2):
         """Train the model loaded as self.model."""
         self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip)
-=======
-    def train(self, load=False, load_fe=False, flip=True, epochs=5, batch_size=64):
-        """
-        trains the model loaded as self.model
-        """
-        # TODO: add folder weights
-        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip, cat=self.to_cat)
->>>>>>> 02601bdbedcb09876a509216a295f7fed44ead98
 
         print(self.gdos.shape, self.valdos.shape)
         self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
 
-<<<<<<< HEAD
         callbacks = []
-=======
->>>>>>> 02601bdbedcb09876a509216a295f7fed44ead98
         earlystop = EarlyStopping(monitor='val_loss',
                                   min_delta=0,
                                   patience=3,
                                   verbose=0,
                                   restore_best_weights=True)
-<<<<<<< HEAD
         callbacks.append(earlystop)
 
         # tensorboard = TensorBoard(log_dir="logs\\",
@@ -184,33 +135,11 @@ class classifier():
                                                                  label_rdm=self.label_rdm),
                                  validation_steps=self.datalen//20//batch_size,
                                  callbacks=callbacks, max_queue_size=4, workers=4)
-=======
-
-        self.model.fit_generator(image_generator(self.gdos, self.Dataset,
-                                                 self.datalen, batch_size, frc,
-                                                 load_speed=self.load_speed, weight_acc=self.weight_acc,
-                                                 sequence=self.sequence, seq_batchsize=seq_batchsize,
-                                                 augm=True, memory=self.memory_size,
-                                                 flip=flip, smoothing=self.smoothing,
-                                                 label_rdm=self.label_rdm),
-                                 steps_per_epoch=self.datalen//(batch_size),
-                                 epochs=epochs,
-                                 validation_data=image_generator(self.valdos, self.Dataset,
-                                                                 self.datalen, batch_size, frc,
-                                                                 load_speed=self.load_speed, weight_acc=self.weight_acc,
-                                                                 sequence=self.sequence, seq_batchsize=seq_batchsize,
-                                                                 augm=True, memory=self.memory_size,
-                                                                 flip=flip, smoothing=self.smoothing,
-                                                                 label_rdm=self.label_rdm),
-                                 validation_steps=self.datalen//20//(batch_size),
-                                 callbacks=[earlystop], max_queue_size=5, workers=8)
->>>>>>> 02601bdbedcb09876a509216a295f7fed44ead98
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
 
     def get_gdos(self, flip=True):
-<<<<<<< HEAD
         """Get list of paths in self.dospath.
 
         Args:
@@ -219,8 +148,6 @@ class classifier():
         Returns:
             tuple: (train_paths, test_paths, weighted_distribution, total number of images)
         """
-=======
->>>>>>> 02601bdbedcb09876a509216a295f7fed44ead98
         if self.dosdir:
             gdos = self.Dataset.load_dataset_sequence(self.dospath)
             gdos = np.concatenate([i for i in gdos])
