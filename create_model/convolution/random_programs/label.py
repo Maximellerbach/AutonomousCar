@@ -1,10 +1,7 @@
-import os
-import random
 from glob import glob
 
 import cv2
 import numpy as np
-from tqdm import tqdm
 import time
 
 dicdir = [3, 5, 7, 9, 11]

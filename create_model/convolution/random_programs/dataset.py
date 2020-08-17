@@ -4,6 +4,8 @@ import cv2
 
 
 class Dataset():
+    """Deprecated dataset class."""
+
     def __init__(self, lab_structure):
         self.label_structure = [i(it) for it, i in enumerate(lab_structure)]
         self.format = '.png'

@@ -3,8 +3,7 @@ import os
 import sys
 import time
 
-sys.path.append('../custom_modules/')
-import SerialCommand
+from ..custom_modules import SerialCommand
 
 
 def printusage():
@@ -15,7 +14,7 @@ def printusage():
 
 comPort = ""
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"c:h",["com", "help"])
+    opts, args = getopt.getopt(sys.argv[1:], "c:h", ["com", "help"])
 except getopt.GetoptError:
     printusage()
     sys.exit(2)
@@ -28,22 +27,19 @@ for opt, arg in opts:
     else:
         printusage()
         sys.exit(2)
-# if (opts == []):
-#     printusage()
-#     sys.exit(2)
 
     if (comPort == ""):
         try:
             comPort = os.environ["COM_PORT"]
-        except KeyError: 
+        except KeyError:
             pass
-    if (comPort!=""):
+    if (comPort != ""):
         ser = SerialCommand.control(comPort)
         try:
             print("Turns:" + str(ser.GetTurns()))
 
             print("start changing PWM from 0 to 255")
-            for pwm in range(0,255):
+            for pwm in range(0, 255):
                 ser.ChangePWM(pwm)
                 time.sleep(0.2)
                 print("Turns:" + str(ser.GetTurns()))
@@ -69,7 +65,8 @@ for opt, arg in opts:
                 time.sleep(5)
                 print("Turns:" + str(ser.GetTurns()))
 
-            ser.ChangeAll(SerialCommand.direction.DIR_STRAIGHT, SerialCommand.motor.MOTOR_STOP, SerialCommand.motor.MOTOR_STOP, 255)
+            ser.ChangeAll(SerialCommand.direction.DIR_STRAIGHT,
+                          SerialCommand.motor.MOTOR_STOP, SerialCommand.motor.MOTOR_STOP, 255)
             print("changed all")
 
             print("Turns:" + str(ser.GetTurns()))
@@ -78,4 +75,3 @@ for opt, arg in opts:
 
     else:
         printusage()
-

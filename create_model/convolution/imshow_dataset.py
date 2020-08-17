@@ -10,23 +10,32 @@ from customDataset import DatasetJson
 Dataset = DatasetJson(["direction", "speed", "throttle", "time"])
 doss = "C:\\Users\\maxim\\random_data\\json_dataset\\"
 
-fe = load_model("test_model\\convolution\\fe.h5")
+model = load_model('test_model\\convolution\\linear_trackmania2.h5',
+                   compile=False)
+fe = load_model('test_model\\convolution\\fe.h5')
 
 layers_info = [(it, layer.name)
                for it, layer in enumerate(fe.layers)]
 
-# for layer in layers_info:
-#     print(layer)
 
-gdos = Dataset.load_dataset(doss, max_interval=0.1)
+gdos = Dataset.load_dataset(doss)
 gdos = np.concatenate([i for i in gdos])
 np.random.shuffle(gdos)
 
+filter_indexes = []
+for layer in layers_info:
+    if 'activation' in layer[1]:
+        filter_indexes.append(layer[0])
+
 for labpath in gdos:
     img, annotations = Dataset.load_img_and_annotation(labpath)
-    indexes = [4, 7, 10, 14]
-    for index in indexes:
-        cv2.imshow('img', img)
-        cv2.waitKey(1)
-        pred_function.visualize_model_layer_filter(
-            fe, img, index)
+    pred = model.predict(np.expand_dims(img/255, axis=0))[0][0]
+    print(f'steering: {pred}')
+
+    cv2.imshow('img', img/255)
+    for index in filter_indexes[:4]:  # only get the first 4
+        activations = pred_function.visualize_model_layer_filter(
+            fe, img, index, show=False)
+
+    cv2.waitKey(1)
+    plt.show()

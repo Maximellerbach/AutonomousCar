@@ -1,20 +1,19 @@
 import collections
-from glob import glob
 
-import numpy as np
-import cv2
-import tensorflow as tf
+import keras.backend as K
 import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 from keras.callbacks import EarlyStopping, TensorBoard
 from keras.models import load_model
 from sklearn.utils import class_weight
 
-import pred_function
-import architectures
 import autolib
 from customDataset import DatasetJson
-from datagenerator import image_generator
+
+from . import architectures  # , pred_function
+from .datagenerator import image_generator
 
 config = tf.ConfigProto()
 # dynamically grow the memory used on the GPU
@@ -28,8 +27,8 @@ set_session(sess)  # set this TensorFlow session as the default
 class model_trainer():
     """model trainer class."""
 
-    def __init__(self, name, dataset, dospath='', dosdir=True, proportion=0.15, is_cat=True, sequence=False,
-                 weight_acc=0.5, smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
+    def __init__(self, name, dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
+                 smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
         """Init the trainer parameters.
 
         Args:
@@ -37,9 +36,7 @@ class model_trainer():
             dospath (str, optional): path to the directory where the images are stored. Defaults to ''.
             dosdir (bool, optional): is the dospath a directory of directory ? Defaults to True.
             proportion (float, optional): proportion of augmented images for every augmentation functions. Defaults to 0.15.
-            is_cat (bool, optional): wether the labels are categorical. Defaults to True.
-            sequence (bool, optional): wether to process the image in sequence. Defaults to False.
-            weight_acc (float, optional): for weighted distribution, accuracy of each steps. Defaults to 0.5.
+            sequence (bool, optional): wether to process the image in sequence, not supported for training yet. Defaults to False.
             smoothing (int, optional): value for label smoothing. Defaults to 0.
             label_rdm (int, optional): value for label randomization. Defaults to 0.
         """
@@ -58,49 +55,56 @@ class model_trainer():
 
         self.number_class = 5
         self.proportion = proportion
-        self.is_cat = is_cat
-        self.weight_acc = weight_acc
         self.smoothing = smoothing
         self.label_rdm = label_rdm
         self.input_components = input_components
         self.output_components = output_components
 
-    def build_classifier(self, load=False, load_fe=False):
+        self.model = self.fe = None
+
+    def build_classifier(self, load=False, load_fe=False,
+                         drop_rate=0.15, regularizer=(0.0, 0.0),
+                         lr=0.001, padding='same'):
         """Load a model using a model architectures from architectures.py."""
         if load:
-            model = load_model(self.name, custom_objects={
-                               "dir_loss": architectures.dir_loss})
-            fe = load_model('test_model\\convolution\\fe.h5')
+            self.model = load_model(self.name, custom_objects={
+                "dir_loss": architectures.dir_loss})
+            self.fe = load_model('test_model\\convolution\\fe.h5')
+            return self.model, self.fe  # just in case you want to fetch the model
 
+        if self.sequence:
+            self.model, self.fe = architectures.create_light_CRNN(
+                self.Dataset, (None, 120, 160, 3),
+                load_fe=load_fe, loss=architectures.dir_loss,
+                drop_rate=drop_rate, regularizer=regularizer, lr=lr,
+                prev_act="relu", last_act="linear", padding='same',
+                use_bias=True, metrics=["mse"],
+                input_components=self.input_components,
+                output_components=self.output_components)
         else:
-            if self.sequence:
-                model, fe = architectures.create_light_CRNN(self.Dataset, (None, 120, 160, 3), 1, load_fe=load_fe,
-                                                            loss=architectures.dir_loss,
-                                                            prev_act="relu", last_act="linear", use_bias=True,
-                                                            drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
-                                                            metrics=["mse"],
-                                                            input_components=self.input_components,
-                                                            output_components=self.output_components)
-            else:
-                model, fe = architectures.create_light_CNN(self.Dataset, (120, 160, 3), 1, load_fe=load_fe,
-                                                           loss=architectures.dir_loss,
-                                                           prev_act="relu", last_act="linear", use_bias=True,
-                                                           drop_rate=0.15, regularizer=(0.0, 0.0), lr=0.001,
-                                                           metrics=["mse"],
-                                                           input_components=self.input_components,
-                                                           output_components=self.output_components)
-        fe.summary()
-        model.summary()
+            self.model, self.fe = architectures.create_light_CNN(
+                self.Dataset, (120, 160, 3),
+                load_fe=load_fe, loss=architectures.dir_loss,
+                drop_rate=drop_rate, regularizer=regularizer, lr=lr,
+                prev_act="relu", last_act="linear", padding='same',
+                use_bias=True, metrics=["mse"],
+                input_components=self.input_components,
+                output_components=self.output_components)
 
-        return model, fe
+        assert len(self.model.outputs) == len(self.output_components)
+        assert len(self.model.inputs)-1 == len(self.input_components)  # don't forget that there is the img input
+        self.model.summary()
+        return self.model, self.fe
 
-    def train(self, load=False, load_fe=False, flip=True, augm=True,
-              epochs=5, batch_size=64, seq_batchsize=4, delay=0.2):
+    def train(self, flip=True, augm=True, epochs=5, batch_size=64, seq_batchsize=4, show=False):
         """Train the model loaded as self.model."""
-        self.gdos, self.valdos, frc, self.datalen = self.get_gdos(flip=flip)
+        gdos, valdos, frc, datalen = self.get_gdos(flip=flip, show=show)
+        print(gdos.shape, valdos.shape)
 
-        print(self.gdos.shape, self.valdos.shape)
-        self.model, self.fe = self.build_classifier(load=load, load_fe=load_fe)
+        if self.model is None:
+            self.build_classifier()
+        elif self.fe is None:
+            self.fe = self.model.layers[1]
 
         callbacks = []
         earlystop = EarlyStopping(monitor='val_loss',
@@ -114,32 +118,28 @@ class model_trainer():
         #                                    update_freq='batch')
         # callbacks.append(earlysttensorboardop)
 
-        self.model.fit_generator(image_generator(self.gdos, self.Dataset,
+        self.model.fit_generator(image_generator(gdos, self.Dataset,
                                                  self.input_components, self.output_components,
-                                                 self.datalen, batch_size, frc,
-                                                 sequence=self.sequence,
+                                                 datalen, batch_size, frc,
                                                  seq_batchsize=seq_batchsize,
-                                                 weight_acc=self.weight_acc,
                                                  augm=augm, flip=flip,
                                                  smoothing=self.smoothing,
                                                  label_rdm=self.label_rdm),
-                                 steps_per_epoch=self.datalen//batch_size, epochs=epochs,
-                                 validation_data=image_generator(self.valdos, self.Dataset,
+                                 steps_per_epoch=datalen//batch_size, epochs=epochs,
+                                 validation_data=image_generator(valdos, self.Dataset,
                                                                  self.input_components, self.output_components,
-                                                                 self.datalen, batch_size, frc,
-                                                                 sequence=self.sequence,
+                                                                 datalen, batch_size, frc,
                                                                  seq_batchsize=seq_batchsize,
-                                                                 weight_acc=self.weight_acc,
-                                                                 augm=False, flip=flip,
+                                                                 augm=augm, flip=flip,
                                                                  smoothing=self.smoothing,
                                                                  label_rdm=self.label_rdm),
-                                 validation_steps=self.datalen//20//batch_size,
+                                 validation_steps=datalen//20//batch_size,
                                  callbacks=callbacks, max_queue_size=4, workers=4)
 
         self.model.save(self.name)
         self.fe.save('test_model\\convolution\\fe.h5')
 
-    def get_gdos(self, flip=True):
+    def get_gdos(self, flip=True, show=False):
         """Get list of paths in self.dospath.
 
         Args:
@@ -149,6 +149,7 @@ class model_trainer():
             tuple: (train_paths, test_paths, weighted_distribution, total number of images)
         """
         if self.dosdir:
+            # even if self.sequence is set to False, load data in sequence
             gdos = self.Dataset.load_dataset_sequence(self.dospath)
             gdos = np.concatenate([i for i in gdos])
 
@@ -171,11 +172,7 @@ class model_trainer():
             np.random.shuffle(gdos)
             traindos, valdos = np.split(gdos, [datalen-datalen//20])
 
-        if self.is_cat:
-            frc = self.get_frc_cat(gdos, flip=flip)
-        else:
-            frc = self.get_frc_lin(gdos, flip=flip)
-
+        frc = self.get_frc_lin(gdos, flip=flip, show=show)
         return traindos, valdos, frc, datalen
 
     def get_frc_lin(self, gdos, flip=True, show=False):
@@ -184,84 +181,49 @@ class model_trainer():
         Args:
             gdos (list): list of paths, could also be a list of paths sequence
             flip (bool, optional): wether to flip images. Defaults to True.
+            show (bool, optional): wether to plot the data. Defaults to False.
 
         Returns:
             dict: dictionnary of label frequency
         """
-        Y = []
-        if self.sequence:
-            for s in gdos:
-                for path in s:
-                    lab = self.Dataset.load_annotation(path, to_list=False)[
-                        self.Dataset.label_structure[0].name]
-                    if flip:
-                        labels = [lab, -lab]
-                    else:
-                        labels = [lab]
-                    for label in labels:
-                        Y.append(autolib.round_st(label, self.weight_acc))
+        def flatten_paths(paths):
+            if isinstance(paths[0], list):
+                return flatten_paths([p for p in listp for listp in paths])
+            elif isinstance(paths[0], str):
+                return paths
 
-        else:
-            for path in gdos:
-                lab = self.Dataset.load_annotation(path, to_list=False)[
-                    self.Dataset.label_structure[0].name]
+        Y = [[] for _ in self.output_components+self.input_components]
+        for path in flatten_paths(gdos):
+            annotation = self.Dataset.load_annotation(path, to_list=False)
+
+            for it, index in enumerate(self.output_components+self.input_components):
+                component = self.Dataset.get_component(index)
+                lab = annotation[component.name]
+
                 if flip:
-                    labels = [lab, -lab]
+                    labels = [lab, lab*component.flip_factor]
                 else:
                     labels = [lab]
+
                 for label in labels:
-                    Y.append(autolib.round_st(label, self.weight_acc))
+                    Y[it].append(autolib.round_st(label, component.weight_acc))
 
-        d = collections.Counter(Y)
+        frcs = []
+        for it, index in enumerate(self.output_components+self.input_components):
+            component = self.Dataset.get_component(index)
+            Y_component = Y[it]
 
-        unique = np.unique(Y)
-        frc = class_weight.compute_class_weight('balanced', unique, Y)
-        dict_frc = dict(zip(unique, frc))
+            d = collections.Counter(Y_component)
+            unique = np.unique(Y_component)
+            frc = class_weight.compute_class_weight(
+                'balanced', unique, Y_component)
+            frcs.append(dict(zip(unique, frc)))
 
-        if show:
-            plt.bar(list(d.keys()), list(d.values()), width=0.2)
-            plt.show()
-        return dict_frc
+            if show:
+                plt.bar(list(d.keys()), list(d.values()), width=component.weight_acc)
+                plt.show()
 
-    def get_frc_cat(self, gdos, flip=True):  # old, now using linear labels
-        """Get the frc dict from gdos with linear labels.
-
-        Args:
-            gdos (list): list of paths, could also be a list of paths sequence
-            flip (bool, optional): wether to flip images. Defaults to True.
-
-        Returns:
-            dict: dictionnary of label frequency
-        """
-        Y = []
-        if self.sequence:
-            for s in gdos:
-                for path in s:
-                    label = autolib.get_label(path, flip=flip, cat=True)
-                    Y.append(label[0])
-                    if flip:
-                        Y.append(label[1])
-
-        else:
-            for path in gdos:
-                label = autolib.get_label(path, flip=flip, cat=True)
-                Y.append(label[0])
-                if flip:
-                    Y.append(label[1])
-
-        d = dict(collections.Counter(Y))
-        prc = [0]*5
-        length = len(Y)
-        for i in range(5):
-            prc[i] = d[i]/length
-        print(prc)
-
-        unique = np.unique(Y)
-        frc = class_weight.compute_class_weight('balanced', unique, Y)
-        dict_frc = dict(zip(unique, frc))
-
-        print(dict_frc)
-        return dict_frc
+        return frcs
 
     def calculate_FLOPS(self):
         """Calculate the number of flops in a self.model.
@@ -280,23 +242,29 @@ class model_trainer():
 
 if __name__ == "__main__":
     Dataset = DatasetJson(['direction', 'time'])
-    Dataset.label_structure[0].offset = -7
-    Dataset.label_structure[0].scale = 1/4
+    direction_comp = Dataset.get_component('direction')
+    direction_comp.offset = -7
+    direction_comp.scale = 1/4
 
-    # those are indexes
+    # set input and output components (indexes)
     input_components = []
     output_components = [0]
 
     trainer = model_trainer(name='test_model\\convolution\\linear_trackmania.h5',
                             dataset=Dataset,
                             dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
-                            proportion=0.4, is_cat=False, sequence=False,
-                            weight_acc=2, smoothing=0.0, label_rdm=0.0,
+                            proportion=0.2, sequence=False,
+                            smoothing=0.0, label_rdm=0.0,
                             input_components=input_components,
                             output_components=output_components)
 
-    trainer.train(load=False, load_fe=False, flip=True, augm=True,
-                  epochs=5, batch_size=64)
+    trainer.build_classifier(load=False,
+                             load_fe=False,
+                             drop_rate=0.05,
+                             regularizer=(0.0, 0.0001),
+                             lr=0.001)
+
+    trainer.train(flip=True, augm=True, show=False, epochs=7, batch_size=32)
 
     # custom_objects={"dir_loss":architectures.dir_loss}
     # trainer.model = load_model(trainer.name, compile=False)

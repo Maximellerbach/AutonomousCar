@@ -1,6 +1,5 @@
 from flask import Flask
 from takepicture import camera
-import os
 
 app = Flask(__name__)
 

@@ -5,8 +5,7 @@ import sys
 
 from flask import Flask
 
-sys.path.append('../custom_modules/')
-from SerialCommand import control, direction, motor
+from ..custom_modules.SerialCommand import control, direction, motor
 
 OK = "ok"
 ERROR = "error"

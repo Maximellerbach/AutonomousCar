@@ -6,12 +6,11 @@ import keras
 import numpy as np
 
 import autolib
-from reorder_dataset import get_speed
 
 
 class image_generator(keras.utils.Sequence):
     def __init__(self, gdos, Dataset, input_components, output_components, datalen, batch_size, frc,
-                 sequence=False, seq_batchsize=64, weight_acc=0.5, augm=True, proportion=0.15,
+                 sequence=False, seq_batchsize=64, augm=True, proportion=0.15,
                  flip=True, smoothing=0.1, label_rdm=0, n_classes=5, lab_scale=1, lab_bias=0,
                  shape=(160, 120, 3)):
         self.shape = shape
@@ -23,7 +22,6 @@ class image_generator(keras.utils.Sequence):
         self.Dataset = Dataset
 
         self.frc = frc
-        self.weight_acc = weight_acc
         self.lab_scale = lab_scale
         self.lab_bias = lab_bias
 

@@ -8,13 +8,7 @@ import numpy as np
 from keras.models import Model
 from tqdm import tqdm
 
-import architectures
-import autolib
-import reorder_dataset
-import customDataset
-
 # TODO refactor those functions broke it by changing dataset
-
 
 def average_data(data, window_size=10, sq_factor=1):
     averaged = []
@@ -70,8 +64,8 @@ def visualize_fe_output(self, img, input_size=(160, 120), waitkey=True):
 
 
 def visualize_model_layer_filter(model, img, layer_index,
-                                 input_size=(160, 120), fig_size=(32, 24),
-                                 layer_outputs=None):
+                                 input_size=(160, 120),
+                                 layer_outputs=None, show=True):
     img = cv2.resize(img, input_size)
     if layer_outputs is None:
         layer_output = model.layers[layer_index].output
@@ -81,18 +75,17 @@ def visualize_model_layer_filter(model, img, layer_index,
 
     activation = tmp_model.predict(np.expand_dims(img, axis=0))[0]
     activation = np.transpose(activation, (-1, 0, 1))
-    print(activation.shape)
 
     plt.figure()
-    # for activation in activations:
     n_filter = len(activation)
     columns = int(n_filter ** 0.5)
     for i, filter_img in enumerate(activation):
         plt.subplot(n_filter / columns + 1, columns, i + 1)
-        # filter_img = cv2.resize(filter_img, fig_size, interpolation=cv2.INTER)
         plt.imshow(filter_img)
 
-    plt.show()
+    if show:
+        plt.show()
+    return activation
 
 
 def pred_img(self, Dataset, path, sleeptime):

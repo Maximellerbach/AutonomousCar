@@ -3,13 +3,14 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import pykalman
-import objects
+import sensors
 
 if __name__ == "__main__":
-    sensor_list = [objects.sensor_compteTour()]
-    
+    sensor_list = [sensors.sensor_compteTour()]
+
     KF = pykalman.KalmanFilter(initial_state_mean=[i.INITIAL_STATE for i in sensor_list],
-                               transition_covariance=[i.MEA_ERROR**2 for i in sensor_list],
+                               transition_covariance=[
+                                   i.MEA_ERROR**2 for i in sensor_list],
                                observation_covariance=[i.MEA_ERROR for i in sensor_list])
 
     states = []
@@ -24,18 +25,18 @@ if __name__ == "__main__":
     estimation = new_state
 
     for i in range(1000):
-        new_state = np.sin(np.deg2rad(it%360))
+        new_state = np.sin(np.deg2rad(it % 360))
         to_pred = new_state+np.random.normal()*0.05
 
-        estimation, covariance = KF.filter_update(estimation, covariance, to_pred)
+        estimation, covariance = KF.filter_update(
+            estimation, covariance, to_pred)
         # print(new_state, estimation, covariance)
-        
+
         states.append(new_state)
         to_preds.append(to_pred)
         pred_states.append(estimation[0][0])
         abs_error.append(abs(to_pred-new_state))
         abs_pred_error.append(abs(estimation[0][0]-new_state))
-
 
         it += 0.5
 

@@ -48,7 +48,8 @@ class PID_controller():
 
     def update_ser(self):
         if self.ser is not None:
-            self.update(self.ser.GetCurrentSpeed(), self.ser.GetTimeLastReceived())
+            self.update(self.ser.GetCurrentSpeed(),
+                        self.ser.GetTimeLastReceived())
         else:
             raise ValueError('Ser is not initialized, please execute ')
 

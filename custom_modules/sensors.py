@@ -42,7 +42,8 @@ class sensor_compteTour():
 
     def update(self, new_measurement, new_time=None):
         new_time = new_time if new_time is not None else time.time()
-        new_measurement = transform_axes(np.array(new_measurement), self.AXES_TRANSFORMER)
+        new_measurement = transform_axes(
+            np.array(new_measurement), self.AXES_TRANSFORMER)
 
         dt = new_time-self.time_last_received
 
@@ -75,7 +76,8 @@ class sensor_accelerometer():
 
     def update(self, new_measurement, new_time=None):
         new_time = new_time if new_time is not None else time.time()
-        new_measurement = transform_axes(np.array(new_measurement), self.AXES_TRANSFORMER)
+        new_measurement = transform_axes(
+            np.array(new_measurement), self.AXES_TRANSFORMER)
 
         dt = new_time-self.time_last_received
 
@@ -96,7 +98,7 @@ class sensor_magnetometer():
         self.AXES_TRANSFORMER = np.array([1, 1, 1])
         self.MEA_ERROR = np.array([0.05, 0.05, 0.05])
         self.INITIAL_STATE = np.array([0, 0, 0])
-        self.DATA_LEVEL = 0 # (metric, speed, acc)
+        self.DATA_LEVEL = 0  # (metric, speed, acc)
 
         self.measurement = self.INITIAL_STATE
         self.position = self.INITIAL_STATE
@@ -108,7 +110,8 @@ class sensor_magnetometer():
 
     def update(self, new_measurement, new_time=None):
         new_time = new_time if new_time is not None else time.time()
-        new_measurement = transform_axes(np.array(new_measurement), self.AXES_TRANSFORMER)
+        new_measurement = transform_axes(
+            np.array(new_measurement), self.AXES_TRANSFORMER)
 
         dt = new_time-self.time_last_received
 

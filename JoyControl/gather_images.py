@@ -48,9 +48,6 @@ for opt, arg in opts:
     else:
         printusage()
         sys.exit(2)
-# if (opts == []):
-#     printusage()
-#     sys.exit(2)
 if (comPort == ""):
     try:
         comPort = os.environ["COM_PORT"]

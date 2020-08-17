@@ -1,12 +1,10 @@
-import datetime
 import os
 
 import cv2
-import numpy as np
 
 
 class camera:
-    "take a picture and saved it in the static folder"
+    """Take a picture and save it in the static folder."""
 
     def __init__(self):
         # take the first camera
