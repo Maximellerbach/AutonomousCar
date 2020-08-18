@@ -5,7 +5,7 @@ import cv2
 import keras
 import numpy as np
 
-import autolib
+from custom_modules import autolib
 
 
 class image_generator(keras.utils.Sequence):

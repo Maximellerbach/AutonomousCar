@@ -1,21 +1,12 @@
-import cv2
-from tqdm import tqdm
-from glob import glob
-from keras.models import *
-from keras.callbacks import *
-import keras.backend
-import skimage
+from customDataset import DatasetJson
 
-import numpy as np
-import autolib
+if __name__ == "__main__":
+    Dataset = DatasetJson(['direction', 'time'])
+    paths = Dataset.load_dos_sorted('C:\\Users\\maxim\\image_raw\\')
 
-path = glob('C:\\Users\\maxim\\image_raw\\*')
-# model = load_model('C:\\Users\\maxim\\AutonomousCar\\test_model\\models\\fe.h5')
-# model.summary()
+    for path in paths:
+        img, annotation = Dataset.load_img_and_annotation(path)
+        
+        cv2.imshow('img', img)
 
-for i in path:
-
-    img = cv2.imread(i)
-    cv2.imshow('img', img)
-
-    cv2.waitKey(1)
+        cv2.waitKey(1)

@@ -4,16 +4,17 @@ import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import tensorflow_model_optimization as tfmot
 from keras.backend.tensorflow_backend import set_session
 from keras.callbacks import EarlyStopping, TensorBoard
 from keras.models import load_model
 from sklearn.utils import class_weight
 
-import autolib
+# import pred_function
+import architectures
+from custom_modules import autolib
 from customDataset import DatasetJson
-
-from . import architectures  # , pred_function
-from .datagenerator import image_generator
+from datagenerator import image_generator
 
 config = tf.ConfigProto()
 # dynamically grow the memory used on the GPU
@@ -60,84 +61,89 @@ class model_trainer():
         self.input_components = input_components
         self.output_components = output_components
 
-        self.model = self.fe = None
+        self.callbacks = []
+        self.model = None
 
-    def build_classifier(self, load=False, load_fe=False,
-                         drop_rate=0.15, regularizer=(0.0, 0.0),
-                         lr=0.001, padding='same'):
+    def build_classifier(self, load=False, prune=0, drop_rate=0.15,
+                         regularizer=(0.0, 0.0), lr=0.001):
         """Load a model using a model architectures from architectures.py."""
         if load:
             self.model = load_model(self.name, custom_objects={
                 "dir_loss": architectures.dir_loss})
-            self.fe = load_model('test_model\\models\\fe.h5')
-            return self.model, self.fe  # just in case you want to fetch the model
+            return self.model  # just in case you want to fetch the model
 
         if self.sequence:
-            self.model, self.fe = architectures.create_light_CRNN(
-                self.Dataset, (None, 120, 160, 3),
-                load_fe=load_fe, loss=architectures.dir_loss,
+            self.model = architectures.create_light_CRNN(
+                self.Dataset, (None, 120, 160, 3), loss=architectures.dir_loss,
                 drop_rate=drop_rate, regularizer=regularizer, lr=lr,
                 prev_act="relu", last_act="linear", padding='same',
                 use_bias=True, metrics=["mse"],
                 input_components=self.input_components,
                 output_components=self.output_components)
         else:
-            self.model, self.fe = architectures.create_light_CNN(
-                self.Dataset, (120, 160, 3),
-                load_fe=load_fe, loss=architectures.dir_loss,
+            self.model = architectures.create_light_CNN(
+                self.Dataset, (120, 160, 3), loss=architectures.dir_loss,
                 drop_rate=drop_rate, regularizer=regularizer, lr=lr,
                 prev_act="relu", last_act="linear", padding='same',
                 use_bias=True, metrics=["mse"],
                 input_components=self.input_components,
                 output_components=self.output_components)
 
-        assert len(self.model.outputs) == len(self.output_components)
-        assert len(self.model.inputs)-1 == len(self.input_components)  # don't forget that there is the img input
-        self.model.summary()
-        return self.model, self.fe
+        if prune:
+            self.model = architectures.create_pruning_model(self.model, prune)
+            pruning = tfmot.sparsity.keras.UpdatePruningStep()
+            self.callbacks.append(pruning)
 
-    def train(self, flip=True, augm=True, epochs=5, batch_size=64, seq_batchsize=4, show=False):
+        assert len(self.model.outputs) == len(self.output_components)
+        # don't forget that there is the img input
+        assert len(self.model.inputs)-1 == len(self.input_components)
+        self.model.summary()
+        return self.model
+
+    def train(self, flip=True, augm=True, use_earlystop=False, use_tensorboard=False,
+              epochs=5, batch_size=64, seq_batchsize=4, show_distr=False):
         """Train the model loaded as self.model."""
-        gdos, valdos, frc, datalen = self.get_gdos(flip=flip, show=show)
+        gdos, valdos, frc, datalen = self.get_gdos(flip=flip, show=show_distr)
         print(gdos.shape, valdos.shape)
 
         if self.model is None:
             self.build_classifier()
-        elif self.fe is None:
-            self.fe = self.model.layers[1]
 
-        callbacks = []
-        earlystop = EarlyStopping(monitor='val_loss',
-                                  min_delta=0,
-                                  patience=3,
-                                  verbose=0,
-                                  restore_best_weights=True)
-        callbacks.append(earlystop)
+        if use_earlystop:
+            earlystop = EarlyStopping(
+                monitor='val_loss',
+                min_delta=0,
+                patience=3,
+                verbose=0,
+                restore_best_weights=True)
+            self.callbacks.append(earlystop)
 
-        # tensorboard = TensorBoard(log_dir="logs\\",
-        #                                    update_freq='batch')
-        # callbacks.append(earlysttensorboardop)
+        if use_tensorboard:
+            tensorboard = TensorBoard(
+                log_dir="logs\\",
+                update_freq='batch')
+            self.callbacks.append(tensorboard)
 
-        self.model.fit_generator(image_generator(gdos, self.Dataset,
-                                                 self.input_components, self.output_components,
-                                                 datalen, batch_size, frc,
-                                                 seq_batchsize=seq_batchsize,
-                                                 augm=augm, flip=flip,
-                                                 smoothing=self.smoothing,
-                                                 label_rdm=self.label_rdm),
-                                 steps_per_epoch=datalen//batch_size, epochs=epochs,
-                                 validation_data=image_generator(valdos, self.Dataset,
-                                                                 self.input_components, self.output_components,
-                                                                 datalen, batch_size, frc,
-                                                                 seq_batchsize=seq_batchsize,
-                                                                 augm=augm, flip=flip,
-                                                                 smoothing=self.smoothing,
-                                                                 label_rdm=self.label_rdm),
-                                 validation_steps=datalen//20//batch_size,
-                                 callbacks=callbacks, max_queue_size=4, workers=4)
+        self.model.fit_generator(
+            image_generator(gdos, self.Dataset,
+                            self.input_components, self.output_components,
+                            datalen, batch_size, frc,
+                            seq_batchsize=seq_batchsize,
+                            augm=augm, flip=flip,
+                            smoothing=self.smoothing,
+                            label_rdm=self.label_rdm),
+            steps_per_epoch=datalen//batch_size, epochs=epochs,
+            validation_data=image_generator(valdos, self.Dataset,
+                                            self.input_components, self.output_components,
+                                            datalen, batch_size, frc,
+                                            seq_batchsize=seq_batchsize,
+                                            augm=augm, flip=flip,
+                                            smoothing=self.smoothing,
+                                            label_rdm=self.label_rdm),
+            validation_steps=datalen//20//batch_size,
+            callbacks=self.callbacks, max_queue_size=4, workers=4)
 
         self.model.save(self.name)
-        self.fe.save('test_model\\models\\fe.h5')
 
     def get_gdos(self, flip=True, show=False):
         """Get list of paths in self.dospath.
@@ -220,7 +226,8 @@ class model_trainer():
             frcs.append(dict(zip(unique, frc)))
 
             if show:
-                plt.bar(list(d.keys()), list(d.values()), width=component.weight_acc)
+                plt.bar(list(d.keys()), list(d.values()),
+                        width=component.weight_acc)
                 plt.show()
 
         return frcs
@@ -259,13 +266,14 @@ if __name__ == "__main__":
                             output_components=output_components)
 
     trainer.build_classifier(load=False,
-                             load_fe=False,
                              drop_rate=0.05,
                              regularizer=(0.0, 0.0001),
                              lr=0.001)
 
-    trainer.train(flip=True, augm=True, show=False, epochs=7, batch_size=32)
+    trainer.train(flip=True, augm=True,
+                  use_earlystop=True, use_tensorboard=False,
+                  prune=0, epochs=7, batch_size=32,
+                  show_distr=False)
 
     # custom_objects={"dir_loss":architectures.dir_loss}
     # trainer.model = load_model(trainer.name, compile=False)
-    # trainer.fe = load_model('test_model\\models\\fe.h5')

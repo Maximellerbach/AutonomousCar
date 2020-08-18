@@ -1,15 +1,13 @@
-import collections
 from glob import glob
 
 import cv2
 import keras.backend as K
 import numpy as np
-from keras.models import Model, load_model
-from tqdm import tqdm
+from keras.models import load_model
 
 from architectures import dir_loss
 
-
+# TODO: refactoring
 def concatenate(img, img2, axis=0):
     shimg = img.shape
     shimg2 = img2.shape

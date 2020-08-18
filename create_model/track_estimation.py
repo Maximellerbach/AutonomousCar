@@ -1,4 +1,3 @@
-import autolib
 import math
 from glob import glob
 
@@ -8,7 +7,7 @@ import numpy as np
 from scipy.spatial.distance import euclidean
 from tqdm import tqdm
 
-import reorder_dataset
+from custom_modules import autolib
 
 
 class track_estimation():

@@ -1,8 +1,8 @@
 from customDataset import DatasetJson
+from tqdm import tqdm
+from glob import glob
 
 if __name__ == "__main__":
-    from tqdm import tqdm
-    from glob import glob
 
     datasetJson = DatasetJson(['direction', 'speed', 'throttle', 'time'])
 

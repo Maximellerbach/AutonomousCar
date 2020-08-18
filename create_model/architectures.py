@@ -1,6 +1,8 @@
+import tensorflow as tf
+import tensorflow_model_optimization as tfmot
 from keras.layers import (Activation, BatchNormalization, Concatenate, Conv2D,
                           Dense, DepthwiseConv2D, Dropout, Flatten,
-                          ZeroPadding2D, MaxPooling2D)
+                          MaxPooling2D, ZeroPadding2D)
 from keras.layers.wrappers import TimeDistributed as TD
 from keras.losses import mae, mse
 from keras.models import Input, Model, Sequential, load_model
@@ -36,7 +38,28 @@ def cat2linear(ny):
     return averages
 
 
-def create_light_CRNN(dataset, img_shape, load_fe=False,
+def create_pruning_model(model, sparsity=0.5):
+    model = tfmot.sparsity.keras.prune_low_magnitude(
+        model,
+        pruning_schedule=tfmot.sparsity.keras.ConstantSparsity(sparsity, 0),
+        block_size=(1, 1),
+        block_pooling_type='MAX')
+    return model
+
+
+def get_fe(model):
+    start_index = 0
+    end_index = -1
+    for it, layer in enumerate(model.layers):
+        if layer.name == 'start_fe':
+            start_index = it
+        if layer.name == "end_fe":
+            end_index = it
+
+    return Model(model.layers[start_index].input, model.layers[end_index].output)
+
+
+def create_light_CRNN(dataset, img_shape,
                       prev_act="relu", last_act="linear", padding="same",
                       drop_rate=0.1, use_bias=False, regularizer=(0, 0), optimizer=Adam, lr=0.001,
                       loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
@@ -73,36 +96,26 @@ def create_light_CRNN(dataset, img_shape, load_fe=False,
         return x
 
     inputs = []
-
-    if load_fe:
-        fe = load_model('test_model\\models\\fe.h5')
-
-    else:
-        inp = Input(shape=img_shape)
-        x = TD(BatchNormalization())(inp)
-
-        x = conv_block(12, 5, 2, x, drop=True)
-        x = conv_block(16, 5, 2, x, drop=True)
-        x = conv_block(32, 3, 2, x, drop=True)
-        x = conv_block(48, 3, 2, x, drop=True)
-
-        x1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
-        x2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
-        x3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
-        x = Concatenate()([x1, x2, x3])
-        x = TD(Dropout(drop_rate))(x)
-
-        fe = Model(inp, x)
-
-    inputs = []
     outputs = []
+
     input_components_names = dataset.indexes2components_names(input_components)
     output_components_names = dataset.indexes2components_names(
         output_components)
 
     inp = Input(shape=img_shape)
     inputs.append(inp)
-    y = fe(inp)
+    x = TD(BatchNormalization(), name="start_fe")(inp)
+
+    x = conv_block(12, 5, 2, x, drop=True)
+    x = conv_block(16, 5, 2, x, drop=True)
+    x = conv_block(32, 3, 2, x, drop=True)
+    x = conv_block(48, 3, 2, x, drop=True, name="end_fe")
+
+    y1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
+    y2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
+    y3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
+    y = Concatenate()([y1, y2, y3])
+    y = TD(Dropout(drop_rate))(x)
 
     y = dense_block(150, y, batchnorm=False)
     y = dense_block(75, y, batchnorm=False)
@@ -128,10 +141,10 @@ def create_light_CRNN(dataset, img_shape, load_fe=False,
 
     model = Model(inputs, outputs)
     model.compile(loss=loss, optimizer=optimizer(lr=lr), metrics=metrics)
-    return model, fe
+    return model
 
 
-def create_light_CNN(dataset, img_shape, load_fe=False,
+def create_light_CNN(dataset, img_shape,
                      prev_act="relu", last_act="linear", padding='same',
                      drop_rate=0.1, use_bias=False, regularizer=(0, 0), optimizer=Adam, lr=0.001,
                      loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
@@ -169,46 +182,31 @@ def create_light_CNN(dataset, img_shape, load_fe=False,
             x = Dropout(drop_rate)(x)
         return x
 
-    if load_fe:
-        fe = load_model('test_model\\models\\fe.h5')
-
-    else:
-        inp = Input(shape=img_shape)
-        x = BatchNormalization()(inp)
-        # x = GaussianNoise(0.2)(inp)
-
-        # x = conv_block(16, 5, 2, x, drop=True)
-        # x = conv_block(16, 5, 2, x, drop=True)
-        # x = conv_block(32, 3, 2, x, drop=True)
-        # x = conv_block(48, 3, 2, x, drop=True)
-
-        x = conv_block(16, 5, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = conv_block(16, 5, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = conv_block(32, 3, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = conv_block(48, 3, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-
-        x1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
-        x2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
-        x3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
-        x = Concatenate()([x1, x2, x3])
-        x = Dropout(drop_rate)(x)
-        ####
-
-        fe = Model(inp, x)
-
     inputs = []
     outputs = []
+
     input_components_names = dataset.indexes2components_names(input_components)
     output_components_names = dataset.indexes2components_names(
         output_components)
 
     inp = Input(shape=img_shape)
     inputs.append(inp)
-    y = fe(inp)
+    x = TD(BatchNormalization(), name="start_fe")(inp)
+
+    x = conv_block(16, 5, 1, x, drop=True)
+    x = MaxPooling2D()(x)
+    x = conv_block(24, 3, 1, x, drop=True)
+    x = MaxPooling2D()(x)
+    x = conv_block(32, 3, 1, x, drop=True)
+    x = MaxPooling2D()(x)
+    x = conv_block(48, 3, 1, x, drop=True)
+    x = MaxPooling2D(name="end_fe")(x)
+
+    y1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
+    y2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
+    y3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
+    y = Concatenate()([y1, y2, y3])
+    y = TD(Dropout(drop_rate))(x)
 
     y = dense_block(150, y, drop=True)
     y = dense_block(75, y, drop=True)
@@ -234,47 +232,8 @@ def create_light_CNN(dataset, img_shape, load_fe=False,
 
     model = Model(inputs, outputs)
     model.compile(loss=loss, optimizer=optimizer(lr=lr), metrics=metrics)
-    return model, fe
-
-
-def flatten_model(path, save_path=None):
-    model = load_model(path, custom_objects={"dir_loss": dir_loss})
-    layers_dict = {"dense": Dense, "conv2d": Conv2D, "dropout": Dropout, "batch": BatchNormalization,
-                   "activation": Activation, "flatten": Flatten, "zero": ZeroPadding2D, "depthwise": DepthwiseConv2D}
-    inp = Input((120, 160, 3))
-    x = -1
-
-    for it, lay in enumerate(model.layers):
-        lay_name = lay.name
-        lay_type = lay_name.split("_")[0]
-
-        if lay_type == "model":
-            for it2, lay2 in enumerate(lay.layers):
-                lay2_name = lay2.name
-                lay2_type = lay2_name.split("_")[0]
-                if it2 == 1 and x == -1:
-                    x = layers_dict[lay2_type].from_config(
-                        lay2.get_config())(inp)
-
-                elif lay2_type in layers_dict:
-                    x = layers_dict[lay2_type].from_config(
-                        lay2.get_config())(x)
-
-        if it == 1 and x == -1:
-            x = layers_dict[lay2_type].from_config(lay2.get_config())(inp)
-
-        elif lay_type in layers_dict:
-            x = layers_dict[lay_type].from_config(lay.get_config())(x)
-
-    new_model = Model(inp, x)
-    new_model.summary()
-
-    if save_path != None:
-        new_model.save(str(save_path))
-
-    return new_model
+    return model
 
 
 if __name__ == "__main__":
-    # new_model = flatten_model('test_model\\models\\lightv6_mix.h5')
     new_model = create_light_CNN((120, 160, 3), 5)
