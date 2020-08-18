@@ -1,6 +1,6 @@
 import time
 
-from .. import PID, PIDController
+from custom_modules import PID, PIDController
 
 if __name__ == "__main__":
     controller = PIDController.PID_controller()

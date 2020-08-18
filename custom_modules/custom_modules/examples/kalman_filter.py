@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pykalman
 
-import SerialCommand
-
-from ..sensors import sensorClass
+from custom_modules import SerialCommand
+from custom_modules.sensors import sensorClass
 
 if __name__ == "__main__":
     sensor_list = [sensorClass.sensor_compteTour()]

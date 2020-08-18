@@ -1,7 +1,7 @@
 import sys
 import time
 
-from .. import SerialCommand, rotatecar
+from custom_modules import SerialCommand, rotatecar
 
 if __name__ == "__main__":
     def getParams(argv):
