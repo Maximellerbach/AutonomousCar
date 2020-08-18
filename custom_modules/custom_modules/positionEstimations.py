@@ -1,23 +1,8 @@
-
-from custom_modules import SerialCommand
+from .. import SerialCommand
 import math
-import sys
 import time
 
-import numpy as np
-
 dico = [10, 8, 6, 4, 2]
-
-
-def plot_points(positions):
-    import matplotlib.pyplot as plt
-
-    positions = np.array(positions)
-    X = positions[:, 1]
-    Y = positions[:, 0]
-    plt.scatter(X, Y)
-    plt.axis('equal')
-    plt.show()
 
 
 def get_approx_distance(dt, speed):
@@ -74,17 +59,17 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.25, orientation=1):
     ser.ChangePWM(85)
 
     it = 0
+    # refactor This
     while((remaining*mult) > 0):  # stop 10cm before (inertia)
         in_progress_turns = ser.GetTurns()
         in_progress_time = ser.GetTimeLastReceived()
         # print(in_progress_turns, in_progress_time)
 
         if in_progress_turns != prev_turns:
-            # turns are actually counted downwards when going forward, reversing it
             delta_turns = in_progress_turns-start_turns
             dt = start_time-in_progress_time
             delta_distance = (wheel_length*(delta_turns/6))
-            # if delta_distance/dt < 10: # set a threshold of 10m/s
+            
             remaining = remaining_distance(delta_distance, d_remaining)
 
             prev_turns = in_progress_turns
@@ -95,30 +80,3 @@ def rotatecar(ser, angle, way, max_angle=40, wheel_length=0.25, orientation=1):
     ser.ChangePWM(0)
     ser.ChangeDirection(dico[2])
     ser.ChangeMotorA(0)
-
-
-if __name__ == "__main__":
-
-    def getParams(argv):
-        for it, arg in enumerate(argv):
-            if arg in ("-a", "--angle"):
-                angle = int(argv[it+1].strip())
-            elif arg in ("-w", "--way"):
-                way = int(argv[it+1].strip())
-            elif arg in ("-o", "--orientation"):
-                orientation = int(argv[it+1].strip())
-
-        return angle, way, orientation
-
-    # r = get_approx_radius(38)
-    # d = distance_needed_to_turn(90, r)
-    # d_remaining = remaining_distance(0.5, d)
-    # print(r d, d_remaining)
-
-    angle, way, orientation = getParams(sys.argv[1:])
-
-    ser = SerialCommand.start_serial()
-    rotatecar(ser, angle, way, orientation=orientation)
-
-    time.sleep(1)
-    ser.stop()

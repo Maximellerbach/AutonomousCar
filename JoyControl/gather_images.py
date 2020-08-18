@@ -6,7 +6,7 @@ import time
 import cv2
 
 import xbox
-from custom_modules.SerialCommand import control, motor
+from custom_modules import SerialCommand
 from customDataset import DatasetJson
 
 
@@ -38,13 +38,6 @@ def get_args():
     return comPort
 
 
-def start_serial(comPort):
-    # Give full access to the serial port
-    # Called "mode bourrin" in French :-)
-    os.system('sudo chmod 0666 ' + comPort)
-    return control(comPort)
-
-
 def get_controller_buttons(joy):
     direction = joy.leftX()
     throttle = joy.rightTrigger()
@@ -64,7 +57,7 @@ th_direction = 0.05
 th_throttle = 0.1
 
 comPort = get_args()
-ser = start_serial(comPort)
+ser = SerialCommand.start_serial(comPort)
 joy = xbox.Joystick()
 
 cap = cv2.VideoCapture(0)
@@ -78,7 +71,7 @@ while not joy.Back():
     current_speed = ser.GetCurrentSpeed()
 
     pwm = int(MAXSPEED * throttle)
-    ser.ChangeMotorA(motor.MOTOR_BACKWARD)
+    ser.ChangeMotorA(SerialCommand.motor.MOTOR_BACKWARD)
     ser.ChangePWM(pwm)
 
     if joy_button_a:

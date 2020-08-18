@@ -1,8 +1,11 @@
-import SerialCommand
-import numpy as np
 import time
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pykalman
+
+import SerialCommand
+
 from ..sensors import sensorClass
 
 if __name__ == "__main__":
