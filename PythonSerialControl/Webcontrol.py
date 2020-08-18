@@ -5,7 +5,8 @@ import sys
 
 from flask import Flask
 
-from ..custom_modules.SerialCommand import control, direction, motor
+
+from custom_modules.SerialCommand import control, direction, motor
 
 OK = "ok"
 ERROR = "error"

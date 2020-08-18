@@ -3,7 +3,8 @@ import os
 import sys
 import time
 
-from ..custom_modules import SerialCommand
+
+from custom_modules import SerialCommand
 
 
 def printusage():

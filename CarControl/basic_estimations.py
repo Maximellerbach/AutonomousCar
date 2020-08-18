@@ -1,12 +1,10 @@
-from ..custom_modules import SerialCommand
+
+from custom_modules import SerialCommand
 import math
 import sys
 import time
 
 import numpy as np
-
-sys.path.append('C:\\Users\\maxim\\github\\AutonomousCar\\custom_modules\\')
-sys.path.append('../custom_modules/')
 
 dico = [10, 8, 6, 4, 2]
 
