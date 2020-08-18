@@ -3,10 +3,10 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import pykalman
-from . import sensors
+from ..sensors import sensorClass
 
 if __name__ == "__main__":
-    sensor_list = [sensors.sensor_compteTour()]
+    sensor_list = [sensorClass.sensor_compteTour()]
 
     KF = pykalman.KalmanFilter(initial_state_mean=[i.INITIAL_STATE for i in sensor_list],
                                transition_covariance=[

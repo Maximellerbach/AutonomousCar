@@ -10,7 +10,7 @@ from custom_modules import SerialCommand
 dico = [3, 5, 7, 9, 11]
 speed = 70
 
-model = load_model("model.h5")
+model = load_model("models/model.h5")
 
 cap = cv2.VideoCapture(0)
 

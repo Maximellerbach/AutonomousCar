@@ -1,11 +1,21 @@
+import math
 import threading
 import time
 from enum import IntEnum
 
 import serial
-from .objects import sensor_compteTour
+
+from .sensors.sensorClass import sensor_compteTour
 
 lock = threading.RLock()
+
+
+class car():
+    WHEEL_BASE = 0.257
+    REAR_DIAMETER = 0.105
+    FRONT_DIAMETER = 0.082
+    REAR_PERIMETER = REAR_DIAMETER*math.pi
+    FRONT_PERIMETER = FRONT_DIAMETER*math.pi
 
 
 class direction(IntEnum):
