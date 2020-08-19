@@ -5,7 +5,7 @@ from glob import glob
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from keras.models import Model
+from tensorflow.keras.models import Model
 from tqdm import tqdm
 
 # TODO refactor those functions broke it by changing dataset
@@ -65,13 +65,14 @@ def visualize_fe_output(self, img, input_size=(160, 120), waitkey=True):
 
 def visualize_model_layer_filter(model, img, layer_index,
                                  input_size=(160, 120),
-                                 layer_outputs=None, show=True):
+                                 layer_outputs=None, show=True, tmp_model=None):
     img = cv2.resize(img, input_size)
-    if layer_outputs is None:
-        layer_output = model.layers[layer_index].output
-    else:
-        layer_output = layer_outputs[layer_index]
-    tmp_model = Model(model.input, layer_output)
+    if tmp_model is None:
+        if layer_outputs is None:
+            layer_output = model.layers[layer_index].output
+        else:
+            layer_output = layer_outputs[layer_index]
+        tmp_model = Model(model.input, layer_output)
 
     activation = tmp_model.predict(np.expand_dims(img, axis=0))[0]
     activation = np.transpose(activation, (-1, 0, 1))

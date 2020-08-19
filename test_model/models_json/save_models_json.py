@@ -1,10 +1,10 @@
 import json
 from glob import glob
 
-import keras
-import keras.backend as K
-from keras.models import load_model
-from keras.utils import plot_model
+import tensorflow as tf
+from tensorflow.keras import backend as K
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import plot_model
 
 def dir_loss(y_true, y_pred):
     return K.sqrt(K.square(y_true-y_pred))

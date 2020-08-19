@@ -124,7 +124,7 @@ pip3 install https://github.com/lhelontra/tensorflow-on-arm/releases/download/v1
 
 ## Install h5py
 
-HDF5 is necessary for Keras. So installation needs to be done prior installing Keras. Installation needs to be done thru the source code. Explanations [here](http://docs.h5py.org/en/latest/build.html). But it's as simple as the following lines but as always, be patient :-)
+HDF5 is necessary for tensorflow.keras. So installation needs to be done prior installing tensorflow.keras. Installation needs to be done thru the source code. Explanations [here](http://docs.h5py.org/en/latest/build.html). But it's as simple as the following lines but as always, be patient :-)
 
 ```bash
 pip install setuptools
@@ -139,7 +139,7 @@ pip3 install -v .
 
 ## Serial, Flask and others
 
-We'll use couple of Python libraries, so we'll need to install them and some are needed for Keras as well. Note that installing scipy is quite long, count at least 1h.
+We'll use couple of Python libraries, so we'll need to install them and some are needed for tensorflow.keras as well. Note that installing scipy is quite long, count at least 1h.
 
 ```bash
 pip install scipy
@@ -150,14 +150,14 @@ pip3 install pyserial Flask imutils tqdm glob2 scikit-learn pillow
 
 Note: if you have any issue, split this command in multiple install, isolate the one generating the issue. Try to check if any dependency is missing and install it, try again.
 
-## Installing Keras
+## Installing tensorflow.keras
 
-Keras is a framework used to facilitate usage of Tensorflow of CNTK. It needs to be installed from the source code. You'll find it on the official Keras [GitHub](https://github.com/keras-team/keras). Follow the simple installation instructions and you'll be good to go. This installation is very long as well. So be patient!
+Keras is a framework used to facilitate usage of Tensorflow of CNTK. It needs to be installed from the source code. You'll find it on the official tensorflow.keras [GitHub](https://github.com/keras-team/keras). Follow the simple installation instructions and you'll be good to go. This installation is very long as well. So be patient!
 
 ```bash
 git clone https://github.com/keras-team/keras.git
 
-cd keras
+cd tensorflow.keras
 git checkout 2.2.2
 pip install -v .
 pip3 install -v .

@@ -1,28 +1,22 @@
 import collections
 
-import keras.backend as K
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
+import tensorflow
 import tensorflow_model_optimization as tfmot
-from keras.backend.tensorflow_backend import set_session
-from keras.callbacks import EarlyStopping, TensorBoard
-from keras.models import load_model
+from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
+from tensorflow.keras.models import load_model
 from sklearn.utils import class_weight
 
 # import pred_function
-import architectures
-from custom_modules import autolib
+from custom_modules import autolib, architectures
 from customDataset import DatasetJson
 from datagenerator import image_generator
 
-config = tf.ConfigProto()
-# dynamically grow the memory used on the GPU
-config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-# to log device placement (on which device the operation ran)
-config.log_device_placement = True
-set_session(sess)  # set this TensorFlow session as the default
+physical_devices = tensorflow.config.list_physical_devices('GPU')
+for gpu_instance in physical_devices:
+    tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 
 class model_trainer():
@@ -64,9 +58,11 @@ class model_trainer():
         self.callbacks = []
         self.model = None
 
-    def build_classifier(self, load=False, prune=0, drop_rate=0.15,
-                         regularizer=(0.0, 0.0), lr=0.001):
+    def build_classifier(self, load=False, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0),
+                         optimizer=tensorflow.keras.optimizers.Adam, lr=0.001,
+                         loss=architectures.dir_loss, metrics=["mse"]):
         """Load a model using a model architectures from architectures.py."""
+
         if load:
             self.model = load_model(self.name, custom_objects={
                 "dir_loss": architectures.dir_loss})
@@ -74,18 +70,18 @@ class model_trainer():
 
         if self.sequence:
             self.model = architectures.create_light_CRNN(
-                self.Dataset, (None, 120, 160, 3), loss=architectures.dir_loss,
-                drop_rate=drop_rate, regularizer=regularizer, lr=lr,
+                self.Dataset, (None, 120, 160, 3),
+                drop_rate=drop_rate, regularizer=regularizer,
                 prev_act="relu", last_act="linear", padding='same',
-                use_bias=True, metrics=["mse"],
+                use_bias=True,
                 input_components=self.input_components,
                 output_components=self.output_components)
         else:
             self.model = architectures.create_light_CNN(
-                self.Dataset, (120, 160, 3), loss=architectures.dir_loss,
-                drop_rate=drop_rate, regularizer=regularizer, lr=lr,
+                self.Dataset, (120, 160, 3),
+                drop_rate=drop_rate, regularizer=regularizer,
                 prev_act="relu", last_act="linear", padding='same',
-                use_bias=True, metrics=["mse"],
+                use_bias=True,
                 input_components=self.input_components,
                 output_components=self.output_components)
 
@@ -93,6 +89,11 @@ class model_trainer():
             self.model = architectures.create_pruning_model(self.model, prune)
             pruning = tfmot.sparsity.keras.UpdatePruningStep()
             self.callbacks.append(pruning)
+
+        self.model.compile(
+            loss=loss,
+            optimizer=optimizer(lr=lr),
+            metrics=metrics)
 
         assert len(self.model.outputs) == len(self.output_components)
         # don't forget that there is the img input
@@ -238,11 +239,11 @@ class model_trainer():
         Returns:
             int: total number of flops
         """
-        run_meta = tf.RunMetadata()
-        opts = tf.profiler.ProfileOptionBuilder.float_operation()
+        run_meta = tensorflow.RunMetadata()
+        opts = tensorflow.profiler.ProfileOptionBuilder.float_operation()
 
-        # We use the Keras session graph in the call to the profiler.
-        flops = tf.profiler.profile(graph=K.get_session(
+        # We use the tensorflow.keras session graph in the call to the profiler.
+        flops = tensorflow.profiler.profile(graph=K.get_session(
         ).graph, run_meta=run_meta, cmd='op', options=opts)
         return flops.total_float_ops
 
@@ -266,13 +267,13 @@ if __name__ == "__main__":
                             output_components=output_components)
 
     trainer.build_classifier(load=False,
-                             drop_rate=0.05,
+                             drop_rate=0.05, prune=0.5,
                              regularizer=(0.0, 0.0001),
                              lr=0.001)
 
     trainer.train(flip=True, augm=True,
                   use_earlystop=True, use_tensorboard=False,
-                  prune=0, epochs=7, batch_size=32,
+                  epochs=7, batch_size=32,
                   show_distr=False)
 
     # custom_objects={"dir_loss":architectures.dir_loss}

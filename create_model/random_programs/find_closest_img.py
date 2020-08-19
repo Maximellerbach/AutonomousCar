@@ -1,19 +1,15 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
-from keras.models import load_model
+from tensorflow.keras.backend.tensorflow_backend import set_session
+from tensorflow.keras.models import load_model
 from tqdm import tqdm
 
 from customDataset import DatasetJson
 
-config = tf.ConfigProto()
-# dynamically grow the memory used on the GPU
-config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-# to log device placement (on which device the operation ran)
-config.log_device_placement = True
-set_session(sess)  # set this TensorFlow session as the default
+physical_devices = tensorflow.config.list_physical_devices('GPU')
+for gpu_instance in physical_devices:
+    tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 
 def get_latent(self, model, path):

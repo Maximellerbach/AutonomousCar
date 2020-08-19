@@ -1,13 +1,14 @@
-import tensorflow as tf
 import tensorflow_model_optimization as tfmot
-from keras.layers import (Activation, BatchNormalization, Concatenate, Conv2D,
-                          Dense, DepthwiseConv2D, Dropout, Flatten,
-                          MaxPooling2D, ZeroPadding2D)
-from keras.layers.wrappers import TimeDistributed as TD
-from keras.losses import mae, mse
-from keras.models import Input, Model, Sequential, load_model
-from keras.optimizers import Adam
-from keras.regularizers import l1_l2
+import tensorflow
+from tensorflow.keras.layers import (Activation, BatchNormalization, Concatenate, Conv2D,
+                                     Dense, DepthwiseConv2D, Dropout, Flatten,
+                                     MaxPooling2D, ZeroPadding2D)
+from tensorflow.keras.layers import TimeDistributed as TD
+from tensorflow.keras.losses import mae, mse
+from tensorflow.keras import Input
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import l1_l2
 
 
 def dir_loss(y_true, y_pred):
@@ -38,13 +39,28 @@ def cat2linear(ny):
     return averages
 
 
+def apply_pruning_to_dense(layer):
+    if isinstance(layer, tensorflow.keras.layers.Dense):
+        return tfmot.sparsity.keras.prune_low_magnitude(layer)
+    return layer
+
+
+def apply_pruning_to_conv(layer):
+    if isinstance(layer, tensorflow.keras.layers.Conv2D):
+        return tfmot.sparsity.keras.prune_low_magnitude(layer)
+    return layer
+
+
+def apply_pruning_to_dense_and_conv(layer):
+    if isinstance(layer, tensorflow.keras.layers.Conv2D) or isinstance(layer, tensorflow.keras.layers.Dense):
+        return tfmot.sparsity.keras.prune_low_magnitude(layer)
+    return layer
+
+
 def create_pruning_model(model, sparsity=0.5):
-    model = tfmot.sparsity.keras.prune_low_magnitude(
-        model,
-        pruning_schedule=tfmot.sparsity.keras.ConstantSparsity(sparsity, 0),
-        block_size=(1, 1),
-        block_pooling_type='MAX')
-    return model
+    new_model = tensorflow.keras.models.clone_model(model,
+                                                    clone_function=apply_pruning_to_dense_and_conv)
+    return new_model
 
 
 def get_fe(model):
@@ -61,8 +77,7 @@ def get_fe(model):
 
 def create_light_CRNN(dataset, img_shape,
                       prev_act="relu", last_act="linear", padding="same",
-                      drop_rate=0.1, use_bias=False, regularizer=(0, 0), optimizer=Adam, lr=0.001,
-                      loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
+                      drop_rate=0.1, use_bias=False, regularizer=(0, 0),
                       input_components=[], output_components=[]):
 
     def conv_block(n_filter, kernel_size, strides, x,
@@ -104,7 +119,7 @@ def create_light_CRNN(dataset, img_shape,
 
     inp = Input(shape=img_shape)
     inputs.append(inp)
-    x = TD(BatchNormalization(), name="start_fe")(inp)
+    x = TD(BatchNormalization(name="start_fe"))(inp)
 
     x = conv_block(12, 5, 2, x, drop=True)
     x = conv_block(16, 5, 2, x, drop=True)
@@ -115,7 +130,7 @@ def create_light_CRNN(dataset, img_shape,
     y2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
     y3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
     y = Concatenate()([y1, y2, y3])
-    y = TD(Dropout(drop_rate))(x)
+    y = TD(Dropout(drop_rate))(y)
 
     y = dense_block(150, y, batchnorm=False)
     y = dense_block(75, y, batchnorm=False)
@@ -139,15 +154,12 @@ def create_light_CRNN(dataset, img_shape,
         outputs.append(th)
         y = Concatenate()([y, th])
 
-    model = Model(inputs, outputs)
-    model.compile(loss=loss, optimizer=optimizer(lr=lr), metrics=metrics)
-    return model
+    return Model(inputs, outputs)
 
 
 def create_light_CNN(dataset, img_shape,
                      prev_act="relu", last_act="linear", padding='same',
-                     drop_rate=0.1, use_bias=False, regularizer=(0, 0), optimizer=Adam, lr=0.001,
-                     loss="categorical_crossentropy", metrics=["categorical_accuracy", dir_loss],
+                     drop_rate=0.1, use_bias=False, regularizer=(0, 0),
                      input_components=[], output_components=[]):
 
     def conv_block(n_filter, kernel_size, strides, x,
@@ -191,7 +203,7 @@ def create_light_CNN(dataset, img_shape,
 
     inp = Input(shape=img_shape)
     inputs.append(inp)
-    x = TD(BatchNormalization(), name="start_fe")(inp)
+    x = BatchNormalization(name="start_fe")(inp)
 
     x = conv_block(16, 5, 1, x, drop=True)
     x = MaxPooling2D()(x)
@@ -206,7 +218,7 @@ def create_light_CNN(dataset, img_shape,
     y2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
     y3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
     y = Concatenate()([y1, y2, y3])
-    y = TD(Dropout(drop_rate))(x)
+    y = Dropout(drop_rate)(y)
 
     y = dense_block(150, y, drop=True)
     y = dense_block(75, y, drop=True)
@@ -230,10 +242,4 @@ def create_light_CNN(dataset, img_shape,
                   activation=last_act, name="throttle")(y)
         outputs.append(z)
 
-    model = Model(inputs, outputs)
-    model.compile(loss=loss, optimizer=optimizer(lr=lr), metrics=metrics)
-    return model
-
-
-if __name__ == "__main__":
-    new_model = create_light_CNN((120, 160, 3), 5)
+    return Model(inputs, outputs)

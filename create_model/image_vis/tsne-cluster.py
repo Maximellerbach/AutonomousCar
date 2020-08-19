@@ -10,22 +10,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
-from keras.layers import Flatten
-from keras.models import Input, Model, load_model
+from tensorflow.keras.backend.tensorflow_backend import set_session
+from tensorflow.keras.layers import Flatten
+from tensorflow.keras.models import Input, Model, load_model
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from sklearn import manifold
 from sklearn.cluster import *
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-config = tf.ConfigProto()
-# dynamically grow the memory used on the GPU
-config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-# to log device placement (on which device the operation ran)
-config.log_device_placement = True
-set_session(sess)  # set this TensorFlow session as the default
+physical_devices = tensorflow.config.list_physical_devices('GPU')
+for gpu_instance in physical_devices:
+    tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 # TODO: OPTICS/DBSCAN clustering for anomaly detection
 
