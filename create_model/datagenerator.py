@@ -2,6 +2,7 @@ import time
 from glob import glob
 
 import cv2
+import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 
@@ -10,9 +11,9 @@ from custom_modules import autolib
 
 class image_generator(keras.utils.Sequence):
     def __init__(self, gdos, Dataset, input_components, output_components, datalen, batch_size, frc,
-                 sequence=False, seq_batchsize=64, augm=True, proportion=0.15,
+                 sequence=False, seq_batchsize=64, augm=True, proportion=0.15, shape=(160, 120, 3),
                  flip=True, smoothing=0.1, label_rdm=0, n_classes=5, lab_scale=1, lab_bias=0,
-                 shape=(160, 120, 3)):
+                 use_tensorboard=False, logdir=""):
         self.shape = shape
         self.augm = augm
         self.img_cols = shape[0]
@@ -36,6 +37,10 @@ class image_generator(keras.utils.Sequence):
         self.flip = flip
         self.seq_batchsize = seq_batchsize
         self.creation_time = time.time()
+
+        self.use_tensorboard = use_tensorboard
+        if self.use_tensorboard:
+            self.file_writer = tf.summary.create_file_writer(logdir)
 
     def __data_generation(self, gdos):
         batchfiles = np.random.choice(gdos, size=self.batch_size)
@@ -139,6 +144,9 @@ class image_generator(keras.utils.Sequence):
             for i in self.output_components:
                 Y.append(ybatch[:, i])
 
+        if self.use_tensorboard:
+            with self.file_writer.as_default():
+                tf.summary.image("Training data", X[0], step=0, max_outputs=16)
         return X, Y
 
     def __len__(self):

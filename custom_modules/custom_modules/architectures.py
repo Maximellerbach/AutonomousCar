@@ -58,9 +58,9 @@ def apply_pruning_to_dense_and_conv(layer):
 
 
 def create_pruning_model(model, sparsity=0.5):
-    new_model = tensorflow.keras.models.clone_model(model,
-                                                    clone_function=apply_pruning_to_dense_and_conv)
-    return new_model
+    return tensorflow.keras.models.clone_model(
+        model,
+        clone_function=apply_pruning_to_dense)
 
 
 def get_fe(model):

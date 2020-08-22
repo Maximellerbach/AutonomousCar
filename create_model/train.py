@@ -1,16 +1,17 @@
 import collections
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow
 import tensorflow_model_optimization as tfmot
+from sklearn.utils import class_weight
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 from tensorflow.keras.models import load_model
-from sklearn.utils import class_weight
 
 # import pred_function
-from custom_modules import autolib, architectures
+from custom_modules import architectures, autolib
 from customDataset import DatasetJson
 from datagenerator import image_generator
 
@@ -64,9 +65,16 @@ class model_trainer():
         """Load a model using a model architectures from architectures.py."""
 
         if load:
-            self.model = load_model(self.name, custom_objects={
-                "dir_loss": architectures.dir_loss})
-            return self.model  # just in case you want to fetch the model
+            try:
+                self.model = load_model(self.name, custom_objects={
+                                        "dir_loss": architectures.dir_loss})
+                return self.model
+
+            except ValueError:
+                with tfmot.sparsity.keras.prune_scope():
+                    self.model = load_model(self.name, custom_objects={
+                                            "dir_loss": architectures.dir_loss})
+                return self.model
 
         if self.sequence:
             self.model = architectures.create_light_CRNN(
@@ -96,7 +104,6 @@ class model_trainer():
             metrics=metrics)
 
         assert len(self.model.outputs) == len(self.output_components)
-        # don't forget that there is the img input
         assert len(self.model.inputs)-1 == len(self.input_components)
         self.model.summary()
         return self.model
@@ -106,6 +113,7 @@ class model_trainer():
         """Train the model loaded as self.model."""
         gdos, valdos, frc, datalen = self.get_gdos(flip=flip, show=show_distr)
         print(gdos.shape, valdos.shape)
+        logdir = f'logs\\{time.time()}\\'
 
         if self.model is None:
             self.build_classifier()
@@ -121,18 +129,19 @@ class model_trainer():
 
         if use_tensorboard:
             tensorboard = TensorBoard(
-                log_dir="logs\\",
+                log_dir=logdir,
                 update_freq='batch')
             self.callbacks.append(tensorboard)
 
-        self.model.fit_generator(
-            image_generator(gdos, self.Dataset,
-                            self.input_components, self.output_components,
-                            datalen, batch_size, frc,
-                            seq_batchsize=seq_batchsize,
-                            augm=augm, flip=flip,
-                            smoothing=self.smoothing,
-                            label_rdm=self.label_rdm),
+        self.model.fit(
+            x=image_generator(gdos, self.Dataset,
+                              self.input_components, self.output_components,
+                              datalen, batch_size, frc,
+                              seq_batchsize=seq_batchsize,
+                              augm=augm, flip=flip,
+                              smoothing=self.smoothing,
+                              label_rdm=self.label_rdm,
+                              use_tensorboard=use_tensorboard, logdir=logdir),
             steps_per_epoch=datalen//batch_size, epochs=epochs,
             validation_data=image_generator(valdos, self.Dataset,
                                             self.input_components, self.output_components,
@@ -140,7 +149,8 @@ class model_trainer():
                                             seq_batchsize=seq_batchsize,
                                             augm=augm, flip=flip,
                                             smoothing=self.smoothing,
-                                            label_rdm=self.label_rdm),
+                                            label_rdm=self.label_rdm,
+                                            use_tensorboard=False),
             validation_steps=datalen//20//batch_size,
             callbacks=self.callbacks, max_queue_size=4, workers=4)
 
@@ -258,7 +268,7 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    trainer = model_trainer(name='test_model\\models\\linear_trackmania.h5',
+    trainer = model_trainer(name='test_model\\models\\linear_trackmania2.h5',
                             dataset=Dataset,
                             dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
                             proportion=0.2, sequence=False,
@@ -267,13 +277,13 @@ if __name__ == "__main__":
                             output_components=output_components)
 
     trainer.build_classifier(load=False,
-                             drop_rate=0.05, prune=0.5,
+                             drop_rate=0.05, prune=0.2,
                              regularizer=(0.0, 0.0001),
                              lr=0.001)
 
     trainer.train(flip=True, augm=True,
-                  use_earlystop=True, use_tensorboard=False,
-                  epochs=7, batch_size=32,
+                  use_earlystop=True, use_tensorboard=True,
+                  epochs=7, batch_size=48,
                   show_distr=False)
 
     # custom_objects={"dir_loss":architectures.dir_loss}
