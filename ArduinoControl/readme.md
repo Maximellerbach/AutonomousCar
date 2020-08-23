@@ -1,6 +1,6 @@
 # The Ardunio/ESP8266 code to pilot the hardware
 
-In the [section dedicated to hardware](/electronic.md), you will find details on what is used. In short, the Arduino/ESP8266 or equivalent pilot an hbridge and a servo motor taking orders from a serial port.
+In the [section dedicated to hardware](/docs/electronic.md), you will find details on what is used. In short, the Arduino/ESP8266 or equivalent pilot an hbridge and a servo motor taking orders from a serial port.
 
 The serial port protocole is [documented here](/python_serial_control/readme.md). And a Python driver has been developed as well to facilitate the usage. Code and description available here as well.
 

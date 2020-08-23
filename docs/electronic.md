@@ -141,7 +141,7 @@ Note: after the accident which burned the RockPro 64, we've decided to use a Ras
 
 After reusing an old USB webcam. We've decided to go for a a wide angle camera. The old webcam did the trick but the quality was not good enough and the lengths were hard to setup. So we bought a wide angle camera. The webcam specification are 1080P H.264 CMOS 30fps 180 degrees Fisheye, low light. It has a USB connector and is connected thru USB to the board. It worked with the RockPro64 as well as with the Raspberry Pi. Cost of good quality module for webcams is quite high but necessary for good quality images.
 
-There are other options that we're currently looking at for the webcam. Like a normal webcam which will be moved up or down depending on the speed of the car to see closer or further and better anticipate the turns. The wide angle camera has the inconvenient to disform quite a lot the images which makes is a bit harder to tag and interpret for AI. See the [AI section](/ai.md) for more information.
+There are other options that we're currently looking at for the webcam. Like a normal webcam which will be moved up or down depending on the speed of the car to see closer or further and better anticipate the turns. The wide angle camera has the inconvenient to disform quite a lot the images which makes is a bit harder to tag and interpret for AI. See the [AI section](/docs/ai.md) for more information.
 
 ## Cooling down everything
 
