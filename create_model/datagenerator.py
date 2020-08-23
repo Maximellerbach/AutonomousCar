@@ -1,5 +1,4 @@
 import time
-from glob import glob
 
 import cv2
 import tensorflow as tf
@@ -89,23 +88,25 @@ class image_generator(keras.utils.Sequence):
             # this is much nicer as we modify into the batch of clean image
             if self.sequence:
                 for i in range(len(xbatch)):
-                    xbatch[i], ybatch[i] = autolib.generate_functions_replace(xbatch[i], ybatch[i],
-                                                                              proportion=self.proportion,
-                                                                              functions=(autolib.change_brightness,
-                                                                                         autolib.rescut,
-                                                                                         autolib.inverse_color,
-                                                                                         autolib.add_random_shadow,
-                                                                                         autolib.add_random_glow,
-                                                                                         autolib.rdm_noise))
+                    xbatch[i], ybatch[i] = autolib.generate_functions_replace(
+                        xbatch[i], ybatch[i],
+                        proportion=self.proportion,
+                        functions=(autolib.change_brightness,
+                                   autolib.rescut,
+                                   autolib.inverse_color,
+                                   autolib.add_random_shadow,
+                                   autolib.add_random_glow,
+                                   autolib.rdm_noise))
             else:
-                xbatch, ybatch = autolib.generate_functions_replace(xbatch, ybatch,
-                                                                    proportion=self.proportion,
-                                                                    functions=(autolib.change_brightness,
-                                                                               autolib.rescut,
-                                                                               autolib.inverse_color,
-                                                                               autolib.add_random_shadow,
-                                                                               autolib.add_random_glow,
-                                                                               autolib.rdm_noise))
+                xbatch, ybatch = autolib.generate_functions_replace(
+                    xbatch, ybatch,
+                    proportion=self.proportion,
+                    functions=(autolib.change_brightness,
+                               autolib.rescut,
+                               autolib.inverse_color,
+                               autolib.add_random_shadow,
+                               autolib.add_random_glow,
+                               autolib.rdm_noise))
 
         if self.flip:
             if self.sequence:

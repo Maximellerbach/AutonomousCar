@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from ..SerialCommand import car
+from ..serialCommand import car
 
 def transform_axes(axes, multiplier):
     return axes*multiplier

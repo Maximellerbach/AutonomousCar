@@ -1,7 +1,4 @@
 import math
-import time
-from glob import glob
-
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,8 +103,8 @@ def pred_img(self, Dataset, path, sleeptime):
         inputs.append(np.expand_dims())
 
     pred = self.model.predict(inputs)[0]
-    visualize_fe_output(self, img, waitkey=False)
 
+    '''
     c = np.copy(img)
     cv2.line(c,
              (img.shape[1]//2, img.shape[0]),
@@ -116,6 +113,7 @@ def pred_img(self, Dataset, path, sleeptime):
 
     cv2.imshow('img', c)
     cv2.waitKey(sleeptime)
+    '''
 
 
 def load_frames(self, path, size=(160, 120), batch_len=32):
@@ -168,13 +166,19 @@ def speed_impact(self, dos, dt_range=(0, -1), sleeptime=33):
 
         c = img.copy()
         if self.load_speed[1]:
-            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2+original_pred*30),
-                                                          img.shape[0]-int(throttle_pred*50)), color=[1, 0, 0], thickness=3)
+            cv2.line(c, (img.shape[1]//2, img.shape[0]),
+                     (int(img.shape[1]/2+original_pred*30),
+                      img.shape[0]-int(throttle_pred*50)),
+                     color=[1, 0, 0], thickness=3)
         else:
-            cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1]/2 +
-                                                              original_pred*30), img.shape[0]-50), color=[0, 1, 1], thickness=3)
-        cv2.line(c, (img.shape[1]//2, img.shape[0]), (int(img.shape[1] /
-                                                          2+real_lab*30), img.shape[0]-50), color=[0, 0, 1], thickness=2)
+            cv2.line(c, (img.shape[1]//2, img.shape[0]),
+                     (int(img.shape[1]/2 + original_pred*30), img.shape[0]-50),
+                     color=[0, 1, 1], thickness=3)
+
+        cv2.line(c,
+                 (img.shape[1]//2, img.shape[0]),
+                 (int(img.shape[1] / 2 + real_lab*30), img.shape[0]-50),
+                 color=[0, 0, 1], thickness=2)
 
         modified = compute_speed(self.model, img_pred,
                                  real_lab, accuracy=0.5, values_range=(0, 21))

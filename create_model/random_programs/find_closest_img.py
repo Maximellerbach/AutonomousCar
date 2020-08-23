@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.backend.tensorflow_backend import set_session
+import tensorflow
 from tensorflow.keras.models import load_model
 from tqdm import tqdm
 
-from customDataset import DatasetJson
+from custom_modules import DatasetJson
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:

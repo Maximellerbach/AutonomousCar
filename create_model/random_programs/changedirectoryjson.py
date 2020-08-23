@@ -1,4 +1,4 @@
-from customDataset import DatasetJson
+from custom_modules import DatasetJson
 from tqdm import tqdm
 from glob import glob
 

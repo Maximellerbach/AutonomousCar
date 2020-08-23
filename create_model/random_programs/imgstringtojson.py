@@ -1,5 +1,5 @@
 from custom_modules.deprecated import dataset
-from customDataset import DatasetJson
+from custom_modules import DatasetJson
 from glob import glob
 
 dataset = dataset.Dataset(

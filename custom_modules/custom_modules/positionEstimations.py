@@ -1,4 +1,4 @@
-from .. import SerialCommand
+from .. import serialCommand
 import math
 import time
 

@@ -11,8 +11,7 @@ from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 from tensorflow.keras.models import load_model
 
 # import pred_function
-from custom_modules import architectures, autolib
-from customDataset import DatasetJson
+from custom_modules import architectures, autolib, DatasetJson
 from datagenerator import image_generator
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')

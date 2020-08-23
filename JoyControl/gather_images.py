@@ -6,8 +6,7 @@ import time
 import cv2
 
 import xbox
-from custom_modules import SerialCommand
-from customDataset import DatasetJson
+from custom_modules import serialCommand, DatasetJson
 
 
 def get_args():
@@ -57,7 +56,7 @@ th_direction = 0.05
 th_throttle = 0.1
 
 comPort = get_args()
-ser = SerialCommand.start_serial(comPort)
+ser = serialCommand.start_serial(comPort)
 joy = xbox.Joystick()
 
 cap = cv2.VideoCapture(0)
@@ -71,7 +70,7 @@ while not joy.Back():
     current_speed = ser.GetCurrentSpeed()
 
     pwm = int(MAXSPEED * throttle)
-    ser.ChangeMotorA(SerialCommand.motor.MOTOR_BACKWARD)
+    ser.ChangeMotorA(serialCommand.motor.MOTOR_BACKWARD)
     ser.ChangePWM(pwm)
 
     if joy_button_a:

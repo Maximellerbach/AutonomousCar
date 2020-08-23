@@ -1,7 +1,7 @@
 import sys
 import time
 
-from custom_modules import SerialCommand, rotatecar
+from custom_modules import serialCommand, rotatecar
 
 if __name__ == "__main__":
     def getParams(argv):
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     angle, way, orientation = getParams(sys.argv[1:])
 
-    ser = SerialCommand.start_serial()
+    ser = serialCommand.start_serial()
     rotatecar(ser, angle, way, orientation=orientation)
 
     time.sleep(1)

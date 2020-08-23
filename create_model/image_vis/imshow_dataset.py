@@ -4,8 +4,7 @@ import numpy as np
 import tensorflow_model_optimization as tfmot
 from tensorflow.keras.models import load_model
 
-from custom_modules import architectures, pred_function
-from customDataset import DatasetJson
+from custom_modules import architectures, pred_function, DatasetJson
 
 
 Dataset = DatasetJson(["direction", "speed", "throttle", "time"])

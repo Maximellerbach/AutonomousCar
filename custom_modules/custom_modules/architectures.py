@@ -1,13 +1,11 @@
 import tensorflow_model_optimization as tfmot
 import tensorflow
 from tensorflow.keras.layers import (Activation, BatchNormalization, Concatenate, Conv2D,
-                                     Dense, DepthwiseConv2D, Dropout, Flatten,
-                                     MaxPooling2D, ZeroPadding2D)
+                                     Dense, Dropout, Flatten, MaxPooling2D)
 from tensorflow.keras.layers import TimeDistributed as TD
 from tensorflow.keras.losses import mae, mse
 from tensorflow.keras import Input
 from tensorflow.keras.models import Model
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l1_l2
 
 

@@ -135,7 +135,11 @@ class control:
         self.ChangePWM(pwm)
 
     def ChangeAll(self, dir, motorA, motorB, pwm):
-        """Change all the elements at the same time. Consider using the direction and motor enums. PWM is byte from 0 to 255."""
+        """
+        Change all the elements at the same time. Consider using the direction and motor enums.
+
+        PWM is a byte from 0 to 255.
+        """
         self.__command[0] = (self.__command[0] & 0b11110000) | (
             dir.to_bytes(1, byteorder='big')[0] & 0b00001111)
         self.__command[0] = (self.__command[0] & 0b11001111) | (
@@ -166,7 +170,7 @@ class control:
                         new_rounds = -int(out.decode())
                         self.__sensor_compteTour.update(new_rounds)
 
-                except:
+                except:  # do not use bare except
                     pass
 
                 finally:

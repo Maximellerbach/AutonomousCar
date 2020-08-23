@@ -110,9 +110,9 @@ To use the driver, you need to initialoze first the driver by passing a serial p
 ### Initialization
 
 ```python
-import SerialCommand
+import serialCommand
 
-ser = SerialCommand.control("/dev/ttyS2")
+ser = serialCommand.control("/dev/ttyS2")
 ```
 
 Note that the ser variable needs to be initialized early in the code so you can use it in the various functions and lower in your code.
@@ -122,7 +122,7 @@ Note that the ser variable needs to be initialized early in the code so you can 
 Then you can call any of the functions. For example to move forward the motor A at 75% of the full speed:
 
 ```python
-ser.ChangeMotorA(SerialCommand.motor.MOTOR_FORWARD)
+ser.ChangeMotorA(serialCommand.motor.MOTOR_FORWARD)
 # This is doing the same thing as well:
 # ser.ChangeMotorA(1)
 ser.ChangePWM(192)
@@ -139,7 +139,7 @@ ser.ChangePWM(255)
 Changing the direction is easy, just setup the direction you want from the enum. For example moving almost to the left:
 
 ```python
-ser.ChangeDirection(SerialCommand.direction.DIR_LEFT_4)
+ser.ChangeDirection(serialCommand.direction.DIR_LEFT_4)
 # This is doing the same thing as well:
 # ser.ChangeDirection(3)
 ```
@@ -147,7 +147,7 @@ ser.ChangeDirection(SerialCommand.direction.DIR_LEFT_4)
 Then if you want to put it back to straight:
 
 ```python
-ser.ChangeDirection(SerialCommand.direction.DIR_STRAIGHT)
+ser.ChangeDirection(serialCommand.direction.DIR_STRAIGHT)
 # This is doing the same thing as well:
 # ser.ChangeDirection(7)
 ```
@@ -155,7 +155,7 @@ ser.ChangeDirection(SerialCommand.direction.DIR_STRAIGHT)
 and move almost to the far right:
 
 ```python
-ser.ChangeDirection(SerialCommand.direction.DIR_RIGHT_4)
+ser.ChangeDirection(serialCommand.direction.DIR_RIGHT_4)
 # This is doing the same thing as well:
 # ser.ChangeDirection(11)
 ```

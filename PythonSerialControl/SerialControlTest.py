@@ -4,7 +4,7 @@ import sys
 import time
 
 
-from custom_modules import SerialCommand
+from custom_modules import serialCommand
 
 
 def printusage():
@@ -35,7 +35,7 @@ for opt, arg in opts:
         except KeyError:
             pass
     if (comPort != ""):
-        ser = SerialCommand.control(comPort)
+        ser = serialCommand.control(comPort)
         try:
             print("Turns:" + str(ser.GetTurns()))
 
@@ -48,26 +48,26 @@ for opt, arg in opts:
 
             print("Turns:" + str(ser.GetTurns()))
 
-            for dir in SerialCommand.direction:
+            for dir in serialCommand.direction:
                 ser.ChangeDirection(dir)
                 print("changed direction " + str(dir))
                 time.sleep(5)
                 print("Turns:" + str(ser.GetTurns()))
 
-            for motor in SerialCommand.motor:
+            for motor in serialCommand.motor:
                 ser.ChangeMotorA(motor)
                 print("changed motor A " + str(motor))
                 time.sleep(5)
                 print("Turns:" + str(ser.GetTurns()))
 
-            for motor in SerialCommand.motor:
+            for motor in serialCommand.motor:
                 ser.ChangeMotorB(motor)
                 print("changed motor B " + str(motor))
                 time.sleep(5)
                 print("Turns:" + str(ser.GetTurns()))
 
-            ser.ChangeAll(SerialCommand.direction.DIR_STRAIGHT,
-                          SerialCommand.motor.MOTOR_STOP, SerialCommand.motor.MOTOR_STOP, 255)
+            ser.ChangeAll(serialCommand.direction.DIR_STRAIGHT,
+                          serialCommand.motor.MOTOR_STOP, serialCommand.motor.MOTOR_STOP, 255)
             print("changed all")
 
             print("Turns:" + str(ser.GetTurns()))
