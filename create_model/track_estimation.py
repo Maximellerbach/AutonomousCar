@@ -1,13 +1,11 @@
 import math
-from glob import glob
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy.spatial.distance import euclidean
 from tqdm import tqdm
 
-from custom_modules import autolib
+from custom_modules import DatasetJson
+from custom_modules.visutils import plot
 
 
 class track_estimation():
@@ -43,10 +41,10 @@ class track_estimation():
 
         return maxp, minp
 
-    def map_pt(self, p, maxp, minp, integer=True, size=(512, 512)):
+    def map_pt(self, p, maxp, minp, is_integer=True, size=(512, 512)):
         '''
-        Function to remap a point with a given max and min and a desired final size, precise integer=False if you want your point to be (float, float)
-        (p, maxp, minp, integer, size) -> (x, y)
+        Function to remap a point with a given max and min and a desired final size, precise is_integer=False if you want your point to be (float, float)
+        (p, maxp, minp, is_integer, size) -> (x, y)
         (Iterable of len==2, float, float, bool, tuple (h,w)) -> (float/int, float/int)
 
         '''
@@ -54,7 +52,7 @@ class track_estimation():
 
         x = ((p[0]-minp)/(maxp-minp))*w
         y = ((p[1]-minp)/(maxp-minp))*h
-        if integer == True:
+        if is_integer:
             x = int(x)
             y = int(y)
 
@@ -65,13 +63,13 @@ class track_estimation():
         function to normalize two segment points according to their position and turn angle
         '''
         pt1, pt2 = pts_segm
-        p1 = self.map_pt(pt1[:2], maxp, minp, integer=False, size=(1, 1))
-        p2 = self.map_pt(pt2[:2], maxp, minp, integer=False, size=(1, 1))
+        p1 = self.map_pt(pt1[:2], maxp, minp, is_integer=False, size=(1, 1))
+        p2 = self.map_pt(pt2[:2], maxp, minp, is_integer=False, size=(1, 1))
         av = np.average([p1, p2], axis=-1)
         # multiply positive coords with sign (- or +) to separate left turns from right turns -> output coords [-1; 1]
         return av * pt1[-1]
 
-    def get_pos(self, Y, time_series, speed_series, cat=False):
+    def get_pos(self, Y, time_series, speed_series):
         '''
         Function to calculate position from image label,
         here I'm making a few assumptions like speed = cte, delta_time = cte and the trajectory is not arced
@@ -87,17 +85,7 @@ class track_estimation():
         pos = [0, 0]
         angle = 0
 
-        for it, ny in enumerate(Y):
-
-            if cat == True:
-                st = 0
-                coef = [-1, -0.5, 0, 0.5, 1]
-
-                for ait, nyx in enumerate(ny):
-                    st += nyx*coef[ait]
-            else:
-                st = ny
-
+        for it, st in enumerate(Y):
             st = -st  # transform [-1, 1] to [1, -1]
             lab_list.append(st)
 
@@ -173,20 +161,20 @@ class track_estimation():
             average[it] = np.average(deg_list[it-look_back//2:it+look_back//2])
 
             if average[it] >= th:
-                if turning == False:
+                if turning is False:
                     way = 1
                     x, y = pos_list[it]
                     turn.append((x, y, it, way))
                     turning = True
 
             elif average[it] <= -th:
-                if turning == False:
+                if turning is False:
                     way = -1
                     x, y = pos_list[it]
                     turn.append((x, y, it, way))
                     turning = True
 
-            elif turning == True:
+            elif turning:
                 x, y = pos_list[it]
                 turn.append((x, y, it, way))
                 thresholded.append(turn)
@@ -341,6 +329,8 @@ class track_estimation():
         return [np.random.random(3) for _ in range(classes)]
 
     def draw_points(self, pos_list, degs=[], colors=[(1, 0, 0), (0, 1, 0), (0, 0, 1)]):
+        assert len(colors) == 3
+
         maxp = np.max(pos_list)
         minp = np.min(pos_list)
 
@@ -348,22 +338,18 @@ class track_estimation():
         for it, p in enumerate(pos_list):
             rpx = ((p[0]-minp)/(maxp-minp))*w
             rpy = ((p[1]-minp)/(maxp-minp))*h
-            try:
-                if it == 0:
-                    color = (0, 0, 1)
-                    th = 3
-                elif degs[it] > 0:
-                    color = colors[0]
-                    th = 1
-                elif degs[it] < 0:
-                    color = colors[2]
-                    th = 1
-                else:
-                    color = colors[1]
-                    th = 1
 
-            except:
-                color = (0, 1, 0)
+            if it == 0:
+                color = (0, 0, 1)
+                th = 3
+            elif degs[it] > 0:
+                color = colors[0]
+                th = 1
+            elif degs[it] < 0:
+                color = colors[2]
+                th = 1
+            else:
+                color = colors[1]
                 th = 1
 
             cv2.circle(self.pmap, (int(rpx), int(rpy)), 1, color, thickness=th)
@@ -403,13 +389,16 @@ class track_estimation():
 
 if __name__ == "__main__":
     # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
-    dts, datalen = reorder_dataset.load_dataset(
-        'C:\\Users\\maxim\\recorded_imgs\\clean_lap\\', recursive=False)
+    Dataset = DatasetJson(["direction", "speed", "throttle", "time"])
+    paths = Dataset.load_dos_sorted('C:\\Users\\maxim\\recorded_imgs\\clean_lap\\')
+    datalen = len(paths)
+    
     sequence_to_study = (1550, 3100)
-    cat = True
 
-    dates = [reorder_dataset.get_date(i) for i in dts]
-    speeds = [reorder_dataset.get_speed(i) for i in dts]
+    dates = [Dataset.load_component_item(i, -1) for i in paths]
+    speeds = [Dataset.load_component_item(i, 1) for i in paths]
+    
+    ''' # TODO: refactoring
     speeds = speeds[sequence_to_study[0]:sequence_to_study[1]-1]
     its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1],
                                dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j > 0.0]  # remove images where dt >= 0.1
@@ -419,17 +408,11 @@ if __name__ == "__main__":
           (sequence_to_study[1]-sequence_to_study[0])-len(its))
 
     Y = []
-    for d in dts:
-        if cat:
-            lab = autolib.get_label(d, flip=False)[0]
-        else:
-            lab = float(d.split('\\')[-1].split('_')[0])
+    for d in paths:
+        lab = float(d.split('\\')[-1].split('_')[0])
 
         # date = reorder_dataset.get_date(d)
         Y.append(lab)
-
-    if cat:
-        Y = autolib.label_smoothing(Y, 5, 0)  # to categorical
     Y = Y[sequence_to_study[0]:sequence_to_study[1]-1]
 
     max_steer_angle = 14
@@ -438,10 +421,8 @@ if __name__ == "__main__":
     pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(
         Y, time_series=its, speed_series=speeds, cat=cat)
 
-    plt.plot([i for i in range(len(vect_list))], np.array(
-        vect_list)[:, 1], np.array(vect_list)[:, 0], linewidth=1)
+    plot.plot_time_series(np.array(vect_list)[:, 0], np.array(vect_list)[:, 1])
     # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves
-    plt.show()
 
     iner_list, outer_list = estimation.boundaries(pos_list, radius=5)
     diner = [1 for i in range(len(iner_list))]
@@ -471,3 +452,4 @@ if __name__ == "__main__":
 
     cv2.imshow('pmap', estimation.pmap)
     cv2.waitKey(0)
+    '''
