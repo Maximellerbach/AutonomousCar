@@ -28,8 +28,8 @@ New hardware:
 
 ![arduino](/docs_image/arduino.jpg)
 
-- Classes and code to take the order from the AI and actually send it to the various electronic elements. More details can be [found in this section](/PythonSerialControl/readme.md). As for the rest of the high level code, it is written in Python, does involve Serial Port communications.
+- Classes and code to take the order from the AI and actually send it to the various electronic elements. More details can be [found in this section](/python_serial_control/readme.md). As for the rest of the high level code, it is written in Python, does involve Serial Port communications.
 
-- Classes and apps including [test tools to remotely pilot the car in wifi for example](/PythonSerialControl/Webcontrol.py) and [previous versions involving controling the electronic directly from a Raspberry Pi](/RaspberryPiControl/readme.md). All written in Python.
+- Classes and apps including [test tools to remotely pilot the car in wifi for example](/python_serial_control/web_control.py) and [previous versions involving controling the electronic directly from a Raspberry Pi](/RaspberryPiControl/readme.md). All written in Python.
 
 - Classes and apps to [test image capture](/ImageWeb). All written in Python.

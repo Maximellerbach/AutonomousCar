@@ -1,6 +1,6 @@
 # Protocol test web page
 
-To facilitate the tests, we've developed a simple web page allowing to test the protocole. The page can be [found here](Webcontrol.py).
+To facilitate the tests, we've developed a simple web page allowing to test the protocole. The page can be [found here](web_control.py).
 
 ## Serial port initializaiton
 
@@ -8,7 +8,7 @@ Windows uses name like COMx where x is a number for serial ports while Linux is 
 
 Keep in mind you need root priviledges to acces serial ports in Linux.
 
-So you can run it like ```sudo python3 Webcontrol.py -c /dev/ttyS2```. Or oy can try ```sudo chmod 666 /dev/ttyS2``` and then run the code in normal mode so ```python3 Webcontrol.py -c /dev/ttyS2```.
+So you can run it like ```sudo python3 web_control.py -c /dev/ttyS2```. Or oy can try ```sudo chmod 666 /dev/ttyS2``` and then run the code in normal mode so ```python3 web_control.py -c /dev/ttyS2```.
 
 The code to get the serial port name thru the arguments is using ```getopt```. It first check the command line arguments which can be used either with ```-c``` either with ```--comm=```. Finally, if there is no argument, it tries to get the ```COM_PORT``` environment variable.
 

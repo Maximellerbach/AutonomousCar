@@ -1,19 +1,20 @@
 import json
 from glob import glob
 
-import tensorflow as tf
-from tensorflow.keras import backend as K
 from tensorflow.keras.models import load_model
 from tensorflow.keras.utils import plot_model
 
+
 def get_models_path(path='test_model\\models\\*.h5'):
     return glob(path)
+
 
 def layers_to_dict(model):
     mod_dict = []
     for i in model.layers:
         mod_dict.append(i.get_config())
     return mod_dict
+
 
 if __name__ == "__main__":
     paths = get_models_path()

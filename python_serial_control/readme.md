@@ -2,8 +2,8 @@
 
 This code allow to pilot thru serial port an autonomous car thru serial commands. This file describes the protocol as well as the Python implementation and the Arduino implementation.
 
-The actual code is located [here](/custom_modules/custom_modules/serialCommand.py)
-Please check [this page](webcontrol.md) if you want to test the protocole in a web page.
+The actual code is located [here](/custom_modules/custom_modules/serial_command.py)
+Please check [this page](web_control.md) if you want to test the protocole in a web page.
 
 ## The communication protocol
 
@@ -102,7 +102,7 @@ The class has few members:
   * use the direction and motor enums
   * refer to protocol up for enums details
 
-You can find an example of usage in the [SerialControlTest.py](./SerialControlTest.py) file. This is the file which has been used to run the various tests with the Arduino/ESP8266 connected and checked the expected results happened.
+You can find an example of usage in the [test_serial_control.py](./test_serial_control.py) file. This is the file which has been used to run the various tests with the Arduino/ESP8266 connected and checked the expected results happened.
 
 ## **Usage**
 
@@ -111,9 +111,9 @@ To use the driver, you need to initialoze first the driver by passing a serial p
 ### Initialization
 
 ```python
-import serialCommand
+import serial_command
 
-ser = serialCommand.control("/dev/ttyS2")
+ser = serial_command.control("/dev/ttyS2")
 ```
 
 Note that the ser variable needs to be initialized early in the code so you can use it in the various functions and lower in your code.
@@ -123,7 +123,7 @@ Note that the ser variable needs to be initialized early in the code so you can 
 Then you can call any of the functions. For example to move forward the motor A at 75% of the full speed:
 
 ```python
-ser.ChangeMotorA(serialCommand.motor.MOTOR_FORWARD)
+ser.ChangeMotorA(serial_command.motor.MOTOR_FORWARD)
 # This is doing the same thing as well:
 # ser.ChangeMotorA(1)
 ser.ChangePWM(192)
@@ -140,7 +140,7 @@ ser.ChangePWM(255)
 Changing the direction is easy, just setup the direction you want from the enum. For example moving almost to the left:
 
 ```python
-ser.ChangeDirection(serialCommand.direction.DIR_LEFT_4)
+ser.ChangeDirection(serial_command.direction.DIR_LEFT_4)
 # This is doing the same thing as well:
 # ser.ChangeDirection(3)
 ```
@@ -148,7 +148,7 @@ ser.ChangeDirection(serialCommand.direction.DIR_LEFT_4)
 Then if you want to put it back to straight:
 
 ```python
-ser.ChangeDirection(serialCommand.direction.DIR_STRAIGHT)
+ser.ChangeDirection(serial_command.direction.DIR_STRAIGHT)
 # This is doing the same thing as well:
 # ser.ChangeDirection(7)
 ```
@@ -156,7 +156,7 @@ ser.ChangeDirection(serialCommand.direction.DIR_STRAIGHT)
 and move almost to the far right:
 
 ```python
-ser.ChangeDirection(serialCommand.direction.DIR_RIGHT_4)
+ser.ChangeDirection(serial_command.direction.DIR_RIGHT_4)
 # This is doing the same thing as well:
 # ser.ChangeDirection(11)
 ```

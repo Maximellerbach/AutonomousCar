@@ -5,7 +5,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 
 
-from custom_modules import serialCommand
+from custom_modules import serial_command
 
 dico = [3, 5, 7, 9, 11]
 speed = 70
@@ -14,7 +14,7 @@ model = load_model("models/model.h5")
 
 cap = cv2.VideoCapture(0)
 
-ser = serialCommand.control("/dev/ttyS0")
+ser = serial_command.control("/dev/ttyS0")
 ser.ChangeMotorA(2)
 
 while(True):

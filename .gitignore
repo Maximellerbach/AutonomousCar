@@ -1,11 +1,11 @@
 .vscode/*
 /create_model/convolution/__pycache__
 /test_model/__pycache__
-/PythonSerialControl/__pycache__
+/python_serial_control/__pycache__
 /pseudo-slam(experimental)/__pycache__
 /ImageWeb/__pycache__
 /ImageWeb/image.jpg
 /__pycache__
-/JoyControl/recorded
+/joy_control/recorded
 /logs
 /tmp

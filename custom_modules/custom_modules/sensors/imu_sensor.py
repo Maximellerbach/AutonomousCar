@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import sys
 from threading import Thread
 from di_sensors.inertial_measurement_unit import InertialMeasurementUnit
 

@@ -6,11 +6,11 @@ import numpy as np
 from tensorflow.keras.models import load_model
 
 
-from custom_modules import serialCommand
+from custom_modules import serial_command
 
 serialport = '/dev/ttyS0'
 os.system('sudo chmod 0666 {}'.format(serialport))
-ser = serialCommand.control(serialport)
+ser = serial_command.control(serialport)
 
 wi = 160
 he = 120
