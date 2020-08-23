@@ -1,7 +1,6 @@
 import collections
 import time
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow
 import tensorflow_model_optimization as tfmot
@@ -12,6 +11,7 @@ from tensorflow.keras.models import load_model
 
 # import pred_function
 from custom_modules import architectures, autolib, DatasetJson
+from custom_modules.visutils import plot
 from datagenerator import image_generator
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
@@ -236,14 +236,12 @@ class model_trainer():
             frcs.append(dict(zip(unique, frc)))
 
             if show:
-                plt.bar(list(d.keys()), list(d.values()),
-                        width=component.weight_acc)
-                plt.show()
+                plot.plot_bars(d, component.weight_acc)
 
         return frcs
 
     def calculate_FLOPS(self):
-        """Calculate the number of flops in a self.model.
+        """Calculate the number of flops in self.model.
 
         Returns:
             int: total number of flops

@@ -1,10 +1,10 @@
 # Autonomous car project
 
 then: 
-![car](/docs_image/car.jpg)
+![car](/docs/images/car.jpg)
 
 and now: 
-![car2](/docs_image/car2.jpg)
+![car2](/docs/images/car2.jpg)
 
 ## The project
 
@@ -16,17 +16,17 @@ This project involve multiple aspects and is very rich:
 
 The old hardware:
 - The board used for intelligence is a RockPro64 from pine64 running a Debian 9 (Stretch) arm64 v8 (aarch64) and as there are a lot of things to install on it, you'll find [the list of the main elements (openCV, Tensorflow, Numpy) and how to compile or install them here](/docs/software.md).
-![rockpro64](/docs_image/ROCKPro64_slide.jpg)
-![schema](/docs_image/schema.png)
+![rockpro64](/docs/images/ROCKPro64_slide.jpg)
+![schema](/docs/images/schema.png)
 
 New hardware:
 - The board I use now is a Raspberry Pi 3b+, running raspbian, you will find some tutorials on how to install Tensorflow and OpenCV on internet.
-![schema2](/docs_image/schema2.png)
+![schema2](/docs/images/schema2.png)
 
 
 - Micro controler code, in our case an Arduino mini, to take orders from a board and actually pilot the low level electronic to make the motor move forward/backward as well as the car turning. [Documentation, protocole and code available](/ArduinoControl/readme.md). All the code for the Arduino is written in C.
 
-![arduino](/docs_image/arduino.jpg)
+![arduino](/docs/images/arduino.jpg)
 
 - Classes and code to take the order from the AI and actually send it to the various electronic elements. More details can be [found in this section](/python_serial_control/readme.md). As for the rest of the high level code, it is written in Python, does involve Serial Port communications.
 
