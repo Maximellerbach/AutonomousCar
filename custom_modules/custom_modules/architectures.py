@@ -10,10 +10,7 @@ from tensorflow.keras.regularizers import l1_l2
 
 
 def dir_loss(y_true, y_pred):
-    """
-    custom loss function for the models
-    (only use if you have the same models as me)
-    """
+    """Loss function for the models."""
     return mae(y_true, y_pred)/2 + mse(y_true, y_pred)
 
 
@@ -55,10 +52,10 @@ def apply_pruning_to_dense_and_conv(layer):
     return layer
 
 
-def create_pruning_model(model, sparsity=0.5):
+def create_pruning_model(model, sparsity=0.5, clone_function=apply_pruning_to_dense):
     return tensorflow.keras.models.clone_model(
         model,
-        clone_function=apply_pruning_to_dense)
+        clone_function=clone_function)
 
 
 def get_fe(model):

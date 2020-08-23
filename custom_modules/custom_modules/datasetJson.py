@@ -3,6 +3,7 @@ import io
 import json
 import os
 import time
+from enum import Enum
 from glob import glob
 
 import cv2
@@ -14,12 +15,12 @@ class DatasetJson():
     """Dataset class that contains everything needed to load and save a json dataset."""
 
     def __init__(self, lab_structure):
-        """Load the given label structure
+        """Load the given label structure.
 
         Args:
             lab_structure (list): list of components (class)
         """
-        self.set_label_structure(lab_structure)  # you could set label_structure again
+        self.set_label_structure(lab_structure)
         self.__meta_components = [img_path_component()]  # this is not changing
 
         self.components_name_mapping = dict(
@@ -56,7 +57,6 @@ class DatasetJson():
             annotations (dict): dict containing annotations to be saved
             dos (string, optional): dos component if not set previously. Defaults to None.
         """
-
         if isinstance(annotations, list):
             if dos is None:
                 raise "dos keyword should be specified"
@@ -463,3 +463,10 @@ class imgbase64_component:
         annotations_dict[self.name] = encoded
 
         return annotations_dict
+
+
+class every_component(Enum):  # not used for the moment
+    DIRECTION = direction_component
+    SPEED = speed_component
+    THROTTLE = throttle_component
+    TIME = time_component

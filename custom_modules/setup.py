@@ -8,5 +8,6 @@ setup(
     author='Maxime Ellerbach',
     licence='MIT License',
     packages=['custom_modules'],
-    install_requires=['opencv-python', 'numpy', 'pykalman', 'matplotlib', 'serial']
+    install_requires=['opencv-python', 'pillow', 'numpy', 'tensorflow',
+                      'pykalman', 'matplotlib', 'serial', 'tqdm']
 )
