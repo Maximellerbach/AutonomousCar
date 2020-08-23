@@ -2,6 +2,7 @@
 
 This code allow to pilot thru serial port an autonomous car thru serial commands. This file describes the protocol as well as the Python implementation and the Arduino implementation.
 
+The actual code is located [here](/custom_modules/custom_modules/serialCommand.py)
 Please check [this page](webcontrol.md) if you want to test the protocole in a web page.
 
 ## The communication protocol
@@ -188,7 +189,7 @@ class motor(IntEnum):
 
 ### bit masks are not easy to use with bytes
 
-If you want to use bit maks on bytes as Python does not have indivisual bytes. And all need to be converted first to byte arrays. And then masks applied on the byte arrays.
+If you want to use bit mask on bytes as Python does not have indivisual bytes. And all need to be converted first to byte arrays. And then masks applied on the byte arrays.
 
 The following example is used to send a change in direction to the board. As per the protocol, the lower part of the first byte is used for the direction.
 

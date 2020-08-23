@@ -2,7 +2,7 @@
 
 This part of the code has been used in early tests during choices of architecture. It is using wiringpi. So don't forget to install the class before using it.
 
-Those classes can be used very easilly with a Flask server like in the [other part of the project](../PythonSerialControl/webcontrol.md). You'll just have to call those classes instead of the serial port. This will allow to drive your car from a Raspberry Pi using a web interface :-)
+Those classes can be used very easilly with a Flask server like in the [other part of the project](/PythonSerialControl/webcontrol.md). You'll just have to call those classes instead of the serial port. This will allow to drive your car from a Raspberry Pi using a web interface :-)
 
 ## Motor
 
