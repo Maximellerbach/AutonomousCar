@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from .visutils import plot
+from .vis import plot
 
 # TODO refactor those functions broke it by changing dataset
 
@@ -12,7 +12,7 @@ def compare_pred(self, Dataset, dos, dt_range=(0, -1)):
     paths = paths[dt_range[0]:dt_range[1]]
 
     preds = []
-    annotations = []
+    annotation = []
     for path in tqdm(paths):
         img, annotation = Dataset.load_img_and_annotation(path)
         annotations.append(annotation)
@@ -32,7 +32,7 @@ def compare_pred(self, Dataset, dos, dt_range=(0, -1)):
 
 
 def pred_img(self, Dataset, path, sleeptime):
-    img, annotations = Dataset.load_img_and_annotation(path)
+    img, annotation = Dataset.load_img_and_annotation(path)
     to_pred_img = np.expand_dims(img/255, axis=0)
 
     inputs = [to_pred_img]

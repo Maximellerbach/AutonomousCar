@@ -25,7 +25,7 @@ gdos = np.concatenate([i for i in gdos])
 np.random.shuffle(gdos)
 
 for labpath in gdos:
-    img, annotations = Dataset.load_img_and_annotation(labpath)
+    img, annotation = Dataset.load_img_and_annotation(labpath)
     pred = model.predict(np.expand_dims(img/255, axis=0))[0][0]
     print(f'steering: {pred}')
 

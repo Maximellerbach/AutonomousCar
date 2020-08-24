@@ -1,10 +1,9 @@
-from custom_modules.deprecated import dataset
-from custom_modules import DatasetJson
+from custom_modules.datasets import dataset, dataset_json
 from glob import glob
 
 dataset = dataset.Dataset(
     [dataset.direction_component, dataset.time_component])
-datasetJson = DatasetJson(
+datasetJson = dataset_json.DatasetJson(
     ["direction", "speed", "throttle", "time"])
 
 src_dos = "C:\\Users\\maxim\\random_data\\12 sim circuit 2 new"

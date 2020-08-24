@@ -1,10 +1,7 @@
-import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pykalman
 
-from custom_modules import serial_command
 from custom_modules.sensors import sensorClass
 
 if __name__ == "__main__":

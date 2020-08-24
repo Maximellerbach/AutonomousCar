@@ -28,10 +28,10 @@ class Dataset():
         return list(map(get_item_comp, self.label_structure))
 
     def load_img_ang_annotation(self, path):
-        annotations = self.load_annotation(path)
+        annotation = self.load_annotation(path)
         img = self.load_image(path)
 
-        return img, annotations
+        return img, annotation
 
     def repeat_function(self, function, items):
         return [function(item) for item in items]
@@ -143,12 +143,12 @@ class time_component:
         return float(item)
 
 
-def annotations_to_name(annotations):
+def annotation_to_name(annotation):
     string = ""
-    for it, component in enumerate(annotations):
+    for it, component in enumerate(annotation):
         string += str(component)
 
-        if it != len(annotations)-1:
+        if it != len(annotation)-1:
             string += "_"
         else:
             string += ".png"
@@ -156,7 +156,7 @@ def annotations_to_name(annotations):
     return string
 
 
-def save(save_path, dts, annotations):
+def save(save_path, dts, annotation):
     import os
     import time
 
@@ -168,7 +168,7 @@ def save(save_path, dts, annotations):
 
     for i in tqdm(range(len(dts))):
         time.sleep(0.0001)
-        name = annotations_to_name(annotations[i])
+        name = annotation_to_name(annotation[i])
         shutil.copy(dts[i], save_path+name)
 
 
@@ -196,12 +196,12 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
     dts = glob(dos+"*")
     Y = []
     for path in dts:
-        annotations = dataset.load_annotation(path)
+        annotation = dataset.load_annotation(path)
         converted_throttle = opt_acc(
-            annotations[0], annotations[1], max_throttle, min_throttle, target_speed)
-        annotations.insert(2, converted_throttle)
+            annotation[0], annotation[1], max_throttle, min_throttle, target_speed)
+        annotation.insert(2, converted_throttle)
 
-        Y.append(annotations)
+        Y.append(annotation)
     return dts, Y
 
 
@@ -211,9 +211,9 @@ def add_dummy_speed(dos, dummy_speed=10):
     dts = glob(dos+"*")
     Y = []
     for path in dts:
-        annotations = dataset.load_annotation(path)
-        annotations.insert(1, dummy_speed)
-        Y.append(annotations)
+        annotation = dataset.load_annotation(path)
+        annotation.insert(1, dummy_speed)
+        Y.append(annotation)
 
     return dts, Y
 
@@ -224,9 +224,9 @@ def cat2linear_dataset(dos):
     dts = glob(dos+"*")
     Y = []
     for path in dts:
-        annotations = dataset.load_annotation(path)
-        annotations[0] = cat2linear(annotations[0])
-        Y.append(annotations)
+        annotation = dataset.load_annotation(path)
+        annotation[0] = cat2linear(annotation[0])
+        Y.append(annotation)
 
     return dts, Y
 
@@ -236,6 +236,6 @@ def cat2linear(ny):
 
 
 if __name__ == "__main__":
-    dts, annotations = cat2linear_dataset(
+    dts, annotation = cat2linear_dataset(
         "C:\\Users\\maxim\\random_data\\11 sim circuit 2\\")
-    save("C:\\Users\\maxim\\random_data\\linear\\11 sim circuit 2\\", dts, annotations)
+    save("C:\\Users\\maxim\\random_data\\linear\\11 sim circuit 2\\", dts, annotation)

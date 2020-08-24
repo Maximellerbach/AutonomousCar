@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 
-class DatasetJson():
+class Dataset():
     """Dataset class that contains everything needed to load and save a json dataset."""
 
     def __init__(self, lab_structure):
@@ -38,44 +38,44 @@ class DatasetJson():
         else:
             self.__label_structure = [i() for i in lab_structure]
 
-    def save_annotations_dict(self, annotations):
-        """Save the annotations dict to {dos}{time}{self.format}.
+    def save_annotation_dict(self, annotation):
+        """Save the annotation dict to {dos}{time}{self.format}.
 
         Args:
-            annotations (dict): dict containing annotations
+            annotation (dict): dict containing annotation
         """
-        dos = annotations.get('dos')
-        time_cmp = annotations.get('time')
+        dos = annotation.get('dos')
+        time_cmp = annotation.get('time')
         with open(os.path.normpath(f'{dos}{time_cmp}{self.format}'), 'w') as json_file:
-            json.dump(annotations, json_file)
+            json.dump(annotation, json_file)
 
-    def save_img_and_annotations(self, img, annotations, dos=None):
-        """Save an image with it's annotations.
+    def save_img_and_annotation(self, img, annotation, dos=None):
+        """Save an image with it's annotation.
 
         Args:
             img (np.ndarray): image to be saved
-            annotations (dict): dict containing annotations to be saved
+            annotation (dict): dict containing annotation to be saved
             dos (string, optional): dos component if not set previously. Defaults to None.
         """
-        if isinstance(annotations, list):
+        if isinstance(annotation, list):
             if dos is None:
                 raise "dos keyword should be specified"
-            assert(len(annotations) == len(self.__label_structure))
+            assert(len(annotation) == len(self.__label_structure))
 
             to_save_dict = {'dos': dos}
-            for component, annotation in zip(self.__label_structure, annotations):
+            for component, annotation in zip(self.__label_structure, annotation):
                 to_save_dict = component.add_item_to_dict(
                     annotation, to_save_dict)
 
-        elif isinstance(annotations, dict):
+        elif isinstance(annotation, dict):
             # check if there is the expected number of labels
-            if len(annotations.keys()) != len(self.__label_structure):
+            if len(annotation.keys()) != len(self.__label_structure):
                 to_save_dict = {}
                 for component in self.__label_structure:
                     to_save_dict[component.name] = component.get_item(
-                        annotations)
+                        annotation)
             else:
-                to_save_dict = annotations
+                to_save_dict = annotation
 
             if 'dos' not in to_save_dict.keys() and dos is not None:
                 to_save_dict["dos"] = dos
@@ -84,7 +84,7 @@ class DatasetJson():
 
         else:
             raise ValueError(
-                f'annotations should be a list or a dict, not {type(annotations)}')
+                f'annotation should be a list or a dict, not {type(annotation)}')
 
         for component in self.__meta_components:
             to_save_dict = component.add_item_to_dict(to_save_dict)
@@ -94,30 +94,30 @@ class DatasetJson():
         with open(os.path.normpath(f'{dos}{time_cmp}{self.format}'), 'w') as json_file:
             json.dump(to_save_dict, json_file)
 
-    def save_img_and_annotations_deprecated(self, dos, img, annotations):
-        path = dos+str(annotations[-1])  # save json with time component
-        annotations.insert(-1, path+'.png')  # add the img_path component
-        cv2.imwrite(annotations[-2], img)
+    def save_img_and_annotation_deprecated(self, dos, img, annotation):
+        path = dos+str(annotation[-1])  # save json with time component
+        annotation.insert(-1, path+'.png')  # add the img_path component
+        cv2.imwrite(annotation[-2], img)
 
-        annotations_dict = self.annotations_to_dict_deprecated(annotations)
+        annotation_dict = self.annotation_to_dict_deprecated(annotation)
         with open(path+self.format, 'w') as json_file:
-            json.dump(annotations_dict, json_file)
+            json.dump(annotation_dict, json_file)
 
-    def save_img_encoded_json_deprecated(self, dos, imgpath, annotations):
-        path = dos+str(annotations[-1])
+    def save_img_encoded_json_deprecated(self, dos, imgpath, annotation):
+        path = dos+str(annotation[-1])
         component = self.get_component('img_base64')
-        annotations.insert(-1, component.encode_img(imgpath))
+        annotation.insert(-1, component.encode_img(imgpath))
 
-        annotations_dict = self.annotations_to_dict_deprecated(annotations)
+        annotation_dict = self.annotation_to_dict_deprecated(annotation)
         with open(path+self.format, 'w') as json_file:
-            json.dump(annotations_dict, json_file)
+            json.dump(annotation_dict, json_file)
 
-    def annotations_to_dict_deprecated(self, annotations):
-        annotations_dict = {}
+    def annotation_to_dict_deprecated(self, annotation):
+        annotation_dict = {}
         for it, component in enumerate(self.__label_structure):
-            annotations_dict[component.name] = annotations[it]
+            annotation_dict[component.name] = annotation[it]
 
-        return annotations_dict
+        return annotation_dict
 
     def load_json(self, path):
         """Load a json json_file.
@@ -178,12 +178,12 @@ class DatasetJson():
             return meta_dict
 
     def load_img_and_annotation(self, path, to_list=True):
-        annotations = self.load_annotation(path, to_list=to_list)
+        annotation = self.load_annotation(path, to_list=to_list)
         img_path = self.load_meta(path, to_list=False).get('img_path')
         if img_path is None:
             raise ValueError('json does not have "img_path" component')
         img = cv2.imread(img_path)
-        return img, annotations
+        return img, annotation
 
     def load_img(self, path):
         img_path = self.load_meta(path, to_list=False).get('img_path')
@@ -302,20 +302,20 @@ class DatasetJson():
 
     def imgstring2json(self, dataset_obj, dst_dos, path):
         img = dataset_obj.load_image(path)
-        annotations = dataset_obj.load_annotation(path)
-        self.save_img_and_annotations(img, annotations, dos=dst_dos)
+        annotation = dataset_obj.load_annotation(path)
+        self.save_img_and_annotation(img, annotation, dos=dst_dos)
 
     def imgstring2dict2json(self, dataset_obj, dst_dos, path):
         img = dataset_obj.load_image(path)
 
         keys = [component.name for component in dataset_obj.label_structure]
         values = dataset_obj.load_annotation(path)
-        annotations_dict = dict(zip(keys, values))
-        self.save_img_and_annotations(img, annotations_dict, dos=dst_dos)
+        annotation_dict = dict(zip(keys, values))
+        self.save_img_and_annotation(img, annotation_dict, dos=dst_dos)
 
     def imgstring2json_encoded_deprecated(self, dataset_obj, dst_dos, path):
-        annotations = dataset_obj.load_annotation(path)
-        self.save_img_encoded_json_deprecated(dst_dos, path, annotations)
+        annotation = dataset_obj.load_annotation(path)
+        self.save_img_encoded_json_deprecated(dst_dos, path, annotation)
 
     def imgstring2json_dos(self, dataset_obj, imgstring2dos_function, src_dos, dst_dos):
         from tqdm import tqdm
@@ -361,12 +361,12 @@ class direction_component:
     def get_item(self, json_data):
         return (self.type(json_data.get(self.name, 0.0))+self.offset)*self.scale
 
-    def add_item_to_dict(self, item, annotations_dict):
+    def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):
-            annotations_dict[self.name] = item
+            annotation_dict[self.name] = item
         else:
             ValueError(f'item type: {type(item)} should match {self.type}')
-        return annotations_dict
+        return annotation_dict
 
 
 class speed_component:
@@ -381,12 +381,12 @@ class speed_component:
     def get_item(self, json_data):
         return (self.type(json_data.get(self.name, 0.0))+self.offset)*self.scale
 
-    def add_item_to_dict(self, item, annotations_dict):
+    def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):
-            annotations_dict[self.name] = item
+            annotation_dict[self.name] = item
         else:
             ValueError(f'item type: {type(item)} should match {self.type}')
-        return annotations_dict
+        return annotation_dict
 
 
 class throttle_component:
@@ -401,12 +401,12 @@ class throttle_component:
     def get_item(self, json_data):
         return (self.type(json_data.get(self.name, 0.0))+self.offset)*self.scale
 
-    def add_item_to_dict(self, item, annotations_dict):
+    def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):
-            annotations_dict[self.name] = item
+            annotation_dict[self.name] = item
         else:
             ValueError(f'item type: {type(item)} should match {self.type}')
-        return annotations_dict
+        return annotation_dict
 
 
 class time_component:
@@ -418,9 +418,9 @@ class time_component:
     def get_item(self, json_data):
         return self.type(json_data.get(self.name, time.time()))
 
-    def add_item_to_dict(self, item, annotations_dict):
-        annotations_dict[self.name] = self.type(item)
-        return annotations_dict
+    def add_item_to_dict(self, item, annotation_dict):
+        annotation_dict[self.name] = self.type(item)
+        return annotation_dict
 
 
 class img_path_component:
@@ -432,13 +432,13 @@ class img_path_component:
     def get_item(self, json_data):
         return self.type(json_data[self.name])
 
-    def add_item_to_dict(self, annotations_dict):
-        time_cmp = annotations_dict.get('time', time.time())
-        dos = annotations_dict.get('dos', "")
+    def add_item_to_dict(self, annotation_dict):
+        time_cmp = annotation_dict.get('time', time.time())
+        dos = annotation_dict.get('dos', "")
         img_path = os.path.normpath(f'{dos}/{time_cmp}.png')
 
-        annotations_dict[self.name] = img_path
-        return annotations_dict
+        annotation_dict[self.name] = img_path
+        return annotation_dict
 
 
 class imgbase64_component:
@@ -458,11 +458,11 @@ class imgbase64_component:
             img_encoded = base64.b64encode(img_file.read()).decode('utf-8')
         return img_encoded
 
-    def add_item_to_dict(self, img_path, annotations_dict):
+    def add_item_to_dict(self, img_path, annotation_dict):
         encoded = self.encode_img(img_path)
-        annotations_dict[self.name] = encoded
+        annotation_dict[self.name] = encoded
 
-        return annotations_dict
+        return annotation_dict
 
 
 class every_component(Enum):  # not used for the moment

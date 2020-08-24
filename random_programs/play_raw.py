@@ -1,5 +1,6 @@
-from custom_modules import DatasetJson
 import cv2
+
+from custom_modules.datasets.dataset_json import Dataset as DatasetJson
 
 if __name__ == "__main__":
     Dataset = DatasetJson(['direction', 'time'])

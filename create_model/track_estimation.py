@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from custom_modules import DatasetJson
-from custom_modules.visutils import plot
+from custom_modules.datasets.dataset_json import Dataset as DatasetJson
+from custom_modules.vis import plot
 
 
 class track_estimation():
@@ -390,14 +390,15 @@ class track_estimation():
 if __name__ == "__main__":
     # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
     Dataset = DatasetJson(["direction", "speed", "throttle", "time"])
-    paths = Dataset.load_dos_sorted('C:\\Users\\maxim\\recorded_imgs\\clean_lap\\')
+    paths = Dataset.load_dos_sorted(
+        'C:\\Users\\maxim\\recorded_imgs\\clean_lap\\')
     datalen = len(paths)
-    
+
     sequence_to_study = (1550, 3100)
 
     dates = [Dataset.load_component_item(i, -1) for i in paths]
     speeds = [Dataset.load_component_item(i, 1) for i in paths]
-    
+
     ''' # TODO: refactoring
     speeds = speeds[sequence_to_study[0]:sequence_to_study[1]-1]
     its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1],

@@ -4,7 +4,7 @@ import tensorflow
 from tensorflow.keras.models import load_model
 from tqdm import tqdm
 
-from custom_modules import DatasetJson
+from custom_modules.datasets.dataset_json import Dataset as DatasetJson
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -12,7 +12,7 @@ for gpu_instance in physical_devices:
 
 
 def get_latent(self, model, path):
-    img, annotations = self.load_img_and_annotation(path)
+    img, annotation = self.load_img_and_annotation(path)
     return model.predict(np.expand_dims(img/255, axis=0))[0]
 
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
             for near in nearests:
                 # gets nearest images and displays it
-                img, annotations = Dataset.load_img_and_annotation(paths[near])
+                img, annotation = Dataset.load_img_and_annotation(paths[near])
                 cv2.imshow('img', img)
                 cv2.waitKey(0)
 

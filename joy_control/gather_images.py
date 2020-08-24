@@ -88,7 +88,7 @@ while not joy.Back():
 
     if joy_button_a:
         _, img = cap.read()
-        Dataset.save_img_and_annotations(
+        Dataset.save_img_and_annotation(
             img,
             [steering, current_speed, throttle, time.time()],
             dos=dos_save)

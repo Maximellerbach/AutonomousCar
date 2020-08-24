@@ -1,6 +1,8 @@
-from custom_modules import DatasetJson
-from tqdm import tqdm
 from glob import glob
+
+from tqdm import tqdm
+
+from custom_modules.datasets.dataset_json import Dataset as DatasetJson
 
 if __name__ == "__main__":
 
@@ -12,7 +14,7 @@ if __name__ == "__main__":
     dos_name = '20 checkpoint patch'
 
     for json_path in tqdm(glob(f'{dst_dos}\\{dos_name}'+'\\*.json')):
-        annotations = datasetJson.load_annotation(json_path, to_list=False)
-        annotations['dos'] = dst_dos+dos_name+"\\"
-        annotations['img_path'] = annotations['dos']+str(annotations['time'])+".png"
-        datasetJson.save_annotations_dict(annotations)
+        annotation = datasetJson.load_annotation(json_path, to_list=False)
+        annotation['dos'] = dst_dos+dos_name+"\\"
+        annotation['img_path'] = annotation['dos']+str(annotation['time'])+".png"
+        datasetJson.save_annotation_dict(annotation)

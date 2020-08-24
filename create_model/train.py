@@ -11,8 +11,8 @@ from tensorflow.keras.models import load_model
 
 # import pred_function
 from custom_modules import architectures, autolib, DatasetJson
-from custom_modules.visutils import plot
-from datagenerator import image_generator
+from custom_modules.vis import plot
+from custom_modules.datagenerator import image_generator
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:

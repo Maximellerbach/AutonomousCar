@@ -60,21 +60,21 @@ class image_generator(keras.utils.Sequence):
                     i = [i[0]]*(self.seq_batchsize-seq_len)+i
 
                 for path in i:
-                    img, annotations = self.Dataset.load_img_and_annotation(
+                    img, annotation = self.Dataset.load_img_and_annotation(
                         path)
                     img = cv2.resize(img, (self.img_cols, self.img_rows))
 
                     xseq.append(img)
-                    yseq.append(annotations)
+                    yseq.append(annotation)
 
                 xbatch.append(xseq)
                 ybatch.append(yseq)
 
             else:
-                img, annotations = self.Dataset.load_img_and_annotation(i)
+                img, annotation = self.Dataset.load_img_and_annotation(i)
                 img = cv2.resize(img, (self.img_cols, self.img_rows))
                 xbatch.append(img)
-                ybatch.append(annotations)
+                ybatch.append(annotation)
 
         if self.augm:
             """ # this is the old "bourrin" way where we add transformed image to the clean one
