@@ -3,36 +3,41 @@ import time
 
 import cv2
 import numpy as np
-from PIL import Image
 
-from ..psql import db_utils, queries
+from ..psql import db_utils
+from ..psql.queries import label
 
 
 class Dataset():
-    """Dataset class that contains everything needed to load and save a sql dataset."""
+    """Dataset class that contains everything needed to load and save a sql dataset, not used for the moment."""
 
-    def __init__(self):
+    def __init__(self, lab_structure):
         db_utils.start_if_not_running()
         self.conn = db_utils.connect()
+        self.rows_meta = label.fetch_rows_meta(self.conn)
 
-    def encode_image(self, image):
-        return base64.b64encode(image)
+    def save_annotation_dict(self, annotation_dict, dataset_name=None):
+        if dataset_name is not None:
+            annotation_dict['dataset_name'] = dataset_name
+        return label.add(self.conn, annotation_dict)
 
-    def decode_image(self, image):
-        bytes_img = base64.b64decode(image)
-        return np.frombuffer(bytes_img, dtype=np.int8)
+    def load_image(self, img_path):
+        return cv2.imread(img_path)
 
-    def save_image_dict(self, image_dict):
-        if 'time' not in image_dict.keys():
-            image_dict['time'] = time.time()
+    def load_annotation_by_id(self, item_id):
+        return label.fetch_by_id(self.conn, item_id)
 
-        # convert numpy array image to base64 encoded string
-        if not isinstance(image_dict['image'], str):
-            image_dict['image'] = self.encode_image(image_dict['image'])
+    def load_image_and_annotations_by_id(self, item_id):
+        annotation = self.load_annotation(item_id)
+        img_path = annotation.get('image_path')
 
-        queries.image.add(conn, image_dict)
+        return (
+            self.load_image(img_path),
+            annotation
+        )
 
-    def save_annotation_dict(self, annotation):
-        queries.label.add(annotation)
+    def load_dataset_sorted(self, dataset_name):
+        return list(label.generator_load_dataset(self.conn, dataset_name))
 
-    def save_img_and_annotation(self, img, annotation, dos=None):
+    def load_sorted(self, dataset_name):
+        return list(label.generator_load(self.conn, dataset_name))

@@ -42,3 +42,9 @@ def start_if_not_running(filename='database.ini', section='database'):
         conn = connect()
     except psycopg2.Error:
         _start_db(filename=filename, section=section)
+        conn = connect()
+    return conn
+
+
+if __name__ == "__main__":
+    conn = start_if_not_running()

@@ -1,8 +1,8 @@
-from custom_modules.datasets import dataset, dataset_json
+from custom_modules.datasets import dataset_img, dataset_json
 from glob import glob
 
-dataset = dataset.Dataset(
-    [dataset.direction_component, dataset.time_component])
+dataset = dataset_img.Dataset(
+    [dataset_img.direction_component, dataset_img.time_component])
 datasetJson = dataset_json.DatasetJson(
     ["direction", "speed", "throttle", "time"])
 
