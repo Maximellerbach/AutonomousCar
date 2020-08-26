@@ -5,7 +5,7 @@ from tensorflow.keras.layers import (Activation, BatchNormalization, Concatenate
 from tensorflow.keras.layers import TimeDistributed as TD
 from tensorflow.keras.losses import mae, mse
 from tensorflow.keras import Input
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.regularizers import l1_l2
 
 
@@ -68,6 +68,26 @@ def get_fe(model):
             end_index = it
 
     return Model(model.layers[start_index].input, model.layers[end_index].output)
+
+
+def get_flat_fe(model):
+    fe = get_fe(model)
+
+    if len(fe.layers[-1].output_shape) == 2:
+        return fe
+    else:
+        inp = Input(shape=(120, 160, 3))
+        x = fe(inp)
+        x = Flatten()(x)
+        return Model(inp, x)
+
+
+def safe_load_model(path, compile=True):
+    try:
+        return load_model(path, compile=compile)
+    except ValueError:
+        with tfmot.sparsity.keras.prune_scope():
+            return load_model(path, compile=compile)
 
 
 def create_light_CRNN(dataset, img_shape,

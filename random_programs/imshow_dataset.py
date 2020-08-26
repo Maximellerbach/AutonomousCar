@@ -4,10 +4,11 @@ import numpy as np
 import tensorflow_model_optimization as tfmot
 from tensorflow.keras.models import load_model
 
-from custom_modules import architectures, pred_function, DatasetJson
+from custom_modules import architectures, pred_function
+from custom_modules.datasets import dataset_json
 
 
-Dataset = DatasetJson(["direction", "speed", "throttle", "time"])
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 doss = "C:\\Users\\maxim\\random_data\\json_dataset\\"
 
 with tfmot.sparsity.keras.prune_scope():

@@ -4,15 +4,13 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-from custom_modules.datasets.dataset_json import Dataset as DatasetJson
+from custom_modules.datasets import dataset_json
 from custom_modules.vis import plot
 
 
-class track_estimation():
-    def __init__(self, size=(512, 512), its=30, steer_coef=30):
+class TrackEstimation():
+    def __init__(self, size=(512, 512), steer_coef=30):
         self.pmap = np.zeros((size[0], size[1], 3))
-        self.its = its
-        self.dt = 1/self.its
         self.steer_coef = steer_coef
         self.segment_map = []
         self.angle = 0
@@ -81,17 +79,15 @@ class track_estimation():
         pos_list = []
         lightpos_list = []
         deg_list = []
-        lab_list = []
         pos = [0, 0]
         angle = 0
 
         for it, st in enumerate(Y):
             st = -st  # transform [-1, 1] to [1, -1]
-            lab_list.append(st)
 
             # TODO current steering angle estimation # https://stackoverflow.com/questions/25895222/estimated-position-of-vector-after-time-angle-and-speed
 
-            degree_angle = st*self.steer_coef * \
+            degree_angle = math.pi * st * self.steer_coef * \
                 (speed_series[it]*time_series[it])
             rad = math.radians(degree_angle)
 
@@ -111,7 +107,7 @@ class track_estimation():
             if degree_angle != 0. or it == 0:
                 lightpos_list.append((pos[0], pos[1], it))
 
-        return pos_list, lightpos_list, vect_list, deg_list, lab_list
+        return pos_list, lightpos_list, vect_list, deg_list
 
     def boundaries(self, pos_list, radius=1):
         '''
@@ -145,7 +141,7 @@ class track_estimation():
 
         return iner, outer
 
-    def segment_track(self, pos_list, deg_list, th=0.005, look_back=30):
+    def segment_track(self, pos_list, degs, th=0.005, look_back=30):
         '''
         Function to detect turns in the trajectory according to the average rotation of the car (look_back is the number of iterations averaged) by applying a threshold.
         After that, storing the [x,y,it,sign] of the start and the end of the turn, returning this array of shape (n, 2, 4) and averaged rotation
@@ -153,12 +149,12 @@ class track_estimation():
 
         turning = False
         way = 0
-        average = [0]*len(deg_list)
+        average = [0]*len(degs)
         thresholded = []
         turn = []
 
-        for it in range(look_back//2, len(deg_list)-look_back//2):
-            average[it] = np.average(deg_list[it-look_back//2:it+look_back//2])
+        for it in range(look_back//2, len(degs)-look_back//2):
+            average[it] = np.average(degs[it-look_back//2:it+look_back//2])
 
             if average[it] >= th:
                 if turning is False:
@@ -263,96 +259,56 @@ class track_estimation():
         matchs = [i % n_turns for i in range(len(segments))]
         return matchs, n_turns, 1-loss
 
-    # TODO: calculate speed using distance between segments
-    def distance_from_speed_segments(self, segments, n_turns, ref_speed_segment=[]):
-        distance_segment = np.array([[1., 1.]]*n_turns)
-
-        prev = 0
-
-        if ref_speed_segment == []:
-            ref_speed_segment = np.array([[1., 1.]]*n_turns)
-        assert (ref_speed_segment.shape == (n_turns, 2))
-
-        # initialize distance with speed == 1 or ref speed
-        for it, segm in enumerate(segments):
-            match_number = it % n_turns
-            start = segm[0][2]
-            end = segm[1][2]
-
-            if it != 0:
-                # straight line (actual-prev)
-                straight_dit = start-prev
-                distance_segment[match_number,
-                                 0] = ref_speed_segment[match_number, 0]*straight_dit*self.dt
-
-                # in the turn (end-start)
-                turn_dit = end-start
-                distance_segment[match_number,
-                                 1] = ref_speed_segment[match_number, 1]*turn_dit*self.dt
-
-            prev = end
-
-        return distance_segment
-
-    # TODO: calculate speed using distance between segments
-    def speed_from_distance_segments(self, segments, n_turns, ref_distance_segment=[]):
-        speed_segment = np.array([[1., 1.]]*n_turns)
-
-        prev = 0
-
-        if ref_distance_segment == []:
-            ref_distance_segment = np.array([[1., 1.]]*n_turns)
-        assert (ref_distance_segment.shape == (n_turns, 2))
-
-        # initialize distance with speed == 1 or ref speed
-        for it, segm in enumerate(segments):
-            match_number = it % n_turns
-            start = segm[0][2]
-            end = segm[1][2]
-
-            if it != 0:
-                # straight line (actual-prev)
-                straight_dit = start-prev
-                speed_segment[match_number,
-                              0] = ref_distance_segment[match_number, 0]/(straight_dit*self.dt)
-
-                # in the turn (end-start)
-                turn_dit = end-start
-                speed_segment[match_number,
-                              1] = ref_distance_segment[match_number, 1]/(turn_dit*self.dt)
-
-            prev = end
-
-        return speed_segment
-
     def create_colors(self, classes):
         return [np.random.random(3) for _ in range(classes)]
 
-    def draw_points(self, pos_list, degs=[], colors=[(1, 0, 0), (0, 1, 0), (0, 0, 1)]):
+    def draw_points(self, pos_list, degs, colors=[(1, 0, 0), (0, 1, 0), (0, 0, 1)], thickness=1):
+        # there is 3 states: forward, left and right, thus 3 colors
         assert len(colors) == 3
 
         maxp = np.max(pos_list)
         minp = np.min(pos_list)
 
         h, w, _ = self.pmap.shape
-        for it, p in enumerate(pos_list):
-            rpx = ((p[0]-minp)/(maxp-minp))*w
-            rpy = ((p[1]-minp)/(maxp-minp))*h
+        for pos, deg in zip(pos_list, degs):
+            rpx = ((pos[0]-minp)/(maxp-minp))*w
+            rpy = ((pos[1]-minp)/(maxp-minp))*h
 
-            if it == 0:
-                color = (0, 0, 1)
-                th = 3
-            elif degs[it] > 0:
-                color = colors[0]
-                th = 1
-            elif degs[it] < 0:
-                color = colors[2]
-                th = 1
+            if deg > 0:
+                color = colors[0]*deg
+            elif deg < 0:
+                color = colors[2]*deg
             else:
                 color = colors[1]
-                th = 1
 
-            cv2.circle(self.pmap, (int(rpx), int(rpy)), 1, color, thickness=th)
+            cv2.circle(self.pmap, (int(rpx), int(rpy)),
+                       1, color, thickness=thickness)
+
+    def draw_circuit(self, pos_list, degs, colors=np.array(((1, 0, 0), (0, 1, 0), (0, 0, 1))), thickness=1):
+        # there is 3 states: forward, left and right, thus 3 colors
+        assert len(colors) == 3
+        inner, outer = Estimator.boundaries(pos_list, radius=5)
+
+        to_draw = pos_list + inner + outer
+        degs = degs[:-1] + [-1]*len(inner) + [1]*len(outer)
+
+        maxp = np.max(to_draw)
+        minp = np.min(to_draw)
+
+        h, w, _ = self.pmap.shape
+        for pos, deg in zip(to_draw, degs):
+            rpx = ((pos[0]-minp)/(maxp-minp))*w
+            rpy = ((pos[1]-minp)/(maxp-minp))*h
+
+            if deg > 0:
+                color = colors[0]*deg
+            elif deg < 0:
+                color = colors[2]*deg
+            else:
+                color = colors[1]
+
+            cv2.circle(self.pmap, (int(rpx), int(rpy)),
+                       1, color, thickness=thickness)
 
     def draw_segments(self, segments, matches=[], min_max=[]):
         segments = np.array(segments)
@@ -389,68 +345,47 @@ class track_estimation():
 
 if __name__ == "__main__":
     # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
-    Dataset = DatasetJson(["direction", "speed", "throttle", "time"])
+    Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+    direction_comp = Dataset.get_component("direction")
+    direction_comp.offset = -7
+    direction_comp.scale = 1/4
+
     paths = Dataset.load_dos_sorted(
-        'C:\\Users\\maxim\\recorded_imgs\\clean_lap\\')
-    datalen = len(paths)
+        'C:\\Users\\maxim\\random_data\\json_dataset\\12 sim circuit 2 new\\')
+    sequence_to_study = (0, 1000)
+    paths = paths[sequence_to_study[0]:sequence_to_study[1]]
 
-    sequence_to_study = (1550, 3100)
+    annotations = np.array([Dataset.load_annotation(path) for path in paths])
 
-    dates = [Dataset.load_component_item(i, -1) for i in paths]
-    speeds = [Dataset.load_component_item(i, 1) for i in paths]
+    directions = annotations[:, 0][:-1]
+    speeds = annotations[:, 1]
+    dates = annotations[:, -1]
+    delta_times = dates[1:]-dates[:-1]
 
-    ''' # TODO: refactoring
-    speeds = speeds[sequence_to_study[0]:sequence_to_study[1]-1]
-    its = [i-j for i, j in zip(dates[sequence_to_study[0]+1:sequence_to_study[1]+1],
-                               dates[sequence_to_study[0]:sequence_to_study[1]]) if i-j > 0.0]  # remove images where dt >= 0.1
+    Estimator = TrackEstimation(steer_coef=14)
 
-    av_its = 1/np.average(its)
-    print("average img/sec:", av_its, "| images removed:",
-          (sequence_to_study[1]-sequence_to_study[0])-len(its))
-
-    Y = []
-    for d in paths:
-        lab = float(d.split('\\')[-1].split('_')[0])
-
-        # date = reorder_dataset.get_date(d)
-        Y.append(lab)
-    Y = Y[sequence_to_study[0]:sequence_to_study[1]-1]
-
-    max_steer_angle = 14
-    # don't know why but this is what works xD
-    estimation = track_estimation(its=av_its, steer_coef=max_steer_angle)
-    pos_list, lightpos_list, vect_list, deg_list, lab_list = estimation.get_pos(
-        Y, time_series=its, speed_series=speeds, cat=cat)
+    pos_list, lightpos_list, vect_list, deg_list = Estimator.get_pos(
+        directions, time_series=delta_times, speed_series=speeds)
 
     plot.plot_time_series(np.array(vect_list)[:, 0], np.array(vect_list)[:, 1])
-    # plt.plot(its, linewidth=1) # useless unless you want to see consistency of NN/image saves
 
-    iner_list, outer_list = estimation.boundaries(pos_list, radius=5)
-    diner = [1 for i in range(len(iner_list))]
-    douter = [-1 for i in range(len(outer_list))]
+    iner_bound_list, outer_bound_list = Estimator.boundaries(
+        pos_list, radius=5)
+    diner = [1 for i in range(len(iner_bound_list))]
+    douter = [-1 for i in range(len(outer_bound_list))]
 
-    analyse_turns = False
-    if analyse_turns:
-        # TODO: refactoring to use labels instead of deg_list
-        turns_segments, average = estimation.segment_track(
-            pos_list, lab_list, th=0.2, look_back=5)
-        matchs, n_turns, accuracy = estimation.match_segments(turns_segments)
-        print(matchs, '| number of turns in a lap: ',
-              n_turns, '| accuracy: ', accuracy)
+    turns_segments, average = Estimator.segment_track(
+        pos_list, directions, th=0.5, look_back=10)
 
-        distances = estimation.distance_from_speed_segments(
-            turns_segments, n_turns)
-        speeds = estimation.speed_from_distance_segments(
-            turns_segments, n_turns)
+    matchs, n_turns, accuracy = Estimator.match_segments(turns_segments)
+    print(matchs, '| number of turns in a lap: ',
+          n_turns, '| accuracy: ', accuracy)
 
-        print(distances)
-        print(speeds)
+    Estimator.draw_segments(turns_segments, matches=matchs,
+                            min_max=iner_bound_list+outer_bound_list)
 
-        estimation.draw_segments(
-            turns_segments, matches=matchs, min_max=iner_list+outer_list)
-    estimation.draw_points(pos_list+iner_list+outer_list, degs=deg_list +
-                           diner+douter, colors=[(0.75, 0, 0), (1, 1, 1), (0, 0, 0.75)])
+    Estimator.draw_circuit(pos_list, directions, colors=np.array(
+        ((0.75, 0, 0), (1, 1, 1), (0, 0, 0.75))))
 
-    cv2.imshow('pmap', estimation.pmap)
+    cv2.imshow('pmap', Estimator.pmap)
     cv2.waitKey(0)
-    '''

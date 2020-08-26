@@ -379,7 +379,7 @@ class speed_component:
         self.weight_acc = 0.1
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, 0.0))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, 1.0))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):
@@ -399,7 +399,7 @@ class throttle_component:
         self.weight_acc = 0.1
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, 0.0))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, 0.5))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):

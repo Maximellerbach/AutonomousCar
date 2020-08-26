@@ -10,9 +10,10 @@ from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 from tensorflow.keras.models import load_model
 
 # import pred_function
-from custom_modules import architectures, autolib, DatasetJson
-from custom_modules.vis import plot
+from custom_modules import architectures, autolib
 from custom_modules.datagenerator import image_generator
+from custom_modules.datasets import dataset_json
+from custom_modules.vis import plot
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -108,7 +109,7 @@ class model_trainer():
         return self.model
 
     def train(self, flip=True, augm=True, use_earlystop=False, use_tensorboard=False,
-              epochs=5, batch_size=64, seq_batchsize=4, show_distr=False):
+              epochs=5, batch_size=64, seq_batchsize=16, show_distr=False):
         """Train the model loaded as self.model."""
         gdos, valdos, frc, datalen = self.get_gdos(flip=flip, show=show_distr)
         print(gdos.shape, valdos.shape)
@@ -133,23 +134,23 @@ class model_trainer():
             self.callbacks.append(tensorboard)
 
         self.model.fit(
-            x=image_generator(gdos, self.Dataset,
-                              self.input_components, self.output_components,
-                              datalen, batch_size, frc,
-                              seq_batchsize=seq_batchsize,
-                              augm=augm, flip=flip,
-                              smoothing=self.smoothing,
-                              label_rdm=self.label_rdm,
-                              use_tensorboard=use_tensorboard, logdir=logdir),
+            x=image_generator(
+                gdos, self.Dataset,
+                self.input_components, self.output_components,
+                datalen, frc, batch_size,
+                sequence=self.sequence,
+                seq_batchsize=seq_batchsize,
+                augm=augm, flip=flip,
+                use_tensorboard=use_tensorboard, logdir=logdir),
             steps_per_epoch=datalen//batch_size, epochs=epochs,
-            validation_data=image_generator(valdos, self.Dataset,
-                                            self.input_components, self.output_components,
-                                            datalen, batch_size, frc,
-                                            seq_batchsize=seq_batchsize,
-                                            augm=augm, flip=flip,
-                                            smoothing=self.smoothing,
-                                            label_rdm=self.label_rdm,
-                                            use_tensorboard=False),
+            validation_data=image_generator(
+                valdos, self.Dataset,
+                self.input_components, self.output_components,
+                datalen, frc, batch_size,
+                sequence=self.sequence,
+                seq_batchsize=seq_batchsize,
+                augm=augm, flip=flip,
+                use_tensorboard=use_tensorboard, logdir=logdir),
             validation_steps=datalen//20//batch_size,
             callbacks=self.callbacks, max_queue_size=4, workers=4)
 
@@ -256,7 +257,7 @@ class model_trainer():
 
 
 if __name__ == "__main__":
-    Dataset = DatasetJson(['direction', 'time'])
+    Dataset = dataset_json.Dataset(['direction', 'time'])
     direction_comp = Dataset.get_component('direction')
     direction_comp.offset = -7
     direction_comp.scale = 1/4
@@ -274,8 +275,8 @@ if __name__ == "__main__":
                             output_components=output_components)
 
     trainer.build_classifier(load=False,
-                             drop_rate=0.05, prune=0.2,
-                             regularizer=(0.0, 0.0001),
+                             drop_rate=0.05, prune=0.0,
+                             regularizer=(0.0, 0.0005),
                              lr=0.001)
 
     trainer.train(flip=True, augm=True,

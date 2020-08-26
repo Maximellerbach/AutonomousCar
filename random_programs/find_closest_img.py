@@ -4,7 +4,7 @@ import tensorflow
 from tensorflow.keras.models import load_model
 from tqdm import tqdm
 
-from custom_modules.datasets.dataset_json import Dataset as DatasetJson
+from custom_modules.datasets import dataset_json
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     model = load_model(
         "C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\models\\fe.h5")
 
-    Dataset = DatasetJson(["time"])
+    Dataset = dataset_json.Dataset(["time"])
     dos = "C:\\Users\\maxim\\random_data\\json_dataset\\20 checkpoint patch\\"
     paths = Dataset.load_dos_sorted(dos)
 

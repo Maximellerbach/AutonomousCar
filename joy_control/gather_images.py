@@ -6,7 +6,8 @@ import time
 import cv2
 
 import xbox
-from custom_modules import serial_command, DatasetJson
+from custom_modules import serial_command
+from custom_modules.datasets import dataset_json
 
 
 def printusage():
@@ -57,7 +58,7 @@ def get_controller_buttons(joy):
     return (direction, throttle, brake, button_a, button_x)
 
 
-Dataset = DatasetJson(["direction", "speed", "throttle", "time"])
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)

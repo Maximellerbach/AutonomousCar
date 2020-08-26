@@ -1,9 +1,9 @@
 import cv2
 
-from custom_modules.datasets.dataset_json import Dataset as DatasetJson
+from custom_modules.datasets import dataset_json
 
 if __name__ == "__main__":
-    Dataset = DatasetJson(['direction', 'time'])
+    Dataset = dataset_json.Dataset(['direction', 'time'])
     paths = Dataset.load_dos_sorted('C:\\Users\\maxim\\image_raw\\')
 
     for path in paths:

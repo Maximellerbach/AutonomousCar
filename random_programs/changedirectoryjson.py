@@ -2,11 +2,11 @@ from glob import glob
 
 from tqdm import tqdm
 
-from custom_modules.datasets.dataset_json import Dataset as DatasetJson
+from custom_modules.datasets import dataset_json
 
 if __name__ == "__main__":
 
-    datasetJson = DatasetJson(['direction', 'speed', 'throttle', 'time'])
+    datasetJson = dataset_json.Dataset(['direction', 'speed', 'throttle', 'time'])
 
     # src_dos = "C:\\Users\\maxim\\random_data\\20 checkpoint patch"
     dst_dos = "C:\\Users\\maxim\\random_data\\test\\"
