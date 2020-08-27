@@ -3,6 +3,7 @@ import math
 import cv2
 import numpy as np
 from tensorflow.keras.models import Model
+from . import vis_img
 
 
 def visualize_fe_output(self, img,
@@ -23,6 +24,7 @@ def visualize_fe_output(self, img,
 
 def visualize_model_layer_filter(model, img, layer_index,
                                  input_size=(160, 120),
+                                 output_size=(80, 60),
                                  layer_outputs=None, tmp_model=None,
                                  show=True, sleep_time=0):
     img = cv2.resize(img, input_size)
@@ -39,13 +41,13 @@ def visualize_model_layer_filter(model, img, layer_index,
     n_filter = len(activation)
     columns = int(n_filter ** 0.5)+1
 
-    final_image = np.zeros((columns*input_size[1], columns*input_size[0]))
+    final_image = np.zeros((columns*output_size[1], columns*output_size[0]))
 
     for i, filter_img in enumerate(activation):
-        filter_img = cv2.resize(filter_img, input_size)
+        filter_img = cv2.resize(filter_img, output_size)
         final_image[
-            (i//columns)*input_size[1]:(i//columns+1)*input_size[1],
-            (i % columns)*input_size[0]:(i % columns+1)*input_size[0]
+            (i//columns)*output_size[1]:(i//columns+1)*output_size[1],
+            (i % columns)*output_size[0]:(i % columns+1)*output_size[0]
         ] = filter_img
 
     cv2.imshow(f'{layer_index}', final_image/np.max(final_image))

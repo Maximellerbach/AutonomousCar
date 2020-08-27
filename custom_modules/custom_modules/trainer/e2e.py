@@ -5,23 +5,20 @@ import numpy as np
 import tensorflow
 import tensorflow_model_optimization as tfmot
 from sklearn.utils import class_weight
-from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
 from tensorflow.keras.models import load_model
 
-# import pred_function
-from custom_modules import architectures, autolib
-from custom_modules.datagenerator import image_generator
-from custom_modules.datasets import dataset_json
-from custom_modules.vis import plot
+from .. import architectures, imaugm
+from ..datagenerator import image_generator
+from ..vis import plot
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 
-class model_trainer():
-    """model trainer class."""
+class End2EndTrainer():
+    """end to end model trainer class."""
 
     def __init__(self, name, dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
                  smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
@@ -77,21 +74,21 @@ class model_trainer():
                 return self.model
 
         if self.sequence:
-            self.model = architectures.create_light_CRNN(
+            self.model = architectures.light_linear_CRNN(
                 self.Dataset, (None, 120, 160, 3),
                 drop_rate=drop_rate, regularizer=regularizer,
                 prev_act="relu", last_act="linear", padding='same',
                 use_bias=True,
                 input_components=self.input_components,
-                output_components=self.output_components)
+                output_components=self.output_components).build()
         else:
-            self.model = architectures.create_light_CNN(
+            self.model = architectures.light_linear_CNN(
                 self.Dataset, (120, 160, 3),
                 drop_rate=drop_rate, regularizer=regularizer,
                 prev_act="relu", last_act="linear", padding='same',
                 use_bias=True,
                 input_components=self.input_components,
-                output_components=self.output_components)
+                output_components=self.output_components).build()
 
         if prune:
             self.model = architectures.create_pruning_model(self.model, prune)
@@ -223,7 +220,7 @@ class model_trainer():
                     labels = [lab]
 
                 for label in labels:
-                    Y[it].append(autolib.round_st(label, component.weight_acc))
+                    Y[it].append(imaugm.round_st(label, component.weight_acc))
 
         frcs = []
         for it, index in enumerate(self.output_components+self.input_components):
@@ -240,49 +237,3 @@ class model_trainer():
                 plot.plot_bars(d, component.weight_acc)
 
         return frcs
-
-    def calculate_FLOPS(self):
-        """Calculate the number of flops in self.model.
-
-        Returns:
-            int: total number of flops
-        """
-        run_meta = tensorflow.RunMetadata()
-        opts = tensorflow.profiler.ProfileOptionBuilder.float_operation()
-
-        # We use the tensorflow.keras session graph in the call to the profiler.
-        flops = tensorflow.profiler.profile(graph=K.get_session(
-        ).graph, run_meta=run_meta, cmd='op', options=opts)
-        return flops.total_float_ops
-
-
-if __name__ == "__main__":
-    Dataset = dataset_json.Dataset(['direction', 'time'])
-    direction_comp = Dataset.get_component('direction')
-    direction_comp.offset = -7
-    direction_comp.scale = 1/4
-
-    # set input and output components (indexes)
-    input_components = []
-    output_components = [0]
-
-    trainer = model_trainer(name='test_model\\models\\linear_trackmania2.h5',
-                            dataset=Dataset,
-                            dospath='C:\\Users\\maxim\\random_data\\json_dataset\\', dosdir=True,
-                            proportion=0.2, sequence=False,
-                            smoothing=0.0, label_rdm=0.0,
-                            input_components=input_components,
-                            output_components=output_components)
-
-    trainer.build_classifier(load=False,
-                             drop_rate=0.05, prune=0.0,
-                             regularizer=(0.0, 0.0005),
-                             lr=0.001)
-
-    trainer.train(flip=True, augm=True,
-                  use_earlystop=True, use_tensorboard=True,
-                  epochs=7, batch_size=48,
-                  show_distr=False)
-
-    # custom_objects={"dir_loss":architectures.dir_loss}
-    # trainer.model = load_model(trainer.name, compile=False)

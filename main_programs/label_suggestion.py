@@ -42,7 +42,9 @@ class LabelisationSuggestion():
         distances = [self.compute_distance(
             lat_to_compare, lat_img) for lat_img in lat_imgs]
         sorted_distances = sorted(distances)
-        smallest = sorted_distances[:N]
+
+        # smallest = actual image, so don't include it in the smallest
+        smallest = sorted_distances[1:N]
 
         return distances, smallest
 
@@ -61,33 +63,34 @@ class LabelisationSuggestion():
         av_weights = 1-softmax([distances])[0]
         return list(np.average(annotations, weights=av_weights, axis=0))
 
-    def main(self, dos):
-        paths = lab_helper.load_paths(dos)
+    def main(self, paths, lat_imgs, i):
+        path = paths[i]
+        distances, smallest_distance = self.compare_lat(
+            lat_imgs[i], lat_imgs)
+        indexes = []
+        for dist in smallest_distance:
+            indexes.append(distances.index(dist))
+
+        annotations = self.load_annotations_from_indexes(
+            paths, indexes)
+        predicted = self.estimate_annotation(
+            annotations, smallest_distance)
+
+        annotation = self.Dataset.load_annotation(path)
+        corresponding_img = self.Dataset.load_img(path)
+        print(annotation, predicted)
+
+        cv2.imshow('img', corresponding_img)
+        cv2.waitKey(0)
+
+    def iterate_main(self, dos):
+        paths = self.load_paths(dos)
         imgs = self.load_imgs(paths)
         lat_imgs = self.get_pred(imgs)
         del imgs
 
         for i in range(len(lat_imgs)):
-            # don't analyse previous images
-            distances, smallest_distance = self.compare_lat(
-                lat_imgs[i], lat_imgs[i+1:])
-            indexes = []
-            for dist in smallest_distance:
-                indexes.append(distances.index(dist)+i)
-
-            annotations = self.load_annotations_from_indexes(paths, indexes)
-            predicted = self.estimate_annotation(
-                annotations, smallest_distance)
-            annotation = self.Dataset.load_annotation(paths[i])
-            # print(annotation, predicted)
-
-            print(predicted)
-            corresponding_img = self.Dataset.load_img(paths[i])
-            
-            cv2.imshow('img', corresponding_img)
-            cv2.waitKey(0)
-            
-        return
+            self.main(paths, lat_imgs, i)
 
 
 if __name__ == "__main__":
@@ -95,5 +98,5 @@ if __name__ == "__main__":
     lab_helper = LabelisationSuggestion(
         Dataset, 'test_model\\models\\linear_trackmania.h5')
 
-    lab_helper.main(
+    lab_helper.iterate_main(
         "C:\\Users\\maxim\\random_data\\json_dataset\\1 ironcar driving\\")

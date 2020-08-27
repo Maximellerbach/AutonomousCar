@@ -90,171 +90,319 @@ def safe_load_model(path, compile=True):
             return load_model(path, compile=compile)
 
 
-def create_light_CRNN(dataset, img_shape,
-                      prev_act="relu", last_act="linear", padding="same",
-                      drop_rate=0.1, use_bias=False, regularizer=(0, 0),
-                      input_components=[], output_components=[]):
+class light_linear_CRNN():
+    def __init__(self, dataset, img_shape,
+                 prev_act="relu", last_act="linear", padding='same',
+                 drop_rate=0.1, use_bias=False, regularizer=(0, 0),
+                 input_components=[], output_components=[]):
 
-    def conv_block(n_filter, kernel_size, strides, x,
-                   conv_type=Conv2D, drop=True,
-                   activation=prev_act, use_bias=use_bias,
-                   flatten=False, batchnorm=True, padding=padding):
+        self.dataset = dataset
+        self.img_shape = img_shape
+        self.prev_act = prev_act
+        self.last_act = last_act
+        self.padding = padding
+        self.drop_rate = drop_rate
+        self.use_bias = use_bias
+        self.regularizer = regularizer
+        self.input_components = input_components
+        self.output_components = output_components
+
+    def rnn_conv_block(self, n_filter, kernel_size, strides, x,
+                       conv_type=Conv2D, drop=True,
+                       flatten=False, batchnorm=True):
 
         x = TD(conv_type(
-            n_filter, kernel_size=kernel_size,
-            strides=strides, use_bias=use_bias, padding=padding,
-            kernel_regularizer=l1_l2(regularizer[0], regularizer[1]),
-            bias_regularizer=l1_l2(regularizer[0], regularizer[1])))(x)
+            n_filter,
+            kernel_size=kernel_size,
+            strides=strides,
+            use_bias=self.use_bias,
+            padding=self.padding,
+            kernel_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
+            bias_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]))
+        )(x)
+
         if batchnorm:
             x = TD(BatchNormalization())(x)
-        x = TD(Activation(activation))(x)
+        x = TD(Activation(self.activation))(x)
         if drop:
-            x = TD(Dropout(drop_rate))(x)
+            x = TD(Dropout(self.drop_rate))(x)
         if flatten:
             x = TD(Flatten())(x)
         return x
 
-    def dense_block(n_neurones, x,
-                    drop=True, activation=prev_act,
-                    use_bias=use_bias, batchnorm=True):
-        x = TD(Dense(n_neurones, use_bias=use_bias))(x)
+    def rnn_dense_block(self, n_neurones, x,
+                        drop=True, batchnorm=True):
+        x = TD(Dense(n_neurones, use_bias=self.use_bias))(x)
         if batchnorm:
             x = TD(BatchNormalization())(x)
-        x = TD(Activation(activation))(x)
+        x = TD(Activation(self.activation))(x)
         if drop:
-            x = TD(Dropout(drop_rate))(x)
+            x = TD(Dropout(self.drop_rate))(x)
         return x
 
-    inputs = []
-    outputs = []
+    def build(self):
+        inputs = []
+        outputs = []
 
-    input_components_names = dataset.indexes2components_names(input_components)
-    output_components_names = dataset.indexes2components_names(
-        output_components)
+        input_components_names = self.dataset.indexes2components_names(
+            self.input_components)
+        output_components_names = self.dataset.indexes2components_names(
+            self.output_components)
 
-    inp = Input(shape=img_shape)
-    inputs.append(inp)
-    x = TD(BatchNormalization(name="start_fe"))(inp)
-
-    x = conv_block(12, 5, 2, x, drop=True)
-    x = conv_block(16, 5, 2, x, drop=True)
-    x = conv_block(32, 3, 2, x, drop=True)
-    x = conv_block(48, 3, 2, x, drop=True, name="end_fe")
-
-    y1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
-    y2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
-    y3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
-    y = Concatenate()([y1, y2, y3])
-    y = TD(Dropout(drop_rate))(y)
-
-    y = dense_block(150, y, batchnorm=False)
-    y = dense_block(75, y, batchnorm=False)
-
-    if 'speed' in input_components_names:
-        inp = Input((img_shape[0], 1))
+        inp = Input(shape=self.img_shape)
         inputs.append(inp)
-        y = Concatenate()([y, inp])
+        x = TD(BatchNormalization(name="start_fe"))(inp)
 
-    y = dense_block(50, y, batchnorm=False, drop=False)
+        x = self.rnn_conv_block(12, 5, 2, x, drop=True)
+        x = self.rnn_conv_block(16, 5, 2, x, drop=True)
+        x = self.rnn_conv_block(32, 3, 2, x, drop=True)
+        x = self.rnn_conv_block(48, 3, 2, x, drop=True, name="end_fe")
 
-    if 'direction' in input_components_names:
-        z = Dense(1, use_bias=use_bias, activation=last_act, activity_regularizer=l1_l2(
-            regularizer[0], regularizer[1]), name="steering")(y)  # kernel_regularizer=l2(0.0005)
-        outputs.append(z)
-        y = Concatenate()([y, z])
+        y1 = self.rnn_conv_block(64, (8, 10), (8, 10),
+                                 x, flatten=True, drop=False)
+        y2 = self.rnn_conv_block(
+            24, (8, 1), (8, 1), x, flatten=True, drop=False)
+        y3 = self.rnn_conv_block(24, (1, 10), (1, 10),
+                                 x, flatten=True, drop=False)
+        y = Concatenate()([y1, y2, y3])
+        y = TD(Dropout(self.drop_rate))(y)
 
-    if 'throttle' in output_components_names:
-        th = Dense(1, use_bias=use_bias, activation="sigmoid", activity_regularizer=l1_l2(
-            regularizer[0], regularizer[1]), name="throttle")(y)
-        outputs.append(th)
-        y = Concatenate()([y, th])
+        y = self.rnn_dense_block(150, y, batchnorm=False)
+        y = self.rnn_dense_block(75, y, batchnorm=False)
 
-    return Model(inputs, outputs)
+        if 'speed' in input_components_names:
+            inp = Input((self.img_shape[0], 1))
+            inputs.append(inp)
+            y = Concatenate()([y, inp])
+
+        y = self.rnn_dense_block(50, y, batchnorm=False, drop=False)
+
+        if 'direction' in input_components_names:
+            z = Dense(1,
+                      use_bias=self.use_bias,
+                      activation=self.last_act,
+                      name="steering")(y)  # kernel_regularizer=l2(0.0005)
+            outputs.append(z)
+            y = Concatenate()([y, z])
+
+        if 'throttle' in output_components_names:
+            th = Dense(1,
+                       use_bias=self.use_bias,
+                       activation="sigmoid",
+                       name="throttle")(y)
+            outputs.append(th)
+            y = Concatenate()([y, th])
+
+        return Model(inputs, outputs)
 
 
-def create_light_CNN(dataset, img_shape,
-                     prev_act="relu", last_act="linear", padding='same',
-                     drop_rate=0.1, use_bias=False, regularizer=(0, 0),
-                     input_components=[], output_components=[]):
+class light_linear_CNN():
+    def __init__(self, dataset, img_shape,
+                 prev_act="relu", last_act="linear", padding='same',
+                 drop_rate=0.1, use_bias=False, regularizer=(0, 0),
+                 input_components=[], output_components=[]):
 
-    def conv_block(n_filter, kernel_size, strides, x,
+        self.dataset = dataset
+        self.img_shape = img_shape
+        self.prev_act = prev_act
+        self.last_act = last_act
+        self.padding = padding
+        self.drop_rate = drop_rate
+        self.use_bias = use_bias
+        self.regularizer = regularizer
+        self.input_components = input_components
+        self.output_components = output_components
+
+    def conv_block(self, n_filter, kernel_size, strides, x,
                    conv_type=Conv2D, drop=True,
-                   activation=prev_act, use_bias=use_bias,
-                   flatten=False, batchnorm=True, padding=padding):
+                   flatten=False, batchnorm=True):
 
         x = conv_type(
             n_filter, kernel_size=kernel_size,
-            strides=strides, use_bias=use_bias, padding=padding,
-            kernel_regularizer=l1_l2(regularizer[0], regularizer[1]),
-            bias_regularizer=l1_l2(regularizer[0], regularizer[1]))(x)
+            strides=strides, use_bias=self.use_bias, padding=self.padding,
+            kernel_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
+            bias_regularizer=l1_l2(self.regularizer[0], self.regularizer[1])
+        )(x)
+
         if batchnorm:
             x = BatchNormalization()(x)
-        x = Activation(activation)(x)
+        x = Activation(self.activation)(x)
         if drop:
-            x = Dropout(drop_rate)(x)
+            x = Dropout(self.drop_rate)(x)
         if flatten:
             x = Flatten()(x)
         return x
 
-    def dense_block(n_neurones, x,
-                    drop=True, activation=prev_act,
-                    use_bias=use_bias, batchnorm=True):
-        x = Dense(n_neurones, use_bias=use_bias,
-                  kernel_regularizer=l1_l2(regularizer[0], regularizer[1]),
-                  bias_regularizer=l1_l2(regularizer[0], regularizer[1]))(x)
+    def dense_block(self, n_neurones, x,
+                    drop=True, batchnorm=True):
+        x = Dense(
+            n_neurones,
+            use_bias=self.use_bias,
+            kernel_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
+            bias_regularizer=l1_l2(self.regularizer[0], self.regularizer[1])
+        )(x)
+
         if batchnorm:
             x = BatchNormalization()(x)
-        x = Activation(activation)(x)
+        x = Activation(self.activation)(x)
         if drop:
-            x = Dropout(drop_rate)(x)
+            x = Dropout(self.drop_rate)(x)
         return x
 
-    inputs = []
-    outputs = []
+    def build(self):
+        inputs = []
+        outputs = []
 
-    input_components_names = dataset.indexes2components_names(input_components)
-    output_components_names = dataset.indexes2components_names(
-        output_components)
+        input_components_names = self.dataset.indexes2components_names(
+            self.input_components)
+        output_components_names = self.dataset.indexes2components_names(
+            self.output_components)
 
-    inp = Input(shape=img_shape)
-    inputs.append(inp)
-    x = BatchNormalization(name="start_fe")(inp)
-
-    x = conv_block(16, 5, 1, x, drop=True)
-    x = MaxPooling2D()(x)
-    x = conv_block(24, 3, 1, x, drop=True)
-    x = MaxPooling2D()(x)
-    x = conv_block(32, 3, 1, x, drop=True)
-    x = MaxPooling2D()(x)
-    x = conv_block(48, 3, 1, x, drop=True)
-    x = MaxPooling2D(name="end_fe")(x)
-
-    y1 = conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
-    y2 = conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
-    y3 = conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
-    y = Concatenate()([y1, y2, y3])
-    y = Dropout(drop_rate)(y)
-
-    y = dense_block(150, y, drop=True)
-    y = dense_block(75, y, drop=True)
-
-    if 'speed' in input_components_names:
-        inp = Input((1,))
+        inp = Input(shape=self.img_shape)
         inputs.append(inp)
-        y = Concatenate()([y, inp])
+        x = BatchNormalization(name="start_fe")(inp)
 
-    y = dense_block(50, y, drop=False)
+        x = self.conv_block(16, 5, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(24, 3, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(32, 3, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(48, 3, 1, x, drop=True)
+        x = MaxPooling2D(name="end_fe")(x)
 
-    if 'direction' in output_components_names:
-        z = Dense(1, use_bias=use_bias,
-                  activation=last_act, name="steering")(y)
-        outputs.append(z)
-        y = Concatenate()([y, z])
+        y1 = self.conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
+        y2 = self.conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
+        y3 = self.conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
+        y = Concatenate()([y1, y2, y3])
+        y = Dropout(self.drop_rate)(y)
 
-    if 'throttle' in output_components_names:
-        y = dense_block(50, y, drop=False)
-        z = Dense(1, use_bias=use_bias,
-                  activation=last_act, name="throttle")(y)
-        outputs.append(z)
+        y = self.dense_block(150, y, drop=True)
+        y = self.dense_block(75, y, drop=True)
 
-    return Model(inputs, outputs)
+        if 'speed' in input_components_names:
+            inp = Input((1,))
+            inputs.append(inp)
+            y = Concatenate()([y, inp])
+
+        y = self.dense_block(50, y, drop=False)
+
+        if 'direction' in output_components_names:
+            z = Dense(1,
+                      use_bias=self.use_bias,
+                      activation=self.last_act,
+                      name="steering")(y)
+            outputs.append(z)
+            y = Concatenate()([y, z])
+
+        if 'throttle' in output_components_names:
+            y = self.dense_block(50, y, drop=False)
+            z = Dense(1,
+                      use_bias=self.use_bias,
+                      activation=self.last_act,
+                      name="throttle")(y)
+            outputs.append(z)
+
+        return Model(inputs, outputs)
+
+
+class light_lane_CNN():
+    def __init__(self, dataset, img_shape, point_precision=10,
+                 prev_act="relu", last_act="linear", padding='same',
+                 drop_rate=0.1, use_bias=False, regularizer=(0, 0),
+                 input_components=[], output_components=[]):
+
+        self.dataset = dataset
+        self.img_shape = img_shape
+        self.point_precision = point_precision
+        self.prev_act = prev_act
+        self.last_act = last_act
+        self.padding = padding
+        self.drop_rate = drop_rate
+        self.use_bias = use_bias
+        self.regularizer = regularizer
+        self.input_components = input_components
+        self.output_components = output_components
+
+    def conv_block(self, n_filter, kernel_size, strides, x,
+                   conv_type=Conv2D, drop=True,
+                   flatten=False, batchnorm=True):
+
+        x = conv_type(
+            n_filter, kernel_size=kernel_size,
+            strides=strides, use_bias=self.use_bias, padding=self.padding,
+            kernel_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
+            bias_regularizer=l1_l2(self.regularizer[0], self.regularizer[1])
+        )(x)
+
+        if batchnorm:
+            x = BatchNormalization()(x)
+        x = Activation(self.activation)(x)
+        if drop:
+            x = Dropout(self.drop_rate)(x)
+        if flatten:
+            x = Flatten()(x)
+        return x
+
+    def dense_block(self, n_neurones, x,
+                    drop=True, batchnorm=True):
+        x = Dense(
+            n_neurones,
+            use_bias=self.use_bias,
+            kernel_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
+            bias_regularizer=l1_l2(self.regularizer[0], self.regularizer[1])
+        )(x)
+
+        if batchnorm:
+            x = BatchNormalization()(x)
+        x = Activation(self.activation)(x)
+        if drop:
+            x = Dropout(self.drop_rate)(x)
+        return x
+
+    def build(self):
+        inputs = []
+        outputs = []
+
+        input_components_names = self.dataset.indexes2components_names(
+            self.input_components)
+        output_components_names = self.dataset.indexes2components_names(
+            self.output_components)
+
+        inp = Input(shape=self.img_shape)
+        inputs.append(inp)
+        x = BatchNormalization(name="start_fe")(inp)
+
+        x = self.conv_block(16, 5, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(24, 3, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(32, 3, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(48, 3, 1, x, drop=True)
+        x = MaxPooling2D(name="end_fe")(x)
+
+        y1 = self.conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
+        y2 = self.conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
+        y3 = self.conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
+        y = Concatenate()([y1, y2, y3])
+        y = Dropout(self.drop_rate)(y)
+
+        y = self.dense_block(150, y, drop=True)
+        y = self.dense_block(75, y, drop=True)
+
+        if "right_lane" in output_components_names:
+            z = Dense(self.point_precision,
+                      use_bias=self.use_bias,
+                      activation=self.last_act,
+                      name="right_lane")(y)
+            outputs.append(z)
+
+        if "left_lane" in output_components_names:
+            z = Dense(self.point_precision,
+                      use_bias=self.use_bias,
+                      activation=self.last_act,
+                      name="left_lane")(y)
+            outputs.append(z)
+
+        return Model(inputs, outputs)

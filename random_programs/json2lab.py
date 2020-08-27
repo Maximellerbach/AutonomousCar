@@ -5,7 +5,7 @@ from glob import glob
 
 import cv2
 
-from custom_modules import autolib
+from custom_modules import imaugm
 
 if __name__ == "__main__":
     path = "C:\\Users\\maxim\\gen_track_user_drv_right_lane\\"
@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     Y = [0]*len(X)
     for i in glob(path+"*.json"):
-        n_img = autolib.get_label(
+        n_img = imaugm.get_label(
             i, before=False, flip=False, dico=list(range(1, len(Y)+1)))[0]
 
         with open(i) as f:

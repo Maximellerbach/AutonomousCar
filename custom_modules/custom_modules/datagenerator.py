@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.utils import Sequence
 import numpy as np
 
-from custom_modules import autolib
+from custom_modules import imaugm
 
 
 class image_generator(Sequence):
@@ -50,26 +50,26 @@ class image_generator(Sequence):
             (xbatch, ybatch, path) for path in batchfiles])
 
         if self.augm:
-            autolib.generate_functions_replace(
+            imaugm.generate_functions_replace(
                 xbatch, ybatch,
                 proportion=self.proportion,
                 functions=(
-                    autolib.change_brightness,
-                    autolib.rescut,
-                    autolib.inverse_color,
-                    autolib.add_random_shadow,
-                    autolib.add_random_glow,
-                    autolib.rdm_noise
+                    imaugm.change_brightness,
+                    imaugm.rescut,
+                    imaugm.inverse_color,
+                    imaugm.add_random_shadow,
+                    imaugm.add_random_glow,
+                    imaugm.rdm_noise
                 )
             )
 
         if self.flip:
-            xflip, yflip = autolib.generate_horizontal_flip(
+            xflip, yflip = imaugm.generate_horizontal_flip(
                 xbatch, ybatch, proportion=1)
             xbatch = self.__normalize(np.concatenate((xbatch, xflip)))
             ybatch = np.concatenate((ybatch, yflip))
 
-        # removed the weight, useless ; weight = autolib.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
+        # removed the weight, useless ; weight = imaugm.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
 
         X = [xbatch]
         for i in self.input_components:
@@ -110,22 +110,22 @@ class image_generator(Sequence):
 
         if self.augm:
             for i in range(len(xbatch)):
-                xbatch[i], ybatch[i] = autolib.generate_functions_replace(
+                xbatch[i], ybatch[i] = imaugm.generate_functions_replace(
                     xbatch[i], ybatch[i],
                     proportion=self.proportion,
                     functions=(
-                        autolib.change_brightness,
-                        autolib.rescut,
-                        autolib.inverse_color,
-                        autolib.add_random_shadow,
-                        autolib.add_random_glow,
-                        autolib.rdm_noise
+                        imaugm.change_brightness,
+                        imaugm.rescut,
+                        imaugm.inverse_color,
+                        imaugm.add_random_shadow,
+                        imaugm.add_random_glow,
+                        imaugm.rdm_noise
                     )
                 )
 
         if self.flip:
             for x, y in zip(xbatch, ybatch):
-                xflip, yflip = autolib.generate_horizontal_flip(
+                xflip, yflip = imaugm.generate_horizontal_flip(
                     x, y, proportion=1)
                 xbatch.append(xflip)
                 ybatch.append(yflip)
