@@ -44,8 +44,23 @@ class Dataset():
         Args:
             annotation (dict): dict containing annotation
         """
+        if len(annotation.keys()) != len(self.__label_structure):
+            to_save_dict = {}
+            for component in self.__label_structure:
+                to_save_dict[component.name] = component.get_item(
+                    annotation)
+        else:
+            to_save_dict = annotation
+
         dos = annotation.get('dos')
+        assert dos is not None
+
         time_cmp = annotation.get('time')
+        assert time_cmp is not None
+
+        img_path = annotation.get('img_path')
+        assert img_path is not None
+
         with open(os.path.normpath(f'{dos}{time_cmp}{self.format}'), 'w') as json_file:
             json.dump(annotation, json_file)
 
@@ -189,6 +204,30 @@ class Dataset():
         img_path = self.load_meta(path, to_list=False).get('img_path')
         return cv2.imread(img_path)
 
+    def load_annotation_json_from_img(self, img_path, to_list=True):
+        annotation_path = img_path.split('.png')[0] + self.format
+        return self.load_annotation(annotation_path, to_list=to_list)
+
+    def load_annotation_img_string(self, img_path, cmp_structure=['direction', 'time']):
+        split_img_path = img_path.split('\\')[-1].split('.png')[0]
+        components_value = split_img_path.split('_')
+        tmp_annotation = {}
+        for cmp_name, value in zip(cmp_structure, components_value):
+            tmp_annotation[cmp_name] = float(value)
+
+        annotation = {}
+        for component in self.__label_structure:
+            annotation[component.name] = component.get_item(tmp_annotation)
+
+        return annotation
+
+    def get_annotation_template(self):
+        dummy_dict = {}
+        template_dict = {}
+        for component in self.__label_structure:
+            template_dict[component.name] = component.get_item(dummy_dict)
+        return template_dict
+
     def sort_paths_by_component(self, paths, n_component):
         def sort_function(path):
             return self.load_component_item(path, n_component)
@@ -237,8 +276,11 @@ class Dataset():
         with open(path, 'w') as json_file:
             json.dump(save_dict, json_file)
 
-    def load_dos(self, dos):
-        return glob(dos+"*.json")
+    def load_dos(self, dos, search_format='default'):
+        if search_format == 'default':
+            return glob(f"{dos}*{self.format}")
+        else:
+            return glob(f"{dos}*{search_format}")
 
     def load_dos_sorted(self, dos, sort_component=-1):
         json_dos_name = dos[:-1]
@@ -254,6 +296,14 @@ class Dataset():
             self.load_dos(dos), sort_component)
         self.save_json_sorted(new_sorted_paths, json_path)
         return new_sorted_paths
+
+    def load_doss(self, base_dos, doss_name, search_format='default'):
+        doss = [base_dos+dos_name for dos_name in doss_name]
+        return [self.load_dos(dos, search_format=search_format) for dos in doss]
+
+    def load_doss_sorted(self, base_dos, doss_name, sort_component=-1):
+        doss = [base_dos+dos_name for dos_name in doss_name]
+        return [self.load_dos_sorted(dos) for dos in doss]
 
     def load_dataset(self, doss):
         doss_paths = []
@@ -344,6 +394,9 @@ class Dataset():
                 raise ValueError('please enter a valid component name')
 
         return label_structure
+
+    def get_label_structure_name(self):
+        return [i.name for i in self.__label_structure]
 
     def indexes2components_names(self, indexes):
         return [self.get_component(i).name for i in indexes]
