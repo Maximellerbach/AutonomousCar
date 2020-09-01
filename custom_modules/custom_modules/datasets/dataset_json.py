@@ -1,3 +1,4 @@
+import ast
 import base64
 import io
 import json
@@ -9,6 +10,15 @@ from glob import glob
 import cv2
 import numpy as np
 from PIL import Image
+from ..vis import vis_lab
+
+
+def print_ret(func):
+    def wrapped_f(*args, **kwargs):
+        ret = func(*args, **kwargs)
+        print(ret)
+        return ret
+    return wrapped_f
 
 
 class Dataset():
@@ -34,9 +44,19 @@ class Dataset():
             lab_structure (list): list of components(class) or list of string
         """
         if isinstance(lab_structure[0], str):
-            self.__label_structure = self.names2components(lab_structure)
+            self.__label_structure = [
+                self.name2component(cmpt) for cmpt in lab_structure]
         else:
             self.__label_structure = [i() for i in lab_structure]
+
+    def add_components(self, components_object):
+        if isinstance(components_object, list):
+            for component_object in components_object:
+                self.add_components(component_object)
+        else:
+            if components_object.name not in self.get_label_structure_name():
+                self.__label_structure.append(components_object)
+                return
 
     def save_annotation_dict(self, annotation):
         """Save the annotation dict to {dos}{time}{self.format}.
@@ -61,8 +81,11 @@ class Dataset():
         img_path = annotation.get('img_path')
         assert img_path is not None
 
-        with open(os.path.normpath(f'{dos}{time_cmp}{self.format}'), 'w') as json_file:
+        filename = f'{dos}{time_cmp}{self.format}'
+        with open(os.path.normpath(filename), 'w') as json_file:
             json.dump(annotation, json_file)
+
+        return filename
 
     def save_img_and_annotation(self, img, annotation, dos=None):
         """Save an image with it's annotation.
@@ -173,7 +196,7 @@ class Dataset():
             return component.get_item(json_data)
         json_data = self.load_json(path)
         if to_list:
-            return list(map(get_item_comp, self.__label_structure))
+            return list([get_item_comp(comp) for comp in self.__label_structure])
         else:
             annotation_dict = {}
             for component in self.__label_structure:
@@ -207,6 +230,24 @@ class Dataset():
     def load_annotation_json_from_img(self, img_path, to_list=True):
         annotation_path = img_path.split('.png')[0] + self.format
         return self.load_annotation(annotation_path, to_list=to_list)
+
+    def make_to_pred(self, paths, input_components):
+        xbatch = []
+        ybatch = []
+        for _ in range(len(self.Dataset.get_label_structure_name())):
+            ybatch.append([])
+
+        for path in paths:
+            img, annotation = self.load_img_and_annotation(path)
+            xbatch.append(img)
+
+        to_pred = [np.array(xbatch, dtype=np.float32)/255]
+
+        for i in self.input_components:
+            to_pred.append(np.float32([np.float32(tmp_array)
+                                       for tmp_array in ybatch[i]]))
+
+        return to_pred
 
     def load_annotation_img_string(self, img_path, cmp_structure=['direction', 'time']):
         split_img_path = img_path.split('\\')[-1].split('.png')[0]
@@ -298,11 +339,11 @@ class Dataset():
         return new_sorted_paths
 
     def load_doss(self, base_dos, doss_name, search_format='default'):
-        doss = [base_dos+dos_name for dos_name in doss_name]
+        doss = [base_dos+dos_name+"\\" for dos_name in doss_name]
         return [self.load_dos(dos, search_format=search_format) for dos in doss]
 
     def load_doss_sorted(self, base_dos, doss_name, sort_component=-1):
-        doss = [base_dos+dos_name for dos_name in doss_name]
+        doss = [base_dos+dos_name+"\\" for dos_name in doss_name]
         return [self.load_dos_sorted(dos) for dos in doss]
 
     def load_dataset(self, doss):
@@ -378,41 +419,51 @@ class Dataset():
         for path in tqdm(paths):
             imgstring2dos_function(dataset_obj, dst_dos, path)
 
-    def names2components(self, names):
-        every_component = [direction_component,
-                           speed_component, throttle_component, time_component]
-        names_component_mapping = {}
-        for component in every_component:
-            names_component_mapping[component().name] = component
-
-        label_structure = []
-        for component_name in names:
-            component = names_component_mapping.get(component_name)
-            if component is not None:
-                label_structure.append(component())
-            else:
-                raise ValueError('please enter a valid component name')
-
-        return label_structure
-
     def get_label_structure_name(self):
         return [i.name for i in self.__label_structure]
 
+    def get_iterable_components(self):
+        return [i for i in self.__label_structure if i.iterable]
+
     def indexes2components_names(self, indexes):
         return [self.get_component(i).name for i in indexes]
+
+    def name2component(self, component_name):
+        mapping = self.names_component_mapping()
+        component = mapping.get(component_name)
+        if component is not None:
+            return component()
+        raise ValueError('please enter a valid component name')
+
+    def components_names2indexes(self):
+        mapping = {}
+        for it, name in enumerate(self.get_label_structure_name()):
+            mapping[name] = it
+        return mapping
+
+    def names_component_mapping(self):
+        mapping = {}
+        for component in every_component:
+            mapping[component.name] = component.value
+        return mapping
 
 
 class direction_component:
     def __init__(self):
         self.name = "direction"
         self.type = float
-        self.flip_factor = -1
+        self.default = 0.0
+
+        self.flip = True
         self.scale = 1.0
         self.offset = 0.0
         self.weight_acc = 0.1
+        self.iterable = False
+        self.is_couple = False
+        self.vis_func = vis_lab.direction
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, 0.0))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):
@@ -420,19 +471,29 @@ class direction_component:
         else:
             ValueError(f'item type: {type(item)} should match {self.type}')
         return annotation_dict
+
+    def from_string(self, string):
+        return self.type(string)
+
+    def flip_item(self, item):
+        return 1-item
 
 
 class speed_component:
     def __init__(self):
         self.name = "speed"
         self.type = float
-        self.flip_factor = 1
+        self.default = 1.0
+        self.iterable = False
+
+        self.flip = False
         self.scale = 1.0
         self.offset = 0.0
         self.weight_acc = 0.1
+        self.is_couple = False
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, 1.0))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):
@@ -440,19 +501,27 @@ class speed_component:
         else:
             ValueError(f'item type: {type(item)} should match {self.type}')
         return annotation_dict
+
+    def from_string(self, string):
+        return self.type(string)
 
 
 class throttle_component:
     def __init__(self):
         self.name = "throttle"
         self.type = float
-        self.flip_factor = 1
+        self.default = 0.5
+        self.iterable = False
+
+        self.flip = False
         self.scale = 1.0
         self.offset = 0.0
         self.weight_acc = 0.1
+        self.is_couple = False
+        self.vis_func = vis_lab.throttle
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, 0.5))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict):
         if isinstance(item, self.type):
@@ -461,26 +530,92 @@ class throttle_component:
             ValueError(f'item type: {type(item)} should match {self.type}')
         return annotation_dict
 
+    def from_string(self, string):
+        return self.type(string)
 
-class time_component:
+
+class right_lane_component:
     def __init__(self):
-        self.name = "time"
-        self.type = float
-        self.flip_factor = 1
+        self.name = "right_lane"
+        self.type = np.float32
+        self.default = [[0, 0], [0, 0]]
+        self.default_flat = [0, 0, 0, 0]
+        self.xnorm = 80
+        self.ynorm = 60
+        self.normarray = np.array(
+            [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
+        self.fliparray = np.array(
+            [1, 0, 1, 0])
+
+        self.flip = True
+        self.iterable = True
+        self.weight_acc = 5
+        self.couple = 'left_lane'
+        self.is_couple = True
+        self.vis_func = vis_lab.lane
 
     def get_item(self, json_data):
-        return self.type(json_data.get(self.name, time.time()))
+        pts_list = json_data.get(self.name)
+        if pts_list is not None:
+            return (np.array(pts_list[0]+pts_list[1], dtype=self.type) / self.normarray) - 1
+        else:
+            return self.default
 
     def add_item_to_dict(self, item, annotation_dict):
         annotation_dict[self.name] = self.type(item)
         return annotation_dict
+
+    def from_string(self, string):
+        return ast.literal_eval(string)
+
+    def flip_item(self, item):  # considering that item is normalised
+        return item*-self.fliparray
+
+
+class left_lane_component:
+    def __init__(self):
+        self.name = "left_lane"
+        self.type = np.float32
+        self.default = [[0, 0], [0, 0]]
+        self.default_flat = [0, 0, 0, 0]
+        self.xnorm = 80
+        self.ynorm = 60
+        self.normarray = np.array(
+            [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
+        self.fliparray = np.array(
+            [1, 0, 1, 0])
+
+        self.flip = True
+        self.iterable = True
+        self.weight_acc = 5
+        self.couple = 'right_lane'
+        self.is_couple = True
+        self.vis_func = vis_lab.lane
+
+    def get_item(self, json_data):
+        pts_list = json_data.get(self.name)
+        if pts_list is not None:
+            return (np.array(pts_list[0]+pts_list[1], dtype=self.type) / self.normarray) - 1
+        else:
+            return self.default
+
+    def add_item_to_dict(self, item, annotation_dict):
+        annotation_dict[self.name] = self.type(item)
+        return annotation_dict
+
+    def from_string(self, string):
+        return ast.literal_eval(string)
+
+    def flip_item(self, item):  # considering that item is normalised
+        return item*-self.fliparray
 
 
 class img_path_component:
     def __init__(self):
         self.name = "img_path"
         self.type = str
-        self.flip_factor = 1
+        self.flip = False
+        self.is_couple = False
 
     def get_item(self, json_data):
         return self.type(json_data[self.name])
@@ -494,11 +629,30 @@ class img_path_component:
         return annotation_dict
 
 
+class time_component:
+    def __init__(self):
+        self.name = "time"
+        self.type = float
+        self.default = time.time
+        self.iterable = False
+
+        self.flip = False
+        self.is_couple = False
+
+    def get_item(self, json_data):
+        return self.type(json_data.get(self.name, self.default()))
+
+    def add_item_to_dict(self, item, annotation_dict):
+        annotation_dict[self.name] = self.type(item)
+        return annotation_dict
+
+
 class imgbase64_component:
     def __init__(self):
         self.name = "img_base64"
         self.type = str
-        self.flip_factor = 1
+        self.flip = False
+        self.is_couple = False
 
     def get_item(self, json_data):
         # getting the image from string and convert it to BGR
@@ -519,7 +673,9 @@ class imgbase64_component:
 
 
 class every_component(Enum):  # not used for the moment
-    DIRECTION = direction_component
-    SPEED = speed_component
-    THROTTLE = throttle_component
-    TIME = time_component
+    direction = direction_component
+    speed = speed_component
+    throttle = throttle_component
+    time = time_component
+    right_lane = right_lane_component
+    left_lane = left_lane_component

@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow
 import tensorflow_model_optimization as tfmot
 from sklearn.utils import class_weight
-from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
+from tensorflow.keras.callbacks import EarlyStopping, TensorBoard, ReduceLROnPlateau
 from tensorflow.keras.models import load_model
 
 from .. import architectures, imaugm
@@ -33,7 +33,6 @@ class End2EndTrainer():
             smoothing (int, optional): value for label smoothing. Defaults to 0.
             label_rdm (int, optional): value for label randomization. Defaults to 0.
         """
-        # self.Dataset = dataset.Dataset([dataset.direction_component, dataset.time_component])
         self.Dataset = dataset
         self.name = name
         self.dospath = dospath
@@ -56,29 +55,26 @@ class End2EndTrainer():
         self.callbacks = []
         self.model = None
 
-    def build_classifier(self, load=False, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0),
+    def build_classifier(self, load=False, use_bias=True, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0),
                          optimizer=tensorflow.keras.optimizers.Adam, lr=0.001,
                          loss=architectures.dir_loss, metrics=["mse"]):
         """Load a model using a model architectures from architectures.py."""
-
         if load:
             try:
                 self.model = load_model(self.name, custom_objects={
                                         "dir_loss": architectures.dir_loss})
-                return self.model
 
             except ValueError:
                 with tfmot.sparsity.keras.prune_scope():
                     self.model = load_model(self.name, custom_objects={
                                             "dir_loss": architectures.dir_loss})
-                return self.model
 
         if self.sequence:
             self.model = architectures.light_linear_CRNN(
                 self.Dataset, (None, 120, 160, 3),
                 drop_rate=drop_rate, regularizer=regularizer,
                 prev_act="relu", last_act="linear", padding='same',
-                use_bias=True,
+                use_bias=use_bias,
                 input_components=self.input_components,
                 output_components=self.output_components).build()
         else:
@@ -86,15 +82,21 @@ class End2EndTrainer():
                 self.Dataset, (120, 160, 3),
                 drop_rate=drop_rate, regularizer=regularizer,
                 prev_act="relu", last_act="linear", padding='same',
-                use_bias=True,
+                use_bias=use_bias,
                 input_components=self.input_components,
                 output_components=self.output_components).build()
 
+        self.add_pruning(prune)
+        self.compile_model(loss, optimizer, lr, metrics)
+        self.model.summary()
+        return self.model
+
+    def add_pruning(self, prune):
         if prune:
             self.model = architectures.create_pruning_model(self.model, prune)
-            pruning = tfmot.sparsity.keras.UpdatePruningStep()
-            self.callbacks.append(pruning)
+            self.callbacks.append(tfmot.sparsity.keras.UpdatePruningStep())
 
+    def compile_model(self, loss, optimizer, lr, metrics):
         self.model.compile(
             loss=loss,
             optimizer=optimizer(lr=lr),
@@ -103,38 +105,54 @@ class End2EndTrainer():
         assert len(self.model.outputs) == len(self.output_components)
         assert len(self.model.inputs)-1 == len(self.input_components)
         self.model.summary()
-        return self.model
 
-    def train(self, flip=True, augm=True, use_earlystop=False, use_tensorboard=False,
-              epochs=5, batch_size=64, seq_batchsize=16, show_distr=False):
+    def train(self, flip=True, augm=True,
+              use_earlystop=False, use_tensorboard=False, use_plateau_lr=False, verbose=0,
+              epochs=5, batch_size=64, seq_batchsize=16, show_distr=False, datagen=False):
         """Train the model loaded as self.model."""
         gdos, valdos, frc, datalen = self.get_gdos(flip=flip, show=show_distr)
         print(gdos.shape, valdos.shape)
         logdir = f'logs\\{time.time()}\\'
+
+        if batch_size > len(valdos):
+            val_batch_size = len(valdos)
+        else:
+            val_batch_size = batch_size
+        it_per_epochs = len(gdos)/batch_size
 
         if self.model is None:
             self.build_classifier()
 
         if use_earlystop:
             earlystop = EarlyStopping(
-                monitor='val_loss',
+                monitor='loss',
                 min_delta=0,
-                patience=3,
-                verbose=0,
+                patience=(1000//it_per_epochs)+1,
+                verbose=verbose,
                 restore_best_weights=True)
             self.callbacks.append(earlystop)
 
         if use_tensorboard:
             tensorboard = TensorBoard(
                 log_dir=logdir,
-                update_freq='batch')
+                update_freq='batch'
+            )
             self.callbacks.append(tensorboard)
+
+        if use_plateau_lr:
+            plateau_lr = ReduceLROnPlateau(
+                monitor='loss',
+                patience=(1000//it_per_epochs)+1,
+                min_lr=0.0001,
+                verbose=verbose
+            )
+            self.callbacks.append(plateau_lr)
 
         self.model.fit(
             x=image_generator(
                 gdos, self.Dataset,
-                self.input_components, self.output_components,
                 datalen, frc, batch_size,
+                self.input_components, self.output_components,
                 sequence=self.sequence,
                 seq_batchsize=seq_batchsize,
                 augm=augm, flip=flip,
@@ -142,14 +160,16 @@ class End2EndTrainer():
             steps_per_epoch=datalen//batch_size, epochs=epochs,
             validation_data=image_generator(
                 valdos, self.Dataset,
+                datalen, frc, val_batch_size,
                 self.input_components, self.output_components,
-                datalen, frc, batch_size,
                 sequence=self.sequence,
                 seq_batchsize=seq_batchsize,
                 augm=augm, flip=flip,
                 use_tensorboard=use_tensorboard, logdir=logdir),
-            validation_steps=datalen//20//batch_size,
-            callbacks=self.callbacks, max_queue_size=4, workers=4)
+            validation_steps=datalen//20//val_batch_size,
+            callbacks=self.callbacks, max_queue_size=8, workers=4,
+            verbose=verbose
+        )
 
         self.model.save(self.name)
 
@@ -215,7 +235,10 @@ class End2EndTrainer():
                 lab = annotation[component.name]
 
                 if flip:
-                    labels = [lab, lab*component.flip_factor]
+                    if component.flip:
+                        labels = [lab, component.flip_item(lab)]
+                    else:
+                        labels = [lab, lab]
                 else:
                     labels = [lab]
 
@@ -225,15 +248,19 @@ class End2EndTrainer():
         frcs = []
         for it, index in enumerate(self.output_components+self.input_components):
             component = self.Dataset.get_component(index)
-            Y_component = Y[it]
+            if component.iterable:
+                frcs.append([1]*len(component.default_flat))
 
-            d = collections.Counter(Y_component)
-            unique = np.unique(Y_component)
-            frc = class_weight.compute_class_weight(
-                'balanced', unique, Y_component)
-            frcs.append(dict(zip(unique, frc)))
+            else:
+                Y_component = Y[it]
 
-            if show:
-                plot.plot_bars(d, component.weight_acc)
+                d = collections.Counter(Y_component)
+                unique = np.unique(Y_component)
+                frc = class_weight.compute_class_weight(
+                    'balanced', unique, Y_component)
+                frcs.append(dict(zip(unique, frc)))
+
+                if show:
+                    plot.plot_bars(d, component.weight_acc)
 
         return frcs

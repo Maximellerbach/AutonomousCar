@@ -10,3 +10,4 @@
 /database.ini
 /custom_modules/custom_modules/psql/queries/__pycache__
 /random_programs/__pycache__
+/custom_modules/custom_modules/trainer/__pycache__

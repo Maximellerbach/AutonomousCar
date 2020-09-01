@@ -7,9 +7,7 @@ from . import vis_img
 
 
 def visualize_fe_output(self, img,
-                        input_size=(160, 120),
                         show=True, sleep_time=1):
-    img = cv2.resize(img, input_size)
     fe_img = self.fe.predict(np.expand_dims(img, axis=0))[0]
     square_root = int(math.sqrt(fe_img.shape[-1]))+1
 
@@ -23,11 +21,9 @@ def visualize_fe_output(self, img,
 
 
 def visualize_model_layer_filter(model, img, layer_index,
-                                 input_size=(160, 120),
                                  output_size=(80, 60),
                                  layer_outputs=None, tmp_model=None,
                                  show=True, sleep_time=0):
-    img = cv2.resize(img, input_size)
     if tmp_model is None:
         if layer_outputs is None:
             layer_output = model.layers[layer_index].output

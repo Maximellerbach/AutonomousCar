@@ -10,13 +10,28 @@ class Labeliser():
     def __init__(self, Dataset, output_components, dos, mode="union"):
         self.Dataset = Dataset
         self.output_components = output_components
+        self.dos = dos
+        self.mode = mode
+
         self.output_components_names = self.Dataset.indexes2components_names(
             self.output_components)
+        self.iterable_components = self.Dataset.get_iterable_components()
 
-        layout = [[sg.Text(f'working dir: {dos}')],
-                  [sg.Image(filename="", key='__IMAGE__')]]
+        self.img_paths = self.Dataset.load_dos(self.dos, search_format='.png')
+        self.annotation_paths = self.Dataset.load_dos_sorted(self.dos)
+        self.annotation_img_paths = [self.Dataset.load_meta(annotation_path, to_list=False).get(
+            'img_path') for annotation_path in self.annotation_paths]
+
+        self.img_paths_mapping = {}
+        for annotation_img_path, annotation_path in zip(self.annotation_img_paths, self.annotation_paths):
+            self.img_paths_mapping[annotation_img_path] = annotation_path
+
+        layout = [[sg.Text(f'working dir: {self.dos}')],
+                  [sg.Graph((160, 120), (0, 120), (160, 0), enable_events=True, key='__GRAPH__')]]
+
         layout += [[sg.Text(name), sg.InputText(key=name)]
                    for name in self.output_components_names]
+
         layout += [[sg.Button('save', key='__SAVE__'),
                     sg.Button('previous', key='__PREV__'),
                     sg.Button('next', key='__NEXT__'),
@@ -25,48 +40,49 @@ class Labeliser():
         # Create the Window and initialize it
         self.window = sg.Window('Labeliser UI', layout)
         self.window.read(timeout=0)
-        self.main(dos, mode)
+        self.main()
 
-    def main(self, dos, mode):
-        img_paths = self.Dataset.load_dos(dos, search_format='.png')
-        annotation_paths = self.Dataset.load_dos_sorted(dos)
-        annotation_img_paths = [self.Dataset.load_meta(annotation_path, to_list=False).get(
-            'img_path') for annotation_path in annotation_paths]
+    def main(self):
+        if self.mode == "difference":
+            to_label_paths = set(
+                self.annotation_img_paths) - set(self.img_paths)
 
-        if mode == "difference":
-            to_label_paths = set(annotation_img_paths) - set(img_paths)
-            print(f'found {len(to_label_paths)} images not labelled')
+        elif self.mode == "union":
+            to_label_paths = set(
+                self.annotation_img_paths) | set(self.img_paths)
 
-        elif mode == "union":
-            to_label_paths = set(annotation_img_paths) | set(img_paths)
-            print(f'found {len(to_label_paths)} images in total')
+        elif self.mode == "intersection":
+            to_label_paths = set(
+                self.annotation_img_paths) & set(self.img_paths)
 
-        elif mode == "intersection":
-            to_label_paths = set(annotation_img_paths) & set(img_paths)
-            print(f'found {len(to_label_paths)} images labelled')
+        print(f'found {len(to_label_paths)} images to label')
 
         i = 0
         to_label_paths = list(to_label_paths)
         to_label_len = len(to_label_paths)
-        while(i < to_label_len):
+        while(i < to_label_len-1):
+            pt_list_iteration = 0
             img_path = to_label_paths[i]
-            img = cv2.imread(img_path)
-            imgbytes = cv2.imencode(".png", img)[1].tobytes()
-            self.window["__IMAGE__"].update(data=imgbytes)
+            self.window["__GRAPH__"].draw_image(
+                filename=img_path, location=(0, 0))
+            self.window["__GRAPH__"].set_cursor('hand2')
+
             self.window["__INDEX__"].update(f'image {i+1}/{to_label_len}')
 
             try:
-                annotation = self.Dataset.load_annotation_json_from_img(
-                    img_path, to_list=False)
-            except OSError:
+                annotation_path = self.img_paths_mapping[img_path]
+                annotation = self.Dataset.load_annotation(
+                    annotation_path, to_list=False)
+            except KeyError:
                 annotation = self.Dataset.load_annotation_img_string(
-                    img_path, cmp_structure=['direction', 'time'])
+                    img_path, cmp_structure=['direction', 'time'])  # default dataset structure
 
-            for component in self.output_components_names:
-                self.window[component].update(annotation[component])
+            for component_name in self.output_components_names:
+                self.window[component_name].update(
+                    str(annotation[component_name]))
 
             while(True):
-                event, values = self.window.read(timeout=500)
+                event, values = self.window.read()
                 if event == sg.WIN_CLOSED:
                     break
 
@@ -78,13 +94,31 @@ class Labeliser():
                     i = i-1 if i > 0 else to_label_len-1
                     break
 
+                elif event == "__GRAPH__" and values["__GRAPH__"] != (None, None):
+                    if len(self.iterable_components) == 0:
+                        continue
+                    pt_value = values["__GRAPH__"]
+                    component = self.iterable_components[pt_list_iteration // 2]
+                    list_of_point = component.from_string(
+                        values[component.name])
+                    list_of_point[pt_list_iteration % 2] = pt_value
+                    self.window[component.name].update(str(list_of_point))
+
+                    pt_list_iteration = (
+                        pt_list_iteration+1) % (2 * len(self.iterable_components))
+
                 elif event == "__SAVE__":
                     to_save = annotation
-                    for labelled_cmp in values:
-                        to_save[labelled_cmp] = float(values[labelled_cmp])
-                    to_save['dos'] = dos
+                    for cmp_key in values:
+                        if "__" not in cmp_key:
+                            to_save[cmp_key] = self.Dataset.get_component(
+                                cmp_key).from_string(values[cmp_key])
+
+                    to_save['dos'] = self.dos
                     to_save['img_path'] = img_path
-                    self.Dataset.save_annotation_dict(to_save)
+                    new_annotation_path = self.Dataset.save_annotation_dict(
+                        to_save)
+                    self.img_paths_mapping[img_path] = new_annotation_path
                     i += 1
                     break
 
@@ -92,12 +126,10 @@ class Labeliser():
 
 
 if __name__ == "__main__":
-    Dataset = dataset_json.Dataset(['direction', 'speed', 'throttle', 'time'])
-    direction_comp = Dataset.get_component('direction')
-    direction_comp.offset = -7
-    direction_comp.scale = 1/4
+    Dataset = dataset_json.Dataset(
+        ['direction', 'speed', 'throttle', 'left_lane', 'right_lane', 'time'])
 
-    output_components = [0, 2]  # indexes to labelise
+    output_components = [0, 2, 3, 4]  # indexes to labelise
 
     labeliser = Labeliser(Dataset, output_components,
                           "C:\\Users\\maxim\\random_data\\1 ironcar driving\\", mode="union")
