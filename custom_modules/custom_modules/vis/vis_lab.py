@@ -51,3 +51,14 @@ def throttle(img, throttle, show=True, name="img", waitkey=None, offset=5):
             cv2.waitKey(waitkey)
     else:
         return img
+
+
+def vis_all(Dataset, input_components, model, img, output_dicts):
+    for output_dict in output_dicts:
+        for output_name in output_dict:
+            component = Dataset.get_component(output_name)
+            img = component.vis_func(
+                img, output_dict[output_name], show=False)
+
+        cv2.imshow('img', img)
+        cv2.waitKey(1)

@@ -1,24 +1,15 @@
-import math
 import threading
 import time
 from enum import IntEnum
 
 import serial
 
-from .sensors.sensorClass import sensor_compteTour
+from .sensors.sensor_class import CompteTour
 
 lock = threading.RLock()
 
 
-class car():
-    WHEEL_BASE = 0.257
-    REAR_DIAMETER = 0.105
-    FRONT_DIAMETER = 0.082
-    REAR_PERIMETER = REAR_DIAMETER*math.pi
-    FRONT_PERIMETER = FRONT_DIAMETER*math.pi
-
-
-class direction(IntEnum):
+class Direction(IntEnum):
     DIR_LEFT_7 = 0
     DIR_LEFT_6 = 1
     DIR_LEFT_5 = 2
@@ -36,7 +27,7 @@ class direction(IntEnum):
     DIR_RIGHT_7 = 14
 
 
-class motor(IntEnum):
+class Motor(IntEnum):
     MOTOR_STOP = 0
     MOTOR_FORWARD = 1
     MOTOR_BACKWARD = 2
@@ -52,7 +43,7 @@ class control:
         Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0
         """
         self.__ser = serial.Serial()
-        self.__sensor_compteTour = sensor_compteTour()
+        self.__sensor_compteTour = CompteTour()
         self.__ser.port = port
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes

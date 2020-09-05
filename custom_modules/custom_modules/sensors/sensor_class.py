@@ -1,6 +1,15 @@
 import time
 import numpy as np
-from ..serial_command import car
+import math
+
+
+class Car():
+    WHEEL_BASE = 0.257
+    REAR_DIAMETER = 0.105
+    FRONT_DIAMETER = 0.082
+    REAR_PERIMETER = REAR_DIAMETER*math.pi
+    FRONT_PERIMETER = FRONT_DIAMETER*math.pi
+
 
 def transform_axes(axes, multiplier):
     return axes*multiplier
@@ -16,8 +25,8 @@ def integrate_axes(integration, axes, dt, axes_len=None):
     return integration+axes*np.full(axes_len, dt)
 
 
-class sensor_compteTour():
-    AXES_TRANSFORMER = np.array([(1/84)*car.REAR_PERIMETER])
+class CompteTour():
+    AXES_TRANSFORMER = np.array([(1/84)*Car.REAR_PERIMETER])
     MEA_ERROR = np.array([0.05])
     INITIAL_STATE = np.array([0])
     DATA_LEVEL = 0  # (metric, speed, acc)
@@ -47,7 +56,7 @@ class sensor_compteTour():
         cls.measurement = new_measurement
 
 
-class sensor_accelerometer():
+class Accelerometer():
     AXES_TRANSFORMER = np.array([1, 1, 1])
     MEA_ERROR = np.array([0.05, 0.05, 0.05])
     INITIAL_STATE = np.array([0, 0, 0])
@@ -78,7 +87,7 @@ class sensor_accelerometer():
         cls.measurement = new_measurement
 
 
-class sensor_magnetometer():
+class Magnetometer():
     AXES_TRANSFORMER = np.array([1, 1, 1])
     MEA_ERROR = np.array([0.05, 0.05, 0.05])
     INITIAL_STATE = np.array([0, 0, 0])
@@ -109,7 +118,7 @@ class sensor_magnetometer():
         cls.measurement = new_measurement
 
 
-class sensor_fusion():
+class Fusion():
     sensors = []
 
     @classmethod
