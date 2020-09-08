@@ -94,9 +94,12 @@ class LabelisationSuggestion():
 
 
 if __name__ == "__main__":
+    import os
+    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+
     Dataset = dataset_json.Dataset(['direction', 'speed', 'throttle', 'time'])
     lab_helper = LabelisationSuggestion(
         Dataset, 'test_model\\models\\linear_trackmania.h5')
 
     lab_helper.iterate_main(
-        "C:\\Users\\maxim\\random_data\\json_dataset\\1 ironcar driving\\")
+        f"{base_path}\\json_dataset\\1 ironcar driving\\")

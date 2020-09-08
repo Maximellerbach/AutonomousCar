@@ -6,6 +6,8 @@ from custom_modules import architectures
 from custom_modules.vis import vis_fe
 from custom_modules.datasets import dataset_json
 
+import os
+base_path = os.getenv('ONEDRIVE') + "\\random_data"
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -13,7 +15,7 @@ for gpu_instance in physical_devices:
 
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-dos = "C:\\Users\\maxim\\random_data\\json_dataset\\1 ironcar driving\\"
+dos = f"{base_path}\\json_dataset\\1 ironcar driving\\"
 
 model = architectures.safe_load_model(
     'test_model\\models\\test.h5', compile=False)

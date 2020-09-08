@@ -40,11 +40,15 @@ def find_nearest(a, index, th=0.1):
 
 
 if __name__ == "__main__":
+    import os
+    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+    current_file = os.path.abspath(os.getcwd())
+
     model = load_model(
-        "C:\\Users\\maxim\\github\\AutonomousCar\\test_model\\models\\fe.h5")
+        os.path.normpath(f"{current_file}..\\test_model\\models\\fe.h5"))
 
     Dataset = dataset_json.Dataset(["time"])
-    dos = "C:\\Users\\maxim\\random_data\\json_dataset\\20 checkpoint patch\\"
+    dos = f"{base_path}\\json_dataset\\20 checkpoint patch\\"
     paths = Dataset.load_dos_sorted(dos)
 
     initial_len = len(paths)

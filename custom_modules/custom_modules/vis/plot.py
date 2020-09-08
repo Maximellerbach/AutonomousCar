@@ -17,11 +17,10 @@ def plot_points(points, show=True):
 
 
 def plot_bars(dict, width, show=True):
-    p = plt.bar(list(dict.keys()),
-                list(dict.values()))
+    plt.bar(list(dict.keys()),
+            list(dict.values()))
     if show:
-        p.show()
-    return p
+        plt.show()
 
 
 def plot_time_series(X, Y, show=True):

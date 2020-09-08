@@ -11,7 +11,7 @@ from ..psql.queries import label
 class Dataset():
     """Dataset class that contains everything needed to load and save a sql dataset, not used for the moment."""
 
-    def __init__(self, lab_structure):
+    def __init__(self):
         db_utils.start_if_not_running()
         self.conn = db_utils.connect()
         self.rows_meta = label.fetch_rows_meta(self.conn)

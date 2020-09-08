@@ -65,7 +65,7 @@ class Dataset():
 
     def load_dataset_sorted(self, doss, sort_component=-1):
         sorted_doss = []
-        for dos in glob(doss+"*"):
+        for dos in glob(doss+f"*{self.format}"):
             paths = self.load_dos(dos+"\\")
             sorted_doss.append(self.sort_paths_by_component(
                 paths, sort_component))  # -1 is time component
@@ -78,11 +78,11 @@ class Dataset():
         return self.sort_paths_by_component(paths, sort_component)
 
     def load_dos(self, dos):
-        return glob(dos+"*")
+        return glob(dos+f"*{self.format}")
 
     def load_dataset(self, doss):
         doss_paths = []
-        for dos in glob(doss+"*"):
+        for dos in glob(doss+f"*{self.format}"):
             paths = self.load_dos(dos+"\\")
             doss_paths.append(paths)
 
@@ -90,7 +90,7 @@ class Dataset():
 
     def load_dataset_sequence(self, doss, max_interval=0.2):
         doss_sequences = []
-        for dos in glob(doss+"*"):
+        for dos in glob(doss+f"*{self.format}"):
             paths = self.load_dos_sorted(dos+"\\")
             paths_sequence = self.split_sorted_paths(
                 paths, time_interval=max_interval)
@@ -193,7 +193,7 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
 
     dataset = Dataset([direction_component, speed_component, time_component])
 
-    dts = glob(dos+"*")
+    dts = glob(dos+"*.png")
     Y = []
     for path in dts:
         annotation = dataset.load_annotation(path)
@@ -208,7 +208,7 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
 def add_dummy_speed(dos, dummy_speed=10):
     dataset = Dataset([direction_component, time_component])
 
-    dts = glob(dos+"*")
+    dts = glob(dos+"*.png")
     Y = []
     for path in dts:
         annotation = dataset.load_annotation(path)
@@ -221,7 +221,7 @@ def add_dummy_speed(dos, dummy_speed=10):
 def cat2linear_dataset(dos):
     dataset = Dataset([direction_component, time_component])
 
-    dts = glob(dos+"*")
+    dts = glob(dos+"*.png")
     Y = []
     for path in dts:
         annotation = dataset.load_annotation(path)
@@ -236,6 +236,9 @@ def cat2linear(ny):
 
 
 if __name__ == "__main__":
+    import os
+    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+
     dts, annotation = cat2linear_dataset(
-        "C:\\Users\\maxim\\random_data\\11 sim circuit 2\\")
-    save("C:\\Users\\maxim\\random_data\\linear\\11 sim circuit 2\\", dts, annotation)
+        f"{base_path}\\11 sim circuit 2\\")
+    save(f"{base_path}\\linear\\11 sim circuit 2\\", dts, annotation)

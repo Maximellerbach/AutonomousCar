@@ -96,16 +96,22 @@ def safe_load_model(path, compile=True):
 
 
 def get_model_output_names(model):
-    tot_names = ['direction', 'left_lane', 'right_lane', 'throttle']
+    tot_out_names = ['left_lane', 'right_lane', 'direction', 'throttle']
     output_names = [node.op.name.split('/')[0] for node in model.outputs]
-    return [name for name in tot_names for output_name in output_names if name in output_name]
+    return [name for name in tot_out_names for output_name in output_names if name in output_name]
 
 
 def prediction2dict(predictions, model_output_names):
-    predictions = np.transpose(predictions, (1, 0, 2))
+    # predictions_list = np.transpose(predictions, (1, 0, 2))  # doesn't work ???
+
+    predictions_list = [[]]*len(predictions[0])
+    for prediction in predictions:
+        for pred_number, pred in enumerate(prediction):
+            predictions_list[pred_number].append(pred)
+
     output_dicts = [{output_name: [] for output_name in model_output_names}
-                    for _ in range(len(predictions))]
-    for prediction, output_dict in zip(predictions, output_dicts):
+                    for _ in range(len(predictions_list))]
+    for prediction, output_dict in zip(predictions_list, output_dicts):
         for output_value, output_name in zip(prediction, output_dict):
             output_dict[output_name] = output_value
     return output_dicts
@@ -160,7 +166,7 @@ class light_linear_CRNN():
 
         if batchnorm:
             x = TD(BatchNormalization())(x)
-        x = TD(Activation(self.activation))(x)
+        x = TD(Activation(self.prev_act))(x)
         if drop:
             x = TD(Dropout(self.drop_rate))(x)
         if flatten:
@@ -172,7 +178,7 @@ class light_linear_CRNN():
         x = TD(Dense(n_neurones, use_bias=self.use_bias))(x)
         if batchnorm:
             x = TD(BatchNormalization())(x)
-        x = TD(Activation(self.activation))(x)
+        x = TD(Activation(self.prev_act))(x)
         if drop:
             x = TD(Dropout(self.drop_rate))(x)
         return x
@@ -299,21 +305,17 @@ class light_linear_CNN():
         inp = Input(shape=self.img_shape)
         inputs.append(inp)
 
-        x = self.conv_block(16, 5, 1, inp, drop=True, name='start_fe')
-        x = MaxPooling2D()(x)
-        x = self.conv_block(16, 3, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(24, 3, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(32, 3, 1, x, drop=True)
-        x = MaxPooling2D(name='end_fe')(x)
+        x = self.conv_block(8, 3, 2, inp, drop=True, name='start_fe')
+        x = self.conv_block(12, 3, 2, x, drop=True)
+        x = self.conv_block(24, 3, 2, x, drop=True)
+        x = self.conv_block(32, 3, 2, x, drop=True, name='end_fe')
 
-        # y1 = self.conv_block(32, (8, 10), (8, 10), x, flatten=True, drop=False)
-        # y2 = self.conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
-        # y3 = self.conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
-        # y = Concatenate()([y1, y2, y3])
-        # y = Dropout(self.drop_rate)(y)
-        y = self.conv_block(48, 3, 3, x, flatten=True, drop=True)
+        y1 = self.conv_block(32, (8, 10), (8, 10), x, flatten=True, drop=False)
+        y2 = self.conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
+        y3 = self.conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
+        y = Concatenate()([y1, y2, y3])
+        y = Dropout(self.drop_rate)(y)
+        # y = self.conv_block(48, 3, 3, x, flatten=True, drop=True)
 
         y = self.dense_block(150, y, drop=True)
         y = self.dense_block(75, y, drop=True)

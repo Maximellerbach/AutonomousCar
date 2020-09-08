@@ -344,14 +344,16 @@ class TrackEstimation():
 
 
 if __name__ == "__main__":
-    # 'C:\\Users\\maxim\\recorded_imgs\\0_0_1587729884.301688\\' # 'C:\\Users\\maxim\\datasets\\1 ironcar driving\\'
+    import os
+    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
     direction_comp = Dataset.get_component("direction")
     direction_comp.offset = -7
     direction_comp.scale = 1/4
 
     paths = Dataset.load_dos_sorted(
-        'C:\\Users\\maxim\\random_data\\json_dataset\\12 sim circuit 2 new\\')
+        f'{base_path}\\json_dataset\\12 sim circuit 2 new\\')
     sequence_to_study = (0, 1000)
     paths = paths[sequence_to_study[0]:sequence_to_study[1]]
 

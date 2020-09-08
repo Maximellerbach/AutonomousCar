@@ -1,10 +1,14 @@
+import os
+
 from custom_modules.datasets import dataset_json, dataset_sql
+
+base_path = os.getenv('ONEDRIVE') + "\\random_data"
 
 datasetJson = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 datasetSQL = dataset_sql.Dataset()
 
 
-src_dos = "C:\\Users\\maxim\\random_data\\json_dataset\\20 checkpoint patch"
+src_dos = f"{base_path}\\json_dataset\\20 checkpoint patch"
 
 dataset_name = src_dos.split('\\')[-1]
 paths = datasetJson.load_dos_sorted(src_dos+"\\")

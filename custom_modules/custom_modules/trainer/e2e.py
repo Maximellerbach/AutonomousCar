@@ -206,6 +206,7 @@ class End2EndTrainer():
             np.random.shuffle(gdos)
             traindos, valdos = np.split(gdos, [datalen-datalen//20])
 
+        print("fetched dataset", self.dospath)
         frc = self.get_frc_lin(gdos, flip=flip, show=show)
         return traindos, valdos, frc, datalen
 
