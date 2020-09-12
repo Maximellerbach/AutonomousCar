@@ -6,7 +6,7 @@ DatasetImg = dataset_img.Dataset(
 DatasetJson = dataset_json.Dataset(
     ["direction", "speed", "throttle", "time"])
 
-src_dos = "D:\\Maxime\\OneDrive\\random_data\\1 ironcar driving"
+src_dos = "D:\\Maxime\\OneDrive\\random_data\\2 donkeycar driving"
 dst_dos = "D:\\Maxime\\OneDrive\\random_data\\json_dataset\\"
 dosdir = False
 

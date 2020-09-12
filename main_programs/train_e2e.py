@@ -8,13 +8,13 @@ if __name__ == "__main__":
 
     # use the onedrive path as root directory for data paths
     base_path = os.getenv('ONEDRIVE') + "\\random_data"
-    train_path = f'{base_path}\\json_dataset\\19 custom speed\\'
+    train_path = f'{base_path}\\json_dataset\\2 donkeycar driving\\'
 
     Dataset = dataset_json.Dataset(
-        ['direction', 'speed', 'throttle', 'left_lane', 'right_lane', 'time'])
+        ['direction', 'speed', 'throttle', 'time'])
     direction_comp = Dataset.get_component('direction')
-    # direction_comp.offset = -7
-    # direction_comp.scale = 1/4
+    direction_comp.offset = -7
+    direction_comp.scale = 1/4
 
     # set input and output components (indexes)
     input_components = [1]
