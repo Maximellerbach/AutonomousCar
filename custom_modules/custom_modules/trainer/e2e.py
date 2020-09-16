@@ -68,23 +68,25 @@ class End2EndTrainer():
                 with tfmot.sparsity.keras.prune_scope():
                     self.model = load_model(self.name, custom_objects={
                                             "dir_loss": architectures.dir_loss})
+            print('loaded model')
 
-        if self.sequence:
-            self.model = architectures.light_linear_CRNN(
-                self.Dataset, (None, 120, 160, 3),
-                drop_rate=drop_rate, regularizer=regularizer,
-                prev_act="relu", last_act="linear", padding='same',
-                use_bias=use_bias,
-                input_components=self.input_components,
-                output_components=self.output_components).build()
         else:
-            self.model = architectures.light_linear_CNN(
-                self.Dataset, (120, 160, 3),
-                drop_rate=drop_rate, regularizer=regularizer,
-                prev_act="relu", last_act="linear", padding='same',
-                use_bias=use_bias,
-                input_components=self.input_components,
-                output_components=self.output_components).build()
+            if self.sequence:
+                self.model = architectures.light_linear_CRNN(
+                    self.Dataset, (None, 120, 160, 3),
+                    drop_rate=drop_rate, regularizer=regularizer,
+                    prev_act="relu", last_act="linear", padding='same',
+                    use_bias=use_bias,
+                    input_components=self.input_components,
+                    output_components=self.output_components).build()
+            else:
+                self.model = architectures.light_linear_CNN(
+                    self.Dataset, (120, 160, 3),
+                    drop_rate=drop_rate, regularizer=regularizer,
+                    prev_act="relu", last_act="linear", padding='same',
+                    use_bias=use_bias,
+                    input_components=self.input_components,
+                    output_components=self.output_components).build()
 
         self.add_pruning(prune)
         self.compile_model(loss, optimizer, lr, metrics)
@@ -244,7 +246,8 @@ class End2EndTrainer():
                     labels = [lab]
 
                 for label in labels:
-                    Y[it].append(imaugm.round_st(label, component.weight_acc))
+                    rounded = imaugm.round_st(label, component.weight_acc)
+                    Y[it].append(rounded)
 
         frcs = []
         for it, index in enumerate(self.output_components+self.input_components):
@@ -262,6 +265,7 @@ class End2EndTrainer():
                 frcs.append(dict(zip(unique, frc)))
 
                 if show:
+                    print(component.name)
                     plot.plot_bars(d, component.weight_acc)
 
         return frcs

@@ -41,9 +41,9 @@ def direction(img, direction, show=True, name="img", waitkey=None):
 def throttle(img, throttle, show=True, name="img", waitkey=None, offset=5):
     h, w, ch = img.shape
     p1 = (offset, h)
-    p2 = (offset, h-int(throttle*5))
+    p2 = (offset, h-int(throttle*30))
 
-    cv2.line(img, p1, p2, (0, 0, 255))
+    cv2.line(img, p1, p2, (0, 0, 255), thickness=2)
 
     if show:
         cv2.imshow(name, img)

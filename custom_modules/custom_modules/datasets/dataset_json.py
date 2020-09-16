@@ -477,7 +477,7 @@ class direction_component:
         return self.type(string)
 
     def flip_item(self, item):
-        return 1-item
+        return item*-1
 
 
 class speed_component:

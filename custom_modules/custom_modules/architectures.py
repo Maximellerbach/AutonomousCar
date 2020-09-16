@@ -87,12 +87,12 @@ def get_flat_fe(model):
         return Model(inp, x)
 
 
-def safe_load_model(path, compile=True):
+def safe_load_model(path, *args, **kwargs):
     try:
-        return load_model(path, compile=compile)
+        return load_model(path, *args, **kwargs)
     except ValueError:
         with tfmot.sparsity.keras.prune_scope():
-            return load_model(path, compile=compile)
+            return load_model(path, *args, **kwargs)
 
 
 def get_model_output_names(model):
@@ -305,10 +305,15 @@ class light_linear_CNN():
         inp = Input(shape=self.img_shape)
         inputs.append(inp)
 
-        x = self.conv_block(8, 3, 2, inp, drop=True, name='start_fe')
-        x = self.conv_block(12, 3, 2, x, drop=True)
-        x = self.conv_block(24, 3, 2, x, drop=True)
-        x = self.conv_block(32, 3, 2, x, drop=True, name='end_fe')
+        x = BatchNormalization(name='start_fe')(inp)
+        x = self.conv_block(12, 3, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(16, 3, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(24, 3, 1, x, drop=True)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(32, 3, 1, x, drop=True)
+        x = MaxPooling2D(name='end_fe')(x)
 
         y1 = self.conv_block(32, (8, 10), (8, 10), x, flatten=True, drop=False)
         y2 = self.conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)

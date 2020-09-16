@@ -50,12 +50,15 @@ class image_generator(Sequence):
             ybatch.append([])
 
         for path in batchfiles:
-            img, annotation = self.Dataset.load_img_and_annotation(path)
-            if img.shape != self.shape:
-                img = cv2.resize(img, (self.shape[1], self.shape[0]))
-            xbatch.append(img)
-            for i in range(len(annotation)):
-                ybatch[i].append(annotation[i])
+            try:
+                img, annotation = self.Dataset.load_img_and_annotation(path)
+                if img.shape != self.shape:
+                    img = cv2.resize(img, (self.shape[1], self.shape[0]))
+                xbatch.append(img)
+                for i in range(len(annotation)):
+                    ybatch[i].append(annotation[i])
+            except:
+                print(path)
 
         if self.augm:
             imaugm.generate_functions_replace(

@@ -128,11 +128,13 @@ class Labeliser():
 if __name__ == "__main__":
     import os
     base_path = os.getenv('ONEDRIVE') + "\\random_data"
+    path = f"{base_path}\\1 ironcar driving\\"
+    path = 'C:\\Users\\maxim\\recorded_imgs\\0_1600008448.0622997\\'
 
     Dataset = dataset_json.Dataset(
-        ['direction', 'speed', 'throttle', 'left_lane', 'right_lane', 'time'])
+        ['direction', 'speed', 'throttle', 'time'])
 
-    output_components = [0, 2, 3, 4]  # indexes to labelise
+    output_components = [0, 1, 2]  # indexes to labelise
 
     labeliser = Labeliser(Dataset, output_components,
-                          f"{base_path}\\1 ironcar driving\\", mode="union")
+                          path, mode="union")
