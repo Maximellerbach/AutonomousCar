@@ -4,12 +4,14 @@ import io
 import json
 import os
 import time
+import typing
 from enum import Enum
 from glob import glob
 
 import cv2
 import numpy as np
 from PIL import Image
+
 from ..vis import vis_lab
 
 
@@ -327,7 +329,7 @@ class Dataset():
     def load_dos_sorted(self, dos, sort_component=-1):
         json_dos_name = dos[:-1]
         json_path = f'{json_dos_name}{self.format}'
-        if os.path.isfile(json_dos_name):
+        if os.path.isfile(json_path):
             sorted_path_json = self.load_json(json_path)
 
             if len(sorted_path_json) == len(os.listdir(dos))//2:
@@ -339,42 +341,45 @@ class Dataset():
         self.save_json_sorted(new_sorted_paths, json_path)
         return new_sorted_paths
 
-    def load_doss(self, base_dos, doss_name, search_format='default'):
+    def load_doss(self, base_dos: str, doss_name: str, search_format='default'):
         doss = [base_dos+dos_name+"\\" for dos_name in doss_name]
         return [self.load_dos(dos, search_format=search_format) for dos in doss]
 
-    def load_doss_sorted(self, base_dos, doss_name, sort_component=-1):
+    def load_doss_sorted(self, base_dos: str, doss_name: str, sort_component=-1):
         doss = [base_dos+dos_name+"\\" for dos_name in doss_name]
         return [self.load_dos_sorted(dos) for dos in doss]
 
-    def load_dataset(self, doss):
+    def load_dataset(self, doss: str):
         doss_paths = []
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 paths = self.load_dos(dos+"\\")
                 doss_paths.append(paths)
+                print('loaded dos', dos)
 
         return doss_paths
 
-    def generator_load_dataset(self, doss):
+    def generator_load_dataset(self, doss: str):
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 yield self.load_dos(dos+"\\")
 
-    def load_dataset_sorted(self, doss):
+    def load_dataset_sorted(self, doss: str):
         doss_paths = []
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 paths = self.load_dos_sorted(dos+"\\")
                 doss_paths.append(paths)
+                print('loaded dos', dos)
+
         return doss_paths
 
-    def generator_load_dataset_sorted(self, doss):
+    def generator_load_dataset_sorted(self, doss: str):
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 yield self.load_dos_sorted(dos+"\\")
 
-    def load_dataset_sequence(self, doss, max_interval=0.2):
+    def load_dataset_sequence(self, doss: str, max_interval=0.2):
         doss_sequences = []
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
@@ -382,10 +387,11 @@ class Dataset():
                 paths_sequence = self.split_sorted_paths(
                     paths, time_interval=max_interval)
                 doss_sequences.append(list(paths_sequence))
+                print('loaded dos', dos)
 
         return doss_sequences
 
-    def generator_load_dataset_sequence(self, doss, max_interval=0.2):
+    def generator_load_dataset_sequence(self, doss: str, max_interval=0.2):
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 paths = self.load_dos_sorted(dos+"\\")
@@ -426,10 +432,10 @@ class Dataset():
     def get_iterable_components(self):
         return [i for i in self.__label_structure if i.iterable]
 
-    def indexes2components_names(self, indexes):
+    def indexes2components_names(self, indexes: typing.List[int]):
         return [self.get_component(i).name for i in indexes]
 
-    def name2component(self, component_name):
+    def name2component(self, component_name: str):
         mapping = self.names_component_mapping()
         component = mapping.get(component_name)
         if component is not None:
@@ -466,7 +472,7 @@ class direction_component:
     def get_item(self, json_data):
         return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
-    def add_item_to_dict(self, item, annotation_dict):
+    def add_item_to_dict(self, item, annotation_dict: dict):
         if isinstance(item, self.type):
             annotation_dict[self.name] = item
         else:
@@ -496,7 +502,7 @@ class speed_component:
     def get_item(self, json_data):
         return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
-    def add_item_to_dict(self, item, annotation_dict):
+    def add_item_to_dict(self, item, annotation_dict: dict):
         if isinstance(item, self.type):
             annotation_dict[self.name] = item
         else:
@@ -521,10 +527,10 @@ class throttle_component:
         self.is_couple = False
         self.vis_func = vis_lab.throttle
 
-    def get_item(self, json_data):
+    def get_item(self, json_data: dict):
         return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
-    def add_item_to_dict(self, item, annotation_dict):
+    def add_item_to_dict(self, item, annotation_dict: dict):
         if isinstance(item, self.type):
             annotation_dict[self.name] = item
         else:
@@ -539,14 +545,14 @@ class right_lane_component:
     def __init__(self):
         self.name = "right_lane"
         self.type = np.float32
-        self.default = [[0, 0], [0, 0]]
-        self.default_flat = [0, 0, 0, 0]
         self.xnorm = 80
         self.ynorm = 60
         self.normarray = np.array(
             [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
         self.fliparray = np.array(
             [1, 0, 1, 0])
+        self.default = np.array([[0, 0], [0, 0]], dtype=self.type)
+        self.default_flat = np.array([0, 0, 0, 0], dtype=self.type)
 
         self.flip = True
         self.iterable = True
@@ -555,14 +561,14 @@ class right_lane_component:
         self.is_couple = True
         self.vis_func = vis_lab.lane
 
-    def get_item(self, json_data):
+    def get_item(self, json_data: dict):
         pts_list = json_data.get(self.name)
         if pts_list is not None:
             return (np.array(pts_list[0]+pts_list[1], dtype=self.type) / self.normarray) - 1
         else:
             return self.default
 
-    def add_item_to_dict(self, item, annotation_dict):
+    def add_item_to_dict(self, item, annotation_dict: dict):
         annotation_dict[self.name] = self.type(item)
         return annotation_dict
 
@@ -593,14 +599,14 @@ class left_lane_component:
         self.is_couple = True
         self.vis_func = vis_lab.lane
 
-    def get_item(self, json_data):
+    def get_item(self, json_data: dict):
         pts_list = json_data.get(self.name)
         if pts_list is not None:
             return (np.array(pts_list[0]+pts_list[1], dtype=self.type) / self.normarray) - 1
         else:
             return self.default
 
-    def add_item_to_dict(self, item, annotation_dict):
+    def add_item_to_dict(self, item, annotation_dict: dict):
         annotation_dict[self.name] = self.type(item)
         return annotation_dict
 
@@ -618,10 +624,10 @@ class img_path_component:
         self.flip = False
         self.is_couple = False
 
-    def get_item(self, json_data):
+    def get_item(self, json_data: dict):
         return self.type(json_data[self.name])
 
-    def add_item_to_dict(self, annotation_dict):
+    def add_item_to_dict(self, annotation_dict: dict):
         time_cmp = annotation_dict.get('time', time.time())
         dos = annotation_dict.get('dos', "")
         img_path = os.path.normpath(f'{dos}/{time_cmp}.png')
@@ -640,10 +646,10 @@ class time_component:
         self.flip = False
         self.is_couple = False
 
-    def get_item(self, json_data):
+    def get_item(self, json_data: dict):
         return self.type(json_data.get(self.name, self.default()))
 
-    def add_item_to_dict(self, item, annotation_dict):
+    def add_item_to_dict(self, item: float, annotation_dict: dict):
         annotation_dict[self.name] = self.type(item)
         return annotation_dict
 
@@ -655,18 +661,18 @@ class imgbase64_component:
         self.flip = False
         self.is_couple = False
 
-    def get_item(self, json_data):
+    def get_item(self, json_data: dict):
         # getting the image from string and convert it to BGR
         base64_img = self.type(json_data[self.name])
         base64_img_decoded = base64.b64decode(base64_img)
         return cv2.cvtColor(np.array(Image.open(io.BytesIO(base64_img_decoded))), cv2.COLOR_RGB2BGR)
 
-    def encode_img(self, imgpath):
+    def encode_img(self, imgpath: str):
         with open(imgpath, "rb") as img_file:
             img_encoded = base64.b64encode(img_file.read()).decode('utf-8')
         return img_encoded
 
-    def add_item_to_dict(self, img_path, annotation_dict):
+    def add_item_to_dict(self, img_path: str, annotation_dict: dict):
         encoded = self.encode_img(img_path)
         annotation_dict[self.name] = encoded
 

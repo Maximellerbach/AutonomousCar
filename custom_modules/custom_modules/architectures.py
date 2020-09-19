@@ -330,6 +330,7 @@ class light_linear_CNN():
                         name='speed')
             inputs.append(inp)
             y = Concatenate()([y, inp])
+            y = self.dense_block(50, y, drop=False)
 
         y = self.dense_block(50, y, drop=False)
 

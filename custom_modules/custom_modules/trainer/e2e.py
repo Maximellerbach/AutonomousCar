@@ -184,6 +184,7 @@ class End2EndTrainer():
         Returns:
             tuple: (train_paths, test_paths, weighted_distribution, total number of images)
         """
+        st = time.time()
         if self.dosdir:
             # even if self.sequence is set to False, load data in sequence
             gdos = self.Dataset.load_dataset_sequence(self.dospath)
@@ -207,8 +208,9 @@ class End2EndTrainer():
 
             np.random.shuffle(gdos)
             traindos, valdos = np.split(gdos, [datalen-datalen//20])
-
-        print("fetched dataset", self.dospath)
+        et = time.time()
+        elapsed_time = et-st
+        print(f"fetched dataset {self.dospath} in {elapsed_time} seconds")
         frc = self.get_frc_lin(gdos, flip=flip, show=show)
         return traindos, valdos, frc, datalen
 

@@ -61,12 +61,10 @@ class image_generator(Sequence):
                 print(path)
 
         if self.augm:
-            imaugm.generate_functions_replace(
+            xbatch, ybatch = imaugm.generate_functions_replace(
                 xbatch, ybatch,
                 proportion=self.proportion,
                 functions=(
-                    imaugm.change_brightness,
-                    imaugm.inverse_color,
                     imaugm.add_random_shadow,
                     imaugm.add_random_glow,
                     imaugm.rdm_noise

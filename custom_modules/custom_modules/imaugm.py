@@ -260,6 +260,8 @@ def generate_functions_replace(X, Y, proportion=0.25,
                 im = np.array(im, dtype=np.uint8)
                 Y[:, index] = annotation
                 X[index] = im
+    
+    return X, Y
 
 
 def generate_random_cut(X, Y, proportion=0.25):

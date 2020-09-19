@@ -15,7 +15,7 @@ for gpu_instance in physical_devices:
 
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-dos = f"{base_path}\\json_dataset\\1 ironcar driving\\"
+dos = f'{base_path}\\recorded_imgs\\0_1600015400.172905\\'
 
 model = architectures.safe_load_model(
     'test_model\\models\\test.h5', compile=False)
