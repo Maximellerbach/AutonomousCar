@@ -349,12 +349,15 @@ class Dataset():
         doss = [base_dos+dos_name+"\\" for dos_name in doss_name]
         return [self.load_dos_sorted(dos) for dos in doss]
 
-    def load_dataset(self, doss: str):
+    def load_dataset(self, doss: str, flat=False):
         doss_paths = []
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 paths = self.load_dos(dos+"\\")
-                doss_paths.append(paths)
+                if flat:
+                    doss_paths += paths
+                else:
+                    doss_paths.append(paths)
                 print('loaded dos', dos)
 
         return doss_paths

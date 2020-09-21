@@ -112,50 +112,23 @@ def add_random_shadow(image, label):
 
     shadow_mask[((X_m-top_x)*(bot_y-top_y) -
                  (bot_x - top_x)*(Y_m-top_y) >= 0)] = 1
-    random_bright = 0.25+0.5*np.random.uniform()
 
-    cond1 = shadow_mask is True
-    cond0 = shadow_mask is False
+    sign = np.random.choice([True, False])
+    if sign:
+        random_bright = 1+0.5*np.random.uniform()
+    else:
+        random_bright = 1-0.5*np.random.uniform()
+
+    cond1 = shadow_mask == 1
+    cond0 = shadow_mask == 0
 
     if np.random.randint(2) == 1:
         image_hls[:, :, 1][cond1] = image_hls[:, :, 1][cond1]*random_bright
     else:
         image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0]*random_bright
 
-    image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
-
-    return image, label
-
-
-def add_random_glow(image, label):
-
-    shape = image.shape
-    top_y = shape[1]*np.random.uniform()
-    top_x = shape[0]*np.random.uniform()
-    bot_x = shape[0]*np.random.uniform()
-    bot_y = shape[1]*np.random.uniform()
-
-    image_hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
-    shadow_glow = 0*image_hls[:, :, 1]
-
-    X_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][0]
-    Y_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][1]
-
-    shadow_glow[((X_m-top_x)*(bot_y-top_y) -
-                 (bot_x - top_x)*(Y_m-top_y) >= 0)] = 1
-    random_bright = 1+0.5*np.random.uniform()
-
-    cond1 = shadow_glow is True
-    cond0 = shadow_glow is False
-
-    if np.random.randint(2) == 1:
-        image_hls[:, :, 1][cond1] = image_hls[:, :, 1][cond1]*random_bright
-    else:
-        image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0]*random_bright
-
-    image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
-
-    return image, label
+    new_image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
+    return new_image, label
 
 
 def night_effect(img,  label, vmin=150, vmax=230):
@@ -174,14 +147,16 @@ def horizontal_flip(Dataset, names2index, flip_indexes, img, labels, index):
         component = Dataset.get_component(flip_index)
         if component.is_couple:
             couple_index = names2index[component.couple]
-            labels[flip_index][index] = component.flip_item(original_labels[couple_index][index])
+            labels[flip_index][index] = component.flip_item(
+                original_labels[couple_index][index])
         else:
-            labels[flip_index][index] = component.flip_item(original_labels[flip_index][index])
+            labels[flip_index][index] = component.flip_item(
+                original_labels[flip_index][index])
 
     return cv2.flip(img, 1), labels
 
 
-def rdm_noise(img, label):
+def add_rdm_noise(img, label):
     img = img+np.random.uniform(-25, 25, size=img.shape)
     return img, label
 
@@ -218,7 +193,7 @@ def mirror_image(img, label):
 
 def generate_functions(X, Y, proportion=0.25):
     functions = (change_brightness, rescut, inverse_color,
-                 night_effect, add_random_shadow, add_random_glow, rdm_noise)
+                 night_effect, add_random_shadow, add_rdm_noise)
     length_X = len(X)
 
     X_aug = []
@@ -243,8 +218,7 @@ def generate_functions_replace(X, Y, proportion=0.25,
                                           inverse_color,
                                           night_effect,
                                           add_random_shadow,
-                                          add_random_glow,
-                                          rdm_noise)):
+                                          add_rdm_noise)):
     X = np.array(X)
     Y = np.array(Y)
 
@@ -256,11 +230,11 @@ def generate_functions_replace(X, Y, proportion=0.25,
         for index in range(len(X)):
             if indexes[index]:
                 im, annotation = f(X[index], Y[:, index])
-                im = np.clip(im, 0, 255)
+                im = np.clip(im, 0, 255)  # force image to be between 0 and 255
                 im = np.array(im, dtype=np.uint8)
                 Y[:, index] = annotation
                 X[index] = im
-    
+
     return X, Y
 
 
@@ -397,23 +371,7 @@ def generate_random_noise(X, Y, proportion=0.25):
     Y_aug = []
     for index in range(len(X)):
         if indexes[index]:
-            im, angle = rdm_noise(X[index], Y[index])
-
-            Y_aug.append(angle)
-            X_aug.append(im)
-
-    return X_aug, Y_aug
-
-
-def generate_random_glow(X, Y, proportion=0.25):
-    indexes = np.random.choice([True, False], len(X), p=[
-                               proportion, 1-proportion])
-
-    X_aug = []
-    Y_aug = []
-    for index in range(len(X)):
-        if indexes[index]:
-            im, angle = add_random_glow(X[index], Y[index])
+            im, angle = add_rdm_noise(X[index], Y[index])
 
             Y_aug.append(angle)
             X_aug.append(im)

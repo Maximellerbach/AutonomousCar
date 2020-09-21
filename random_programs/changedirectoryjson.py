@@ -13,7 +13,7 @@ def assemble_string(str_list, sep='\\'):
     return s
 
 
-def replace_string(path: str, string='-Maxime-PC': str, replace_string='': str):
+def replace_string(path: str, string: str = '-Maxime-PC', replace_string: str = ''):
     return path.replace(string, replace_string)
 
 
@@ -22,6 +22,7 @@ def merge_changes(base_path: str):
     for json_path in tqdm(glob(f"{base_path}\\**\\*.json", recursive=True)):
         if '-Maxime-PC' in json_path:
             new_path = replace_string(json_path)
+            os.remove(new_path)
             os.rename(json_path, new_path)
 
 
@@ -44,4 +45,5 @@ if __name__ == "__main__":
     datasetJson = dataset_json.Dataset(
         ['direction', 'speed', 'throttle', 'time'])
 
-    change_directory(base_path, datasetJson)
+    # change_directory(base_path, datasetJson)
+    merge_changes(base_path)

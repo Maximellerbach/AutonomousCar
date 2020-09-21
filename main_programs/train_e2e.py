@@ -22,7 +22,7 @@ if __name__ == "__main__":
     input_components = [1]
     output_components = [0, 2]
 
-    model_path = 'test_model\\models\\rbrl_sim.h5'
+    model_path = 'test_model\\models\\rbrl_sim2.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         name=model_path,
@@ -36,8 +36,8 @@ if __name__ == "__main__":
     e2e_trainer.build_classifier(
         load=False,
         use_bias=False,
-        drop_rate=0.1, prune=0.0,
-        regularizer=(0.0, 0.0005),
+        drop_rate=0.05, prune=0.0,
+        regularizer=(0.0, 0.0001),
         loss='mse', lr=0.001, metrics=[])
 
     e2e_trainer.train(
@@ -47,15 +47,15 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=6,
+        epochs=12,
         batch_size=32,
         show_distr=False)
 
-    model = architectures.safe_load_model(model_path)
-    paths = Dataset.load_dataset(train_path)
+    model = architectures.safe_load_model(model_path, compile=False)
     if dosdir:
-        # merges paths into one list
-        paths = [path for path in dos_path for dos_path in paths]
+        paths = Dataset.load_dataset(train_path, flat=True)
+    else:
+        paths = Dataset.load_dos(train_path)
 
     pred_function.test_predict_paths(Dataset, input_components,
                                      model, paths, waitkey=1)

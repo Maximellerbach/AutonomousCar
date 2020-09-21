@@ -87,12 +87,12 @@ def get_flat_fe(model):
         return Model(inp, x)
 
 
-def safe_load_model(path, *args, **kwargs):
+def safe_load_model(*args, **kwargs):
     try:
-        return load_model(path, *args, **kwargs)
+        return load_model(*args, **kwargs)
     except ValueError:
         with tfmot.sparsity.keras.prune_scope():
-            return load_model(path, *args, **kwargs)
+            return load_model(*args, **kwargs)
 
 
 def get_model_output_names(model):

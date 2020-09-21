@@ -66,8 +66,8 @@ class image_generator(Sequence):
                 proportion=self.proportion,
                 functions=(
                     imaugm.add_random_shadow,
-                    imaugm.add_random_glow,
-                    imaugm.rdm_noise
+                    imaugm.add_rdm_noise,
+                    imaugm.rescut
                 )
             )
 

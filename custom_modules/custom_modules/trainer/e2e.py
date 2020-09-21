@@ -90,7 +90,6 @@ class End2EndTrainer():
 
         self.add_pruning(prune)
         self.compile_model(loss, optimizer, lr, metrics)
-        self.model.summary()
         return self.model
 
     def add_pruning(self, prune):
