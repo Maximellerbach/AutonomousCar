@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 import tensorflow
-from custom_modules import architectures
+from custom_modules import architectures, pred_function
 from custom_modules.vis import vis_fe
 from custom_modules.datasets import dataset_json
 
@@ -15,14 +15,17 @@ for gpu_instance in physical_devices:
 
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-dos = f'{base_path}\\recorded_imgs\\0_1600015400.172905\\'
+input_components = [1]
+
+dos = f'{base_path}\\recorded_imgs\\0_1600003784.089919\\'
+# dos = 'C:\\Users\\maxim\\recorded_imgs\\0_1600794409.9635623\\'
 
 model = architectures.safe_load_model(
-    'test_model\\models\\test.h5', compile=False)
+    'test_model\\models\\rbrl_sim4_working.h5', compile=False)
+architectures.apply_predict_decorator(model)
+
 fe = architectures.get_fe(model)
-
 fe.summary()
-
 
 filter_indexes = []
 for it, layer in enumerate(fe.layers):
@@ -34,12 +37,12 @@ np.random.shuffle(gdos)
 
 for labpath in gdos:
     img, annotation = Dataset.load_img_and_annotation(labpath)
+    pred_function.test_predict_paths(
+        Dataset, input_components, model, [labpath], waitkey=None, apply_decorator=False)
 
     img = img/255
-    print(img.shape)
-    cv2.imshow('img', img)
-    for index in filter_indexes[:4]:  # only get the first 4
-        activations = vis_fe.visualize_model_layer_filter(
+    for index in filter_indexes[:5]:
+        activations, _ = vis_fe.visualize_model_layer_filter(
             fe, img, index, output_size=(80, 60), show=False)
 
     cv2.waitKey(0)

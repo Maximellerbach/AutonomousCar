@@ -61,4 +61,5 @@ def vis_all(Dataset, input_components, model, img, output_dicts, waitkey=1):
                 img, output_dict[output_name], show=False)
 
         cv2.imshow('img', img)
-        cv2.waitKey(waitkey)
+        if waitkey is not None:
+            cv2.waitKey(waitkey)

@@ -123,7 +123,7 @@ def predict_decorator(func, model_output_names):
         predictions = func(*args, **kwargs)
         output_dicts = prediction2dict(predictions, model_output_names)
         et = time.time()
-        return (output_dicts, et-st)
+        return output_dicts, et-st
     return wrapped_f
 
 
@@ -306,14 +306,12 @@ class light_linear_CNN():
         inputs.append(inp)
 
         x = BatchNormalization(name='start_fe')(inp)
-        x = self.conv_block(12, 3, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(16, 3, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(24, 3, 1, x, drop=True)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(32, 3, 1, x, drop=True)
-        x = MaxPooling2D(name='end_fe')(x)
+        x = self.conv_block(12, 3, 2, x, drop=True)
+        x = self.conv_block(16, 3, 2, x, drop=True)
+        x = self.conv_block(24, 3, 2, x, drop=True)
+        x = self.conv_block(32, 3, 2, x, drop=True)
+        # useless layer, just here to make to have a "end_fe" layer
+        x = Activation('linear', name='end_fe')(x)
 
         y1 = self.conv_block(32, (8, 10), (8, 10), x, flatten=True, drop=False)
         y2 = self.conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)

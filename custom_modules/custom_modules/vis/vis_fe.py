@@ -21,7 +21,7 @@ def visualize_fe_output(self, img,
 
 
 def visualize_model_layer_filter(model, img, layer_index,
-                                 output_size=(80, 60),
+                                 output_size=None, mult=1,
                                  layer_outputs=None, tmp_model=None,
                                  show=True, sleep_time=0):
     if tmp_model is None:
@@ -35,8 +35,15 @@ def visualize_model_layer_filter(model, img, layer_index,
     activation = np.transpose(activation, (-1, 0, 1))
 
     n_filter = len(activation)
-    columns = int(n_filter ** 0.5)+1
+    sqrt_filter = n_filter ** 0.5
+    if int(sqrt_filter) - sqrt_filter != 0.0:
+        columns = int(sqrt_filter)+1
+    else:
+        columns = int(sqrt_filter)
 
+    if output_size is None:
+        output_size = (activation.shape[2], activation.shape[1])
+    output_size = (output_size[0]*mult, output_size[1]*mult)
     final_image = np.zeros((columns*output_size[1], columns*output_size[0]))
 
     for i, filter_img in enumerate(activation):
@@ -50,4 +57,4 @@ def visualize_model_layer_filter(model, img, layer_index,
     if show:
         cv2.waitKey(sleep_time)
 
-    return activation
+    return activation, tmp_model

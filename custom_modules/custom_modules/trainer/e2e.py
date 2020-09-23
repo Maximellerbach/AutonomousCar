@@ -6,7 +6,6 @@ import tensorflow
 import tensorflow_model_optimization as tfmot
 from sklearn.utils import class_weight
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard, ReduceLROnPlateau
-from tensorflow.keras.models import load_model
 
 from .. import architectures, imaugm
 from ..datagenerator import image_generator
@@ -20,12 +19,13 @@ for gpu_instance in physical_devices:
 class End2EndTrainer():
     """end to end model trainer class."""
 
-    def __init__(self, name, dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
+    def __init__(self, load_path, save_path, dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
                  smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
         """Init the trainer parameters.
 
         Args:
-            name (str): the name you want your model to be called
+            load_path (str): the path of the model you want to load.
+            save_path (str): the path of the future model you want to save.
             dospath (str, optional): path to the directory where the images are stored. Defaults to ''.
             dosdir (bool, optional): is the dospath a directory of directory ? Defaults to True.
             proportion (float, optional): proportion of augmented images for every augmentation functions. Defaults to 0.15.
@@ -34,7 +34,8 @@ class End2EndTrainer():
             label_rdm (int, optional): value for label randomization. Defaults to 0.
         """
         self.Dataset = dataset
-        self.name = name
+        self.load_path = load_path
+        self.save_path = save_path
         self.dospath = dospath
         self.dosdir = dosdir
         self.sequence = sequence
@@ -60,14 +61,8 @@ class End2EndTrainer():
                          loss=architectures.dir_loss, metrics=["mse"]):
         """Load a model using a model architectures from architectures.py."""
         if load:
-            try:
-                self.model = load_model(self.name, custom_objects={
-                                        "dir_loss": architectures.dir_loss})
-
-            except ValueError:
-                with tfmot.sparsity.keras.prune_scope():
-                    self.model = load_model(self.name, custom_objects={
-                                            "dir_loss": architectures.dir_loss})
+            self.model = architectures.safe_load_model(self.load_path, custom_objects={
+                "dir_loss": architectures.dir_loss})
             print('loaded model')
 
         else:
@@ -172,7 +167,7 @@ class End2EndTrainer():
             verbose=verbose
         )
 
-        self.model.save(self.name)
+        self.model.save(self.save_path)
 
     def get_gdos(self, flip=True, show=False):
         """Get list of paths in self.dospath.

@@ -40,7 +40,7 @@ def change_directory(base_path: str, datasetJson: dataset_json.Dataset):
 
 
 if __name__ == "__main__":
-    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+    base_path = os.getenv('ONEDRIVE') + "\\random_data\\recorded_imgs\\0_1600805893.911268\\"
 
     datasetJson = dataset_json.Dataset(
         ['direction', 'speed', 'throttle', 'time'])

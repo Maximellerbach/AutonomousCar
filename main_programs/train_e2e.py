@@ -22,10 +22,12 @@ if __name__ == "__main__":
     input_components = [1]
     output_components = [0, 2]
 
-    model_path = 'test_model\\models\\rbrl_sim2.h5'
+    load_path = 'test_model\\models\\rbrl_sim4.h5'
+    save_path = 'test_model\\models\\rbrl_sim4.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
-        name=model_path,
+        load_path=load_path,
+        save_path=save_path,
         dataset=Dataset,
         dospath=train_path, dosdir=dosdir,
         proportion=0.2, sequence=False,
@@ -34,7 +36,7 @@ if __name__ == "__main__":
         output_components=output_components)
 
     e2e_trainer.build_classifier(
-        load=False,
+        load=True,
         use_bias=False,
         drop_rate=0.05, prune=0.0,
         regularizer=(0.0, 0.0001),
@@ -47,11 +49,11 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=12,
+        epochs=6,
         batch_size=32,
         show_distr=False)
 
-    model = architectures.safe_load_model(model_path, compile=False)
+    model = architectures.safe_load_model(save_path, compile=False)
     if dosdir:
         paths = Dataset.load_dataset(train_path, flat=True)
     else:
