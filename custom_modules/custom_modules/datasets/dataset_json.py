@@ -233,7 +233,7 @@ class Dataset():
         annotation_path = img_path.split('.png')[0] + self.format
         return self.load_annotation(annotation_path, to_list=to_list)
 
-    def make_to_pred(self, paths, input_components):
+    def make_to_pred_paths(self, paths, input_components):
         xbatch = []
         ybatch = []
         for _ in range(len(self.get_label_structure_name())):
@@ -242,6 +242,22 @@ class Dataset():
         for path in paths:
             img, annotation = self.load_img_and_annotation(path)
             xbatch.append(img)
+            for it, lab in enumerate(annotation):
+                ybatch[it].append(lab)
+
+        to_pred = [np.array(xbatch, dtype=np.float32)/255]
+
+        for i in input_components:
+            to_pred.append(np.float32([np.float32(tmp_array)
+                                       for tmp_array in ybatch[i]]))
+        return to_pred
+
+    def make_to_pred_annotations(self, xbatch, annotations, input_components):
+        ybatch = []
+        for _ in range(len(self.get_label_structure_name())):
+            ybatch.append([])
+
+        for annotation in annotations:
             for it, lab in enumerate(annotation):
                 ybatch[it].append(lab)
 

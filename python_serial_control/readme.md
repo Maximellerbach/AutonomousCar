@@ -57,8 +57,8 @@ Here are the possible values for motor:
 | motor | Values |
 | --- | --- |
 | MOTOR_STOP | 0 |
-| MOTOR_FORWARD | 1 |
-| MOTOR_BACKWARD | 2 |
+| MOTOR_BACKWARD | 1 |
+| MOTOR_FORWARD | 2 |
 | MOTOR_IDLE | 3 |
 
 PWM is a byte from 0 to 255.
@@ -180,10 +180,10 @@ As an example, here is the enum for the motor states:
 ```python
 from enum import IntEnum
 
-class motor(IntEnum):
+class Motor(IntEnum):
     MOTOR_STOP = 0
-    MOTOR_FORWARD = 1
-    MOTOR_BACKWARD = 2
+    MOTOR_BACKWARD = 1
+    MOTOR_FORWARD = 2
     MOTOR_IDLE = 3
 ```
 

@@ -257,7 +257,7 @@ class light_linear_CNN():
 
     def conv_block(self, n_filter, kernel_size, strides, x,
                    conv_type=Conv2D, drop=True,
-                   flatten=False, batchnorm=True, **kwargs):
+                   flatten=False, batchnorm=True, maxpool=False, **kwargs):
 
         x = conv_type(
             n_filter, kernel_size=kernel_size,
@@ -272,12 +272,14 @@ class light_linear_CNN():
         x = Activation(self.prev_act)(x)
         if drop:
             x = Dropout(self.drop_rate)(x)
+        if maxpool:
+            x = MaxPooling2D()(x)
         if flatten:
             x = Flatten()(x)
         return x
 
     def dense_block(self, n_neurones, x,
-                    drop=True, batchnorm=True, **kwargs):
+                    drop=True, batchnorm=True, activation=None, **kwargs):
         x = Dense(
             n_neurones,
             use_bias=self.use_bias,
@@ -288,7 +290,10 @@ class light_linear_CNN():
 
         if batchnorm:
             x = BatchNormalization()(x)
-        x = Activation(self.prev_act)(x)
+        if activation is None:
+            x = Activation(self.prev_act)(x)
+        else:
+            x = Activation(activation)(x)
         if drop:
             x = Dropout(self.drop_rate)(x)
         return x
@@ -310,7 +315,7 @@ class light_linear_CNN():
         x = self.conv_block(16, 3, 2, x, drop=True)
         x = self.conv_block(24, 3, 2, x, drop=True)
         x = self.conv_block(32, 3, 2, x, drop=True)
-        # useless layer, just here to make to have a "end_fe" layer
+        # useless layer, just here to have a "end_fe" layer
         x = Activation('linear', name='end_fe')(x)
 
         y1 = self.conv_block(32, (8, 10), (8, 10), x, flatten=True, drop=False)
@@ -349,10 +354,12 @@ class light_linear_CNN():
             y = Concatenate()([y, z])
 
         if 'direction' in output_components_names:
+            z = self.dense_block(25, y, drop=False)
+            z = self.dense_block(25, y, drop=False, activation='softmax')
             z = Dense(1,
                       use_bias=self.use_bias,
                       activation=self.last_act,
-                      name='direction')(y)
+                      name='direction')(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 
