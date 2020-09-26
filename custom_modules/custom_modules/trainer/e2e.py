@@ -181,8 +181,8 @@ class End2EndTrainer():
         st = time.time()
         if self.dosdir:
             # even if self.sequence is set to False, load data in sequence
-            gdos = self.Dataset.load_dataset_sequence(self.dospath)
-            gdos = np.concatenate([i for i in gdos])
+            gdos = self.Dataset.load_dataset_sorted(self.dospath)
+            # gdos = np.concatenate([i for i in gdos])
 
         else:
             gdos = self.Dataset.load_dos_sorted(self.dospath)

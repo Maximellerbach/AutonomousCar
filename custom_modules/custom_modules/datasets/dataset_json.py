@@ -193,17 +193,20 @@ class Dataset():
         json_data = self.load_json(path)
         return self.get_component(n_component).get_item(json_data)
 
-    def load_annotation(self, path, to_list=True):
+    def load_annotation(self, path, to_list=True, load_all=False):
         def get_item_comp(component):
             return component.get_item(json_data)
         json_data = self.load_json(path)
         if to_list:
             return list([get_item_comp(comp) for comp in self.__label_structure])
         else:
-            annotation_dict = {}
-            for component in self.__label_structure:
-                annotation_dict[component.name] = get_item_comp(component)
-            return annotation_dict
+            if load_all:
+                return json_data
+            else:
+                annotation_dict = {}
+                for component in self.__label_structure:
+                    annotation_dict[component.name] = get_item_comp(component)
+                return annotation_dict
 
     def load_meta(self, path, to_list=True):
         def get_item_comp(component):

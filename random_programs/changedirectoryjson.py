@@ -4,6 +4,7 @@ import os
 from tqdm import tqdm
 
 from custom_modules.datasets import dataset_json
+import json
 
 
 def assemble_string(str_list, sep='\\'):
@@ -28,22 +29,23 @@ def merge_changes(base_path: str):
 
 def change_directory(base_path: str, datasetJson: dataset_json.Dataset):
     for json_path in tqdm(glob(f"{base_path}\\**\\*.json", recursive=True)):
+        try:
+            if os.path.isdir(assemble_string(json_path.split('.json')[:-1])):
+                continue
 
-        if os.path.isdir(assemble_string(json_path.split('.json')[:-1])):
-            continue
-
-        annotation = datasetJson.load_annotation(json_path, to_list=False)
-        annotation['dos'] = assemble_string(json_path.split('\\')[:-1])
-        annotation['img_path'] = annotation['dos'] + \
-            str(annotation['time'])+".png"
-        datasetJson.save_annotation_dict(annotation)
-
+            annotation = datasetJson.load_annotation(json_path, to_list=False, load_all=True)
+            annotation['dos'] = assemble_string(json_path.split('\\')[:-1])
+            annotation['img_path'] = annotation['dos'] + \
+                str(annotation['time'])+".png"
+            datasetJson.save_annotation_dict(annotation)
+        except json.JSONDecodeError:
+            print(f'could not load {json_path}')
 
 if __name__ == "__main__":
-    base_path = os.getenv('ONEDRIVE') + "\\random_data\\recorded_imgs\\0_1600805893.911268\\"
+    base_path = os.getenv('ONEDRIVE') + "\\random_data\\generated_track\\1_1601131038.8030944\\"
 
     datasetJson = dataset_json.Dataset(
         ['direction', 'speed', 'throttle', 'time'])
 
-    # change_directory(base_path, datasetJson)
-    merge_changes(base_path)
+    change_directory(base_path, datasetJson)
+    # merge_changes(base_path)
