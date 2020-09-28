@@ -2,7 +2,7 @@ import os
 
 from custom_modules.datasets import dataset_json, dataset_sql
 
-base_path = os.getenv('ONEDRIVE') + "\\random_data"
+base_path = os.path.expanduser("~") + "\\random_data"
 
 datasetJson = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 datasetSQL = dataset_sql.Dataset()

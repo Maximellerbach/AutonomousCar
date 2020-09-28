@@ -7,7 +7,7 @@ from custom_modules.vis import vis_fe
 from custom_modules.datasets import dataset_json
 
 import os
-base_path = os.getenv('ONEDRIVE') + "\\random_data"
+base_path = os.path.expanduser("~") + "\\random_data"
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -17,11 +17,10 @@ for gpu_instance in physical_devices:
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = [1]
 
-dos = f'{base_path}\\recorded_imgs\\0_1600003784.089919\\'
-# dos = 'C:\\Users\\maxim\\recorded_imgs\\0_1600794409.9635623\\'
+dos = f'{base_path}\\roboracingleague_1\\0_1600893583.008224\\'
 
 model = architectures.safe_load_model(
-    'test_model\\models\\rbrl_sim4.h5', compile=False)
+    'test_model\\models\\gentrck_sim1_working.h5', compile=False)
 architectures.apply_predict_decorator(model)
 
 fe = architectures.get_fe(model)

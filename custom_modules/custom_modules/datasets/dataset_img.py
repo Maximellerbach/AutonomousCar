@@ -237,7 +237,7 @@ def cat2linear(ny):
 
 if __name__ == "__main__":
     import os
-    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+    base_path = os.path.expanduser("~") + "\\random_data"
 
     dts, annotation = cat2linear_dataset(
         f"{base_path}\\11 sim circuit 2\\")

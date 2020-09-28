@@ -127,7 +127,7 @@ class Labeliser():
 
 if __name__ == "__main__":
     import os
-    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+    base_path = os.path.expanduser("~") + "\\random_data"
     path = f"{base_path}\\1 ironcar driving\\"
     path = 'C:\\Users\\maxim\\recorded_imgs\\0_1600008448.0622997\\'
 

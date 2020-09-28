@@ -95,7 +95,7 @@ class LabelisationSuggestion():
 
 if __name__ == "__main__":
     import os
-    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+    base_path = os.path.expanduser("~") + "\\random_data"
 
     Dataset = dataset_json.Dataset(['direction', 'speed', 'throttle', 'time'])
     lab_helper = LabelisationSuggestion(

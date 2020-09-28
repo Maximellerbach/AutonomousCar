@@ -41,7 +41,7 @@ def find_nearest(a, index, th=0.1):
 
 if __name__ == "__main__":
     import os
-    base_path = os.getenv('ONEDRIVE') + "\\random_data"
+    base_path = os.path.expanduser("~") + "\\random_data"
     current_file = os.path.abspath(os.getcwd())
 
     model = load_model(
