@@ -41,8 +41,9 @@ def change_directory(base_path: str, datasetJson: dataset_json.Dataset):
         except json.JSONDecodeError:
             print(f'could not load {json_path}')
 
+
 if __name__ == "__main__":
-    base_path = os.path.expanduser("~") + "\\random_data\\generated_track\\1_1601131038.8030944\\"
+    base_path = os.path.expanduser("~") + "\\random_data\\roboracingleague_1\\"
 
     datasetJson = dataset_json.Dataset(
         ['direction', 'speed', 'throttle', 'time'])

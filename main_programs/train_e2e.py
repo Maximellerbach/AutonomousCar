@@ -6,10 +6,9 @@ from custom_modules.trainer import e2e
 
 if __name__ == "__main__":
 
-    # use the onedrive path
-    # as root directory for data paths
+    # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\generated_track\\'
+    train_path = f'{base_path}\\roboracingleague_1\\'
     dosdir = True
 
     Dataset = dataset_json.Dataset(
@@ -22,8 +21,8 @@ if __name__ == "__main__":
     input_components = [1]
     output_components = [0, 2]
 
-    load_path = 'test_model\\models\\gentrck_sim1_working.h5'
-    save_path = 'test_model\\models\\gentrck_sim1_working.h5'
+    load_path = 'test_model\\models\\rbrl_sim6_working.h5'
+    save_path = 'test_model\\models\\rbrl_sim6.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -49,7 +48,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=4,
+        epochs=2,
         batch_size=32,
         show_distr=False)
 
