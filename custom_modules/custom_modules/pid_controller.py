@@ -2,13 +2,13 @@ import time
 from . import PID
 
 
-class PID_controller():
-    def __init__(self, kp=1, ki=1, kd=1):
+class PIDController():
+    def __init__(self, kp=1, ki=1, kd=1, high_th=127, low_th=30):
         self.pid = PID.PID(kp, ki, kd)
         self.ser = None
 
-        self.high_th = 127
-        self.low_th = 30
+        self.high_th = high_th
+        self.low_th = low_th
 
         self.last_received = time.time()
         self.current_speed = 0
@@ -48,10 +48,11 @@ class PID_controller():
 
     def update_ser(self):
         if self.ser is not None:
-            self.update(self.ser.GetCurrentSpeed(),
-                        self.ser.GetTimeLastReceived())
+            return self.update(self.ser.GetCurrentSpeed(),
+                               self.ser.GetTimeLastReceived())
         else:
-            raise ValueError('Ser is not initialized, please execute ')
+            raise ValueError(
+                'Ser is not initialized, please execute init_ser(ser)')
 
     def changePWM(self, pwm):
         self.ser.changePWM(pwm)

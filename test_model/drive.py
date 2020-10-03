@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 
 from custom_modules import architectures, serial_command
-from custom_modules.vis import vis_lab
 
 # serialport = '/dev/ttyS0'
 # os.system('sudo chmod 0666 {}'.format(serialport))
@@ -45,7 +44,6 @@ while(True):
         # SAVE FRAME
         # cv2.imwrite('../../../image_course/' +
         #             str(dico_save[pred])+'_'+str(time.time())+'.png', cam)
-        
 
     except Exception as e:
         print(e)

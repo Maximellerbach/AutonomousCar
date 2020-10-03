@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pykalman
 
-from custom_modules.sensors import sensorClass
+from custom_modules.sensors import sensor_class
 
 if __name__ == "__main__":
-    sensor_list = [sensorClass.sensor_compteTour()]
+    sensor_list = [sensor_class.CompteTour()]
 
     KF = pykalman.KalmanFilter(initial_state_mean=[i.INITIAL_STATE for i in sensor_list],
                                transition_covariance=[

@@ -4,7 +4,7 @@ from enum import IntEnum
 
 import serial
 
-from .sensors.sensor_class import CompteTour
+from .sensors import sensor_class
 
 lock = threading.RLock()
 
@@ -43,7 +43,7 @@ class control:
         Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0
         """
         self.__ser = serial.Serial()
-        self.__sensor_compteTour = CompteTour()
+        self.__sensor_compteTour = sensor_class.CompteTour()
         self.__ser.port = port
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes

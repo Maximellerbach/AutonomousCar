@@ -1,9 +1,9 @@
 import time
 
-from custom_modules import PIDController
+from custom_modules import pid_controller
 
 if __name__ == "__main__":
-    controller = PIDController.PID_controller()
+    controller = pid_controller.PIDController()
     controller.update_target(1)
     # controller.init_ser()
 
