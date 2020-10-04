@@ -2,7 +2,6 @@ import time
 
 import numpy as np
 import tensorflow
-import tensorflow_model_optimization as tfmot
 from tensorflow.keras import Input
 from tensorflow.keras.layers import (Activation, BatchNormalization, Concatenate,
                                      Conv2D, SeparableConv2D, Dense,
@@ -58,6 +57,7 @@ def apply_pruning_to_dense_and_conv(layer):
 
 
 def create_pruning_model(model, sparsity=0.5, clone_function=apply_pruning_to_dense_and_conv):
+    import tensorflow_model_optimization as tfmot
     return tensorflow.keras.models.clone_model(
         model,
         clone_function=clone_function)
@@ -91,6 +91,7 @@ def safe_load_model(*args, **kwargs):
     try:
         return load_model(*args, **kwargs)
     except ValueError:
+        import tensorflow_model_optimization as tfmot
         with tfmot.sparsity.keras.prune_scope():
             return load_model(*args, **kwargs)
 
