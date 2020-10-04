@@ -3,7 +3,8 @@ import os
 import cv2
 import numpy as np
 
-from custom_modules import architectures, serial_command
+from custom_modules import serial_command, architectures, drive_utils
+from custom_modules.datasets import dataset_json
 
 # serialport = '/dev/ttyS0'
 # os.system('sudo chmod 0666 {}'.format(serialport))
@@ -12,31 +13,43 @@ from custom_modules import architectures, serial_command
 wi = 160
 he = 120
 
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+input_components = [1]
+
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.load_model(
     os.path.normpath(f'{basedir}/models/gentrck_sim1_working.h5'))
 architectures.apply_predict_decorator(model)
 
 
-# dico = [10, 8, 6, 4, 2]
-# dico_save = [3, 5, 7, 9, 11]
-# dico_speed = [1, 0.9, 0.8, 0.9, 1]
-
 cap = cv2.VideoCapture(0)
 # ser.ChangeMotorA(2)
 
 while(True):
     try:
-
         _, cam = cap.read()
 
         # PREPARE IMAGE FOR AI's INPUT SHAPE
         img = cv2.resize(cam, (wi, he))/255
-        img_pred = np.expand_dims(img, axis=0)
+
+        # annotation template with just what is needed for the prediction
+        annotation = {
+            'direction': 0,
+            'speed': 10,
+            'throttle': 0,
+            'time': 0
+        }
+        annotation_list = drive_utils.dict2list(annotation)
+
+        to_pred = Dataset.make_to_pred_annotations(
+            [img], [annotation_list], input_components)
 
         # PREDICT
-        predicted = model.predict(img_pred)
+        predicted = model.predict(to_pred)
         print(predicted)
+
+        cv2.imshow('img', img)
+        cv2.waitKey(1)
 
         # ser.ChangePWM(speed)
         # ser.ChangeDirection(dico[pred])

@@ -53,3 +53,7 @@ def get_controller_buttons(joy):
 
 def direction2categorical(direction, dir_range=(2, 10)):
     return round(dir_range[0]+direction*(dir_range[1] - dir_range[0]))
+
+
+def dict2list(dict):
+    return [i[1] for i in dict.items()]

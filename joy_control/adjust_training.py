@@ -32,7 +32,7 @@ joy = xbox.Joystick()
 cap = cv2.VideoCapture(0)
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.safe_load_model(
+model = architectures.load_model(
     os.path.normpath(f'{basedir}/../test_model/models/rbrl_sim5_working.h5'))
 architectures.apply_predict_decorator(model)
 
@@ -67,8 +67,9 @@ while not joy.Back():
         }
         Dataset.save_img_and_annotation(img, annotation)
     else:
+        annotation_list = drive_utils.dict2list(annotation)
         to_pred = Dataset.make_to_pred_annotations(
-            [img], [annotation], input_components)
+            [img], [annotation_list], input_components)
 
         output_dict, elapsed_time = model.predict(to_pred)
         output_dict = output_dict[0]
