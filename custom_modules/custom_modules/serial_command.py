@@ -66,7 +66,7 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        time.sleep(1)
+        time.sleep(1) 
 
     def __enter__(self):
         return self

@@ -1,7 +1,7 @@
 import os
 
 import cv2
-import numpy as np
+import time
 
 from custom_modules import serial_command, architectures, drive_utils
 from custom_modules.datasets import dataset_json
@@ -19,7 +19,7 @@ input_components = [1]
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.load_model(
     os.path.normpath(f'{basedir}/models/gentrck_sim1_working.h5'))
-architectures.apply_predict_decorator(model)
+# architectures.apply_predict_decorator(model)
 
 
 cap = cv2.VideoCapture(0)
@@ -45,8 +45,10 @@ while(True):
             [img], [annotation_list], input_components)
 
         # PREDICT
+        st = time.time()
         predicted = model.predict(to_pred)
-        print(predicted)
+        et = time.time()
+        print(predicted, et-st)
 
         cv2.imshow('img', img)
         cv2.waitKey(1)
