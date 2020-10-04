@@ -13,8 +13,8 @@ wi = 160
 he = 120
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.safe_load_model(
-    os.path.normpath(f'{basedir}/models/test.h5'))
+model = architectures.load_model(
+    os.path.normpath(f'{basedir}/models/gentrck_sim1_working.h5'))
 architectures.apply_predict_decorator(model)
 
 
