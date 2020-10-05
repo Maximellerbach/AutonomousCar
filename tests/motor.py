@@ -5,7 +5,7 @@ from custom_modules import serial_command
 
 comPort = '/dev/ttyUSB0'
 ser = serial_command.start_serial(comPort)
-TEST_PWM = 60
+TEST_PWM = 70
 
 
 class MotorTestCase(unittest.TestCase):
@@ -15,6 +15,7 @@ class MotorTestCase(unittest.TestCase):
         ser.ChangeMotorA(serial_command.Motor.MOTOR_STOP)
 
     def test_motor_forward(self):
+        self.reset()
         ser.ChangeMotorA(serial_command.Motor.MOTOR_FORWARD)
         ser.ChangePWM(TEST_PWM)
         time.sleep(3)
@@ -22,6 +23,7 @@ class MotorTestCase(unittest.TestCase):
         self.reset()
 
     def test_motor_backward(self):
+        self.reset()
         ser.ChangeMotorA(serial_command.Motor.MOTOR_BACKWARD)
         ser.ChangePWM(TEST_PWM)
         time.sleep(3)
