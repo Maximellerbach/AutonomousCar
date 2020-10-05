@@ -11,6 +11,7 @@ TEST_PWM = 60
 class MotorTestCase(unittest.TestCase):
     def reset(self):
         ser.ChangePWM(0)
+        ser.ChangeDirection(6)
         ser.ChangeMotorA(serial_command.Motor.MOTOR_STOP)
 
     def test_motor_forward(self):
