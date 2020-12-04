@@ -21,7 +21,7 @@ if __name__ == "__main__":
     input_components = [1]
     output_components = [0, 2]
 
-    load_path = 'test_model\\models\\gentrck_sim1_working.h5'
+    load_path = 'test_model\\models\\rbrl_sim7_working.h5'
     save_path = 'test_model\\models\\gentrck_sim2.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         save_path=save_path,
         dataset=Dataset,
         dospath=train_path, dosdir=dosdir,
-        proportion=0.1, sequence=False,
+        proportion=0.2, sequence=False,
         smoothing=0.0, label_rdm=0.0,
         input_components=input_components,
         output_components=output_components)
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=2,
+        epochs=10,
         batch_size=32,
         show_distr=False)
 
