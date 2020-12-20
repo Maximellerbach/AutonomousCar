@@ -1,7 +1,13 @@
 import os
-import xbox
-from custom_modules import serial_command2
+import time
 
+from custom_modules import serial_command2
+from custom_modules.datasets import dataset_json
+
+
+import xbox
+
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
@@ -29,7 +35,7 @@ while not joy.Back():
     print(joy_steering, joy_throttle, joy_brake)
 
     steering = joy_steering if abs(joy_steering) > abs(th_direction) and not joy_button_x else 0
-    throttle = joy_throttle - joy_brake if abs(joy_throttle) > abs(th_throttle) else 0
+    throttle = joy_throttle - joy_brake if abs(joy_throttle - joy_brake) > abs(th_throttle) else 0
 
     pwm = MAXTHROTTLE * throttle
     ser.ChangeAll(steering, pwm, min=[-1, -1], max=[1, 1])
@@ -46,6 +52,6 @@ while not joy.Back():
     #             'time': time.time()
     #         }
     #     )
-    # prev_throttle = throttle
+    prev_throttle = throttle
 
 print('terminated')
