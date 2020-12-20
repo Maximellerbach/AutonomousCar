@@ -47,13 +47,14 @@ while(True):
             annotation[name] = predicted[name][0]  # in our case we only have 1 value per output, so converting the array to a single float
 
         # print(annotation)
-        print(dt)
+        # print(dt)
 
         # cv2.imshow('img', img)
         # cv2.waitKey(1)
 
         ser.ChangePWM(0)
         ser.ChangeDirection(annotation['direction'])
+        print(annotation['direction'], annotation['throttle'])
 
         # SAVE FRAME
         # Dataset.save_img_and_annotation(img, annotation)

@@ -22,7 +22,7 @@ Servo motorESC;
 
 byte buffData[2] = {0, 0}; // one byte for the steering servo, and an other of the motor
 long last_received = 0;
-int maxTimout = 1000;
+int maxTimout = 2000;
 
 void setup() {
   Serial.begin(115200);
