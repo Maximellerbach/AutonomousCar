@@ -54,14 +54,14 @@ void loop() {
     Serial.readBytes(buffData, 2);
     last_received = millis();
     changeSteering();
-    //changeThrottle();
+    changeThrottle();
   }
 
   // if the arduino isn't receiving anything for a given amount of time, stop the motor and servo
-  else if (abs(millis()-last_received)>maxTimout){
-    servoSteering.writeMicroseconds(SERVO_NEUTRAL);
-    motorESC.writeMicroseconds(ESC_NEUTRAL);
-  }
+  //else if (abs(millis()-last_received)>maxTimout){
+  //  servoSteering.writeMicroseconds(SERVO_NEUTRAL);
+  //  motorESC.writeMicroseconds(ESC_NEUTRAL);
+  //}
 }
 
 void changeSteering() {
