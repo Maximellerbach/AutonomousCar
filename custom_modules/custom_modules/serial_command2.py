@@ -34,8 +34,6 @@ class control:
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
         self.__ser.timeout = 0  # no timeout
         self.__command = bytearray([127, 127])
-        self.__pwm = 0
-        self.__steering = 0
         self.__isRuning = True
         self.__isOperation = False
         self.__boosting = False
@@ -76,14 +74,12 @@ class control:
         steering = int(map_value(steering, min, max, 0, 255))
         print(steering)
         self.__command[0] = steering
-        self.__steering = steering
         self.__toSend.append(self.__command)
 
     def ChangePWM(self, pwm, min=-1, max=1):
         """Change motor speed."""
         pwm = int(map_value(pwm, min, max, 0, 255))
         self.__command[1] = pwm
-        self.__pwm = pwm
         self.__toSend.append(self.__command)
 
     def ChangeAll(self, steering, pwm, min=[-1, -1], max=[1, 1]):
@@ -98,8 +94,6 @@ class control:
 
         self.__command[0] = steering
         self.__command[1] = pwm
-        self.__steering = steering
-        self.__pwm = pwm
         self.__toSend.append(self.__command)
 
     def __MainThread__(self):
