@@ -33,7 +33,7 @@ class control:
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
         self.__ser.timeout = 0  # no timeout
-        self.__command = bytearray([127, 127])
+        self.__command = bytearray([0, 0])
         self.__isRuning = True
         self.__isOperation = False
         self.__boosting = False
@@ -72,7 +72,6 @@ class control:
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
         steering = int(map_value(steering, min, max, 0, 255))
-        print(steering)
         self.__command[0] = steering
         self.__toSend.append(self.__command)
 

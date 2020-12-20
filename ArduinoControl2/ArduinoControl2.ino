@@ -53,8 +53,8 @@ void loop() {
   if (Serial.available()) {
     Serial.readBytes(buffData, 2);
     last_received = millis();
-    changeSteering(buffData[0]);
-    //changeThrottle(buffData[1]);
+    changeSteering();
+    //changeThrottle();
   }
 
   // if the arduino isn't receiving anything for a given amount of time, stop the motor and servo
@@ -64,15 +64,15 @@ void loop() {
   //}
 }
 
-void changeSteering(byte steeringByte) {
-  int decoded_steering = steeringByte; // cast byte to int
+void changeSteering() {
+  int decoded_steering = buffData[0]; // cast byte to int
   
   int steering = SERVO_MIN + decoded_steering/255 * (SERVO_MAX - SERVO_MIN);
   servoSteering.writeMicroseconds(steering);
 }
 
-void changeThrottle(byte throttleByte) {
-  int decoded_trottle = throttleByte; // cast byte to int
+void changeThrottle() {
+  int decoded_trottle = buffData[1]; // cast byte to int
   
   int throttle = ESC_MIN + decoded_trottle/255 * (ESC_MAX - ESC_MIN);
   motorESC.writeMicroseconds(throttle);
