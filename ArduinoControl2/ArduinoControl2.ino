@@ -58,21 +58,21 @@ void loop() {
   }
 
   // if the arduino isn't receiving anything for a given amount of time, stop the motor and servo
-  //else if (abs(millis()-last_received)>maxTimout){
-  //  servoSteering.writeMicroseconds(SERVO_NEUTRAL);
-  //  motorESC.writeMicroseconds(ESC_NEUTRAL);
-  //}
+  else if (abs(millis()-last_received)>maxTimout){
+    servoSteering.writeMicroseconds(SERVO_NEUTRAL);
+    motorESC.writeMicroseconds(ESC_NEUTRAL);
+  }
 }
 
 void changeSteering() {
-  int decoded_steering = buffData[0]; // cast byte to int
+  float decoded_steering = buffData[0]; // cast byte to int
   
   int steering = SERVO_MIN + decoded_steering/255 * (SERVO_MAX - SERVO_MIN);
   servoSteering.writeMicroseconds(steering);
 }
 
 void changeThrottle() {
-  int decoded_trottle = buffData[1]; // cast byte to int
+  float decoded_trottle = buffData[1]; // cast byte to int
   
   int throttle = ESC_MIN + decoded_trottle/255 * (ESC_MAX - ESC_MIN);
   motorESC.writeMicroseconds(throttle);
