@@ -7,17 +7,17 @@ ser = serial_command2.start_serial(comPort)
 
 if __name__ == '__main__':
     for i in range(10):
-        ser.ChangeDirection(127+i, 0, 255)
+        ser.ChangePWM(127+i, 0, 255)
         time.sleep(0.05)
 
     for i in range(10, 0, -1):
-        ser.ChangeDirection(127+i, 0, 255)
+        ser.ChangePWM(127+i, 0, 255)
         time.sleep(0.05)
 
     for i in range(10):
-        ser.ChangeDirection(127-i, 0, 255)
+        ser.ChangePWM(127-i, 0, 255)
         time.sleep(0.05)
-        
+
     for i in range(10, 0, -1):
-        ser.ChangeDirection(127-i, 0, 255)
+        ser.ChangePWM(127-i, 0, 255)
         time.sleep(0.05)
