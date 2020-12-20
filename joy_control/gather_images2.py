@@ -1,12 +1,9 @@
-import cv2
 import os
-import time
-
 import xbox
-from custom_modules import serial_command2
-from custom_modules.datasets import dataset_json
 
-Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+def fmtFloat(n):
+    return '{:6.3f}'.format(n)
+
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
@@ -21,7 +18,7 @@ joy = xbox.Joystick()
 # cap = cv2.VideoCapture(0)
 
 print("I'm HERE !")
-print(joy.leftTrigger())
+print(joy.connected())
 
 prev_throttle = 0
 while not joy.Back():
@@ -31,7 +28,7 @@ while not joy.Back():
     joy_button_a = joy.A()
     joy_button_x = joy.X()
 
-    print(joy_steering, joy_throttle, joy_brake, joy_button_a, joy_button_x)
+    print(fmtFloat(joy_steering), fmtFloat(joy_throttle), fmtFloat(joy_brake))
 
     steering = joy_steering if abs(joy_steering) > abs(th_direction) and not joy_button_x else 0
     throttle = joy_throttle - joy_brake if abs(joy_throttle) > abs(th_throttle) else 0
