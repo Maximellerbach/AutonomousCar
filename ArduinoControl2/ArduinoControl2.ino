@@ -58,10 +58,10 @@ void loop() {
   }
 
   // if the arduino isn't receiving anything for a given amount of time, stop the motor and servo
-  else if (abs(millis()-last_received)>maxTimout){
-    servoSteering.writeMicroseconds(SERVO_NEUTRAL);
-    motorESC.writeMicroseconds(ESC_NEUTRAL);
-  }
+  //else if (abs(millis()-last_received)>maxTimout){
+  //  servoSteering.writeMicroseconds(SERVO_NEUTRAL);
+  //  motorESC.writeMicroseconds(ESC_NEUTRAL);
+  //}
 }
 
 void changeSteering(byte steeringByte) {

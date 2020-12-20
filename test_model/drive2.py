@@ -54,7 +54,7 @@ while(True):
 
         ser.ChangePWM(0)
         ser.ChangeDirection(annotation['direction'])
-        print(annotation['direction'], annotation['throttle'])
+        # print(annotation['direction'], annotation['throttle'])
 
         # SAVE FRAME
         # Dataset.save_img_and_annotation(img, annotation)

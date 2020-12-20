@@ -74,6 +74,7 @@ class control:
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
         steering = int(map_value(steering, min, max, 0, 255))
+        print(steering)
         self.__command[0] = steering
         self.__steering = steering
         self.__toSend.append(self.__command)
