@@ -52,7 +52,7 @@ while(True):
         # cv2.imshow('img', img)
         # cv2.waitKey(1)
 
-        ser.ChangePWM(annotation['throttle'])
+        ser.ChangePWM(0)
         ser.ChangeDirection(annotation['direction'])
 
         # SAVE FRAME

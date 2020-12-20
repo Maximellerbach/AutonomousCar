@@ -15,7 +15,7 @@ def map_value(value, min, max, outmin, outmax):
     elif value > max:
         value = max
 
-    return ((value-min)/max)*(outmin-outmax)-outmin
+    return ((outmax-outmin)*(value-min))/(max-min) + outmin
 
 
 class control:
