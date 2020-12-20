@@ -20,6 +20,9 @@ ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 # cap = cv2.VideoCapture(0)
 
+print("I'm HERE !")
+print(joy.leftTrigger())
+
 prev_throttle = 0
 while not joy.Back():
     joy_steering = joy.leftX()
