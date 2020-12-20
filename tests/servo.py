@@ -6,5 +6,5 @@ ser = serial_command2.start_serial(comPort)
 
 if __name__ == '__main__':
     for i in range(255):
-        ser.ChangeDirection(i)
+        ser.ChangeDirection(i/255)
         time.sleep(0.5)
