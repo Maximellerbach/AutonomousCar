@@ -25,7 +25,7 @@ long last_received = 0;
 int maxTimout = 2000;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(230400);
   Serial.setTimeout(200);
 
   // servo init
