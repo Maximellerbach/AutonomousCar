@@ -13,7 +13,7 @@ th_direction = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
-ser = serial_command2.start_serial(comPort)
+#ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 # cap = cv2.VideoCapture(0)
 
@@ -34,7 +34,7 @@ while not joy.Back():
     throttle = joy_throttle - joy_brake if abs(joy_throttle) > abs(th_throttle) else 0
 
     pwm = MAXTHROTTLE * throttle
-    ser.ChangeAll(steering, pwm, min=[-1, -1], max=[1, 1])
+    #ser.ChangeAll(steering, pwm, min=[-1, -1], max=[1, 1])
 
     # if joy_button_a:
     #     _, img = cap.read()
