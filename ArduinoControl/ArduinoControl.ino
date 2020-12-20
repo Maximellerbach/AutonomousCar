@@ -63,6 +63,10 @@ int pulses;
 #define ENCODER_A 2
 #define ENCODER_B 3
 bool pulsesChanged = false;
+long lastPulseSent = 0;
+#define MAX_PULSE_WAIT 100000
+int rounds = 0;
+int lastRounds = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -100,14 +104,16 @@ void setup() {
 }
 
 void loop() {
-  if (pulsesChanged) {
+  if ((pulsesChanged)&&(lastPulseSent >= MAX_PULSE_WAIT)) {
       pulsesChanged = false;
-      Serial.println(pulses);
+      Serial.println(lastRounds);
+      lastPulseSent = 0;
   }
   if (Serial.available()) {
     Serial.readBytes(buffData, 2);
     DecryptSerial();    
   }  
+  lastPulseSent++;
 }
 
 void A_CHANGE(){
@@ -120,7 +126,11 @@ void A_CHANGE(){
       pulses++; // moving forward
     }
   }
-  pulsesChanged = true;
+  rounds = pulses / 14;
+  if (lastRounds != rounds) {
+    lastRounds = rounds;
+    pulsesChanged = true;
+  }
 }
 
 void DecryptSerial()

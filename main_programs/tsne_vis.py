@@ -86,7 +86,7 @@ class data_visualization():
                                imageData=X, ax=ax, zoom=0.4)
                 plt.show()
             else:
-                return X_tsne
+                yield X_tsne
 
 
 if __name__ == "__main__":
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     Dataset = dataset_json.Dataset(
         ['direction', 'speed', 'throttle', 'time'])
 
-    vis = data_visualization(Dataset, 'test_model\\models\\linear_trackmania.h5')
+    vis = data_visualization(Dataset, 'test_model\\models\\warehouse_sim1_working.h5')
     vis.computeTSNEProjectionOfLatentSpace(
-        f"{base_path}\\json_dataset\\1 ironcar driving\\", display=True)
+        f"{base_path}\\warehouse\\0_1607858711.03117\\", display=True)
     # vis.clustering(doss)

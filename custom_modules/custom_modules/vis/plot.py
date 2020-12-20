@@ -18,7 +18,8 @@ def plot_points(points, show=True):
 
 def plot_bars(dict, width, show=True):
     plt.bar(list(dict.keys()),
-            list(dict.values()))
+            list(dict.values()),
+            width=width)
     if show:
         plt.show()
 
