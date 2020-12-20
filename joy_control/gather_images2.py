@@ -25,6 +25,8 @@ while not joy.Back():
     joy_steering, joy_throttle, joy_brake, joy_button_a, joy_button_x = drive_utils.get_controller_buttons(
         joy)
 
+    print(joy_steering, joy_throttle, joy_brake, joy_button_a, joy_button_x)
+
     steering = joy_steering if abs(joy_steering) > abs(th_direction) and not joy_button_x else 0
     throttle = joy_throttle - joy_brake if abs(joy_throttle) > abs(th_throttle) else 0
 
