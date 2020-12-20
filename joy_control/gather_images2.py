@@ -1,6 +1,6 @@
 import os
 import xbox
-from custom_modules import serial_command
+from custom_modules import serial_command2
 
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
