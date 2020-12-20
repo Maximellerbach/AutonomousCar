@@ -9,6 +9,15 @@ from .sensors import sensor_class
 lock = threading.RLock()
 
 
+def map_value(value, min, max, outmin, outmax):
+    if value < min:
+        value = min
+    elif value > max:
+        value = max
+
+    return ((value-min)/max)*(outmin-outmax)-outmin
+
+
 class control:
     """This classs send trhu serial port commands to an Arduino to pilot 2 motors using PWM and a servo motor."""
 
@@ -18,13 +27,12 @@ class control:
         Or /dev/ttyXYZ where XYZ is a valid tty output for example /dev/ttyS2 or /dev/ttyUSB0
         """
         self.__ser = serial.Serial()
-        self.__sensor_compteTour = sensor_class.CompteTour()
         self.__ser.port = port
         self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
-        self.__ser.timeout = 0 # no timeout
+        self.__ser.timeout = 0  # no timeout
         self.__command = bytearray([0, 0])
         self.__pwm = 0
         self.__steering = 0
@@ -42,7 +50,7 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        time.sleep(1) 
+        time.sleep(1)
 
     def __enter__(self):
         return self
@@ -63,33 +71,30 @@ class control:
             self.__ser.flush()
             self.__isOperation = False
 
-    def ChangeSteering(self, steering, min, max):
+    def ChangeSteering(self, steering, min=-1, max=1):
         """Change steering."""
+        steering = int(map_value(steering, min, max, 0, 255))
         self.__command[0] = steering
+        self.__steering = steering
         self.__toSend.append(self.__command)
 
-    def ChangePWM(self, pwm, min, max):
+    def ChangePWM(self, pwm, min=-1, max=1):
         """Change motor speed."""
-        if (pwm < 0):
-            pwm = 0
-        if (pwm > 255):
-            pwm = 255
-
+        pwm = int(map_value(pwm, min, max, 0, 255))
         self.__command[1] = pwm
         self.__pwm = pwm
         self.__toSend.append(self.__command)
 
-    def ChangeAll(self, steering, pwm):
+    def ChangeAll(self, steering, pwm, min=[-1, -1], max=[1, 1]):
         """
         Change all the elements at the same time.
 
         steering is a byte from 0 to 255.
         PWM is a byte from 0 to 255.
         """
-        if (pwm < 0):
-            pwm = 0
-        if (pwm > 255):
-            pwm = 255
+        steering = int(map_value(steering, min[0], max[0], 0, 255))
+        pwm = int(map_value(pwm, min[1], max[1], 0, 255))
+
         self.__command[0] = steering
         self.__command[1] = pwm
         self.__steering = steering
@@ -101,24 +106,6 @@ class control:
             for cmd in self.__toSend:
                 self.__safeWrite__(cmd)
                 self.__toSend.remove(cmd)
-
-    def GetSensor(self):
-        return self.__sensor_compteTour
-
-    def GetTurns(self):
-        return self.__sensor_compteTour.measurement
-
-    def GetTimeLastReceived(self):
-        return self.__sensor_compteTour.time_last_received
-
-    def GetCurrentPosition(self):
-        return self.__sensor_compteTour.position
-
-    def GetCurrentSpeed(self):
-        return self.__sensor_compteTour.speed
-
-    def GetCurrentAcc(self):
-        return self.__sensor_compteTour.acc
 
 
 def start_serial(port="/dev/ttyUSB0"):
