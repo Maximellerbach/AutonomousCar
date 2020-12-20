@@ -14,10 +14,10 @@ if __name__ == '__main__':
         ser.ChangePWM(127+i, 0, 255)
         time.sleep(0.1)
 
-    for i in range(25):
+    for i in range(50):
         ser.ChangePWM(127-i, 0, 255)
         time.sleep(0.1)
 
-    for i in range(25, 0, -1):
+    for i in range(50, 0, -1):
         ser.ChangePWM(127-i, 0, 255)
         time.sleep(0.1)
