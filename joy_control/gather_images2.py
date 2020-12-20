@@ -3,7 +3,7 @@ import os
 import time
 
 import xbox
-from custom_modules import serial_command2, drive_utils
+from custom_modules import serial_command2
 from custom_modules.datasets import dataset_json
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
@@ -22,8 +22,11 @@ joy = xbox.Joystick()
 
 prev_throttle = 0
 while not joy.Back():
-    joy_steering, joy_throttle, joy_brake, joy_button_a, joy_button_x = drive_utils.get_controller_buttons(
-        joy)
+    joy_steering = joy.leftX()
+    joy_throttle = joy.rightTrigger()
+    joy_brake = joy.leftTrigger()
+    joy_button_a = joy.A()
+    joy_button_x = joy.X()
 
     print(joy_steering, joy_throttle, joy_brake, joy_button_a, joy_button_x)
 
