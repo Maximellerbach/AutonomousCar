@@ -1,5 +1,6 @@
 import os
 import xbox
+from custom_modules import serial_command2
 
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
@@ -10,7 +11,7 @@ th_direction = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
-#ser = serial_command2.start_serial(comPort)
+ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 # cap = cv2.VideoCapture(0)
 
