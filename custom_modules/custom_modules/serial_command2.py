@@ -71,7 +71,7 @@ class control:
             self.__ser.flush()
             self.__isOperation = False
 
-    def ChangeSteering(self, steering, min=-1, max=1):
+    def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
         steering = int(map_value(steering, min, max, 0, 255))
         self.__command[0] = steering
