@@ -1,9 +1,6 @@
 import os
 import xbox
 
-def fmtFloat(n):
-    return '{:6.3f}'.format(n)
-
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
@@ -28,7 +25,7 @@ while not joy.Back():
     joy_button_a = joy.A()
     joy_button_x = joy.X()
 
-    print(fmtFloat(joy_steering), fmtFloat(joy_throttle), fmtFloat(joy_brake))
+    print(joy_steering, joy_throttle, joy_brake)
 
     steering = joy_steering if abs(joy_steering) > abs(th_direction) and not joy_button_x else 0
     throttle = joy_throttle - joy_brake if abs(joy_throttle) > abs(th_throttle) else 0
