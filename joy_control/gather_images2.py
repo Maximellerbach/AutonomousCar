@@ -2,7 +2,6 @@ import cv2
 import os
 import time
 
-import xbox
 from custom_modules import serial_command2, drive_utils
 from custom_modules.datasets import dataset_json
 
@@ -17,7 +16,6 @@ th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
-joy = xbox.Joystick()
 # cap = cv2.VideoCapture(0)
 
 prev_throttle = 0
