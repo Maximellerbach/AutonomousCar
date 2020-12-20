@@ -9,6 +9,8 @@
 import pygame
 import sys
 
+pygame.init()
+
 LINUX = 0
 MAC = 1
 WINDOWS = 2
