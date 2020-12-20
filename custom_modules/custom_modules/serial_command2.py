@@ -43,8 +43,8 @@ class control:
             print("Serial port open")
             print(self.__ser.portstr)  # check which port was really used
             self.__ser.write(self.__command)
-            self.__thread = threading.Thread(target=self.__MainThread__)
-            self.__thread.start()
+            # self.__thread = threading.Thread(target=self.__MainThread__)
+            # self.__thread.start()
         except Exception as e:
             print("Error opening port: " + str(e))
 
@@ -73,13 +73,15 @@ class control:
         """Change steering."""
         steering = int(map_value(steering, min, max, 0, 255))
         self.__command[0] = steering
-        self.__toSend.append(self.__command)
+        # self.__toSend.append(self.__command)
+        self.__ser.write(self.__command)
 
     def ChangePWM(self, pwm, min=-1, max=1):
         """Change motor speed."""
         pwm = int(map_value(pwm, min, max, 0, 255))
         self.__command[1] = pwm
-        self.__toSend.append(self.__command)
+        # self.__toSend.append(self.__command)
+        self.__ser.write(self.__command)
 
     def ChangeAll(self, steering, pwm, min=[-1, -1], max=[1, 1]):
         """
@@ -93,7 +95,8 @@ class control:
 
         self.__command[0] = steering
         self.__command[1] = pwm
-        self.__toSend.append(self.__command)
+        # self.__toSend.append(self.__command)
+        self.__ser.write(self.__command)
 
     def __MainThread__(self):
         while self.__isRuning:
