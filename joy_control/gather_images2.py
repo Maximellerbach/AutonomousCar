@@ -19,7 +19,6 @@ comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 # cap = cv2.VideoCapture(0)
-print(joy)
 
 prev_throttle = 0
 while not joy.Back():
