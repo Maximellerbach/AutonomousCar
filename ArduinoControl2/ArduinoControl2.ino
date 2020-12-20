@@ -67,7 +67,7 @@ void loop() {
 void changeSteering() {
   float decoded_steering = buffData[0]; // cast byte to int
   
-  int steering = SERVO_MIN + decoded_steering/255 * (SERVO_MAX - SERVO_MIN);
+  int steering = SERVO_MAX - decoded_steering/255 * (SERVO_MAX - SERVO_MIN);
   servoSteering.writeMicroseconds(steering);
 }
 
