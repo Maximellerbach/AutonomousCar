@@ -1,44 +1,23 @@
-import unittest
 import time
 
-from custom_modules import serial_command
+from custom_modules import serial_command2
 
 comPort = '/dev/ttyUSB0'
-ser = serial_command.start_serial(comPort)
-TEST_PWM = 50
-
-
-class MotorTestCase(unittest.TestCase):
-    def reset(self):
-        ser.ChangePWM(0)
-        ser.ChangeDirection(6)
-        ser.ChangeMotorA(serial_command.Motor.MOTOR_STOP)
-
-    def test_motor_forward(self):
-        self.reset()
-        ser.ChangeMotorA(serial_command.Motor.MOTOR_FORWARD)
-        ser.ChangePWM(TEST_PWM)
-        time.sleep(3)
-        current_speed = ser.GetCurrentSpeed()
-        print(current_speed)
-        self.reset()
-        time.sleep(1)
-        self.assertGreaterEqual(current_speed, 0)
-
-    def test_motor_backward(self):
-        self.reset()
-        ser.ChangeMotorA(serial_command.Motor.MOTOR_BACKWARD)
-        ser.ChangePWM(TEST_PWM)
-        time.sleep(3)
-        current_speed = ser.GetCurrentSpeed()
-        print(current_speed)
-        self.reset()
-        time.sleep(1)
-        self.assertLessEqual(current_speed, 0)
-
-
+ser = serial_command2.start_serial(comPort)
 
 if __name__ == '__main__':
-    unittest.main()
-    exit()
+    for i in range(10):
+        ser.ChangeDirection(127+i, 0, 255)
+        time.sleep(0.05)
 
+    for i in range(10, 0, -1):
+        ser.ChangeDirection(127+i, 0, 255)
+        time.sleep(0.05)
+
+    for i in range(10):
+        ser.ChangeDirection(127-i, 0, 255)
+        time.sleep(0.05)
+        
+    for i in range(10, 0, -1):
+        ser.ChangeDirection(127-i, 0, 255)
+        time.sleep(0.05)
