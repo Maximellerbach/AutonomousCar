@@ -28,7 +28,7 @@ class control:
         """
         self.__ser = serial.Serial()
         self.__ser.port = port
-        self.__ser.baudrate = 230400
+        self.__ser.baudrate = 115200
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
