@@ -54,7 +54,7 @@ while(True):
         # cv2.imshow('img', img)
         # cv2.waitKey(1)
 
-        ser.ChangeAll(steering, 0.35)
+        ser.ChangeAll(steering, 0.18)
         prev_throttle = predicted['throttle'][0]
 
         # SAVE FRAME
