@@ -36,8 +36,7 @@ while not joy.Back():
     steering = joy_steering if abs(joy_steering) > abs(th_direction) and not joy_button_x else 0
     throttle = joy_throttle - joy_brake if abs(joy_throttle - joy_brake) > abs(th_throttle) else 0
 
-    pwm = MAXTHROTTLE * throttle
-    ser.ChangeAll(steering, pwm, min=[-1, -1], max=[1, 1])
+    ser.ChangeAll(steering, MAXTHROTTLE * throttle, min=[-1, -1], max=[1, 1])
 
     if joy_button_a:
         _, cam = cap.read()
