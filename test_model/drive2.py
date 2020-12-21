@@ -10,6 +10,7 @@ serialport = '/dev/ttyUSB0'
 os.system('sudo chmod 0666 {}'.format(serialport))
 ser = serial_command2.control(serialport)
 
+MAXTHROTTLE = 0.3
 wi = 160
 he = 120
 
@@ -18,11 +19,12 @@ input_components = [1]
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.load_model(
-    os.path.normpath(f'{basedir}/models/gentrck_sim1_working.h5'))
+    os.path.normpath(f'{basedir}/models/test_home.h5'))
 architectures.apply_predict_decorator(model)
 
 cap = cv2.VideoCapture(0)
 
+prev_throttle = 0
 while(True):
     try:
         _, cam = cap.read()
@@ -31,7 +33,7 @@ while(True):
         # annotation template with just what is needed for the prediction
         annotation = {
             'direction': 0,
-            'speed': 10,
+            'speed': prev_throttle,
             'throttle': 0,
             'time': time.time()
         }
@@ -43,6 +45,8 @@ while(True):
         # PREDICT
         predicted, dt = model.predict(to_pred)
         predicted = predicted[0]
+        steering = predicted['direction'][0]
+        throttle = predicted['throttle'][0]
 
         # print(annotation)
         # print(dt)
@@ -50,7 +54,8 @@ while(True):
         # cv2.imshow('img', img)
         # cv2.waitKey(1)
 
-        ser.ChangeAll(predicted['direction'][0], 0)
+        ser.ChangeAll(steering, throttle*MAXTHROTTLE)
+        prev_throttle = predicted['throttle'][0]
         # print(annotation['direction'], annotation['throttle'])
 
         # SAVE FRAME
