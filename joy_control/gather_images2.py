@@ -21,7 +21,6 @@ ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 cap = cv2.VideoCapture(0)
 
-print("I'm HERE !")
 print(joy.connected())
 
 prev_throttle = 0
@@ -32,16 +31,17 @@ while not joy.Back():
     joy_button_a = joy.A()
     joy_button_x = joy.X()
 
-    print('{:6.3}'.format(joy_steering))
+    print('{:1.3}'.format(joy_steering))
 
     steering = joy_steering if abs(joy_steering) > abs(th_direction) and not joy_button_x else 0
     throttle = joy_throttle - joy_brake if abs(joy_throttle - joy_brake) > abs(th_throttle) else 0
 
     pwm = MAXTHROTTLE * throttle
     ser.ChangeAll(steering, pwm, min=[-1, -1], max=[1, 1])
-    
+
     if joy_button_a:
-        _, img = cap.read()
+        _, cam = cap.read()
+        img = cv2.resize(cam, (160, 120))
 
         Dataset.save_img_and_annotation(
             img,
