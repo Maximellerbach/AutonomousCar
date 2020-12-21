@@ -21,7 +21,7 @@ if __name__ == "__main__":
     input_components = [1]
     output_components = [0, 2]
 
-    load_path = 'test_model\\models\\pretrained_rbrl_sim.h5'
+    load_path = 'test_model\\models\\test_home.h5'
     save_path = 'test_model\\models\\test_home.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
+        epochs=5,
         batch_size=32,
         show_distr=True)
 

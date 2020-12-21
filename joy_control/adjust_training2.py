@@ -44,8 +44,8 @@ while not joy.Back():
     joy_button_a = joy.A()
     joy_button_x = joy.X()
 
-    _, img = cap.read()
-    img = cv2.resize(img, (160, 120))
+    _, cam = cap.read()
+    img = cv2.resize(cam, (160, 120))
 
     # annotation template with just what is needed for the prediction
     annotation = {
@@ -64,10 +64,10 @@ while not joy.Back():
             Dataset.save_img_and_annotation(
                 img,
                 {
-                    'direction': str(steering),
-                    'speed': str(prev_throttle),
-                    'throttle': str(throttle),
-                    'time': str(time.time())
+                    'direction': float(steering),
+                    'speed': float(prev_throttle),
+                    'throttle': float(throttle),
+                    'time': time.time()
                 },
                 './recorded/')
 
