@@ -10,7 +10,7 @@ serialport = '/dev/ttyUSB0'
 os.system('sudo chmod 0666 {}'.format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 0.3
+MAXTHROTTLE = 0.4
 wi = 160
 he = 120
 
@@ -48,7 +48,7 @@ while(True):
         steering = predicted['direction'][0]
         throttle = predicted['throttle'][0]
 
-        # print(annotation)
+        print(predicted)
         # print(dt)
 
         # cv2.imshow('img', img)
@@ -56,7 +56,6 @@ while(True):
 
         ser.ChangeAll(steering, throttle*MAXTHROTTLE)
         prev_throttle = predicted['throttle'][0]
-        # print(annotation['direction'], annotation['throttle'])
 
         # SAVE FRAME
         # Dataset.save_img_and_annotation(img, annotation)
