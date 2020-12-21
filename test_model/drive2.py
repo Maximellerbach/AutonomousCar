@@ -40,7 +40,7 @@ while(True):
         annotation_list = drive_utils.dict2list(annotation)
 
         to_pred = Dataset.make_to_pred_annotations(
-            [img/255], [annotation_list], input_components)
+            [img], [annotation_list], input_components)
 
         # PREDICT
         predicted, dt = model.predict(to_pred)
