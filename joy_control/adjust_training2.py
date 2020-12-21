@@ -57,17 +57,15 @@ while not joy.Back():
 
     if joy_button_a or joy_button_x:
 
-        steering = joy_steering if abs(joy_steering) > abs(
-            th_direction) and not joy_button_x else 0
-        throttle = joy_throttle - \
-            joy_brake if abs(joy_throttle) > abs(th_throttle) else 0
+        steering = joy_steering if abs(joy_steering) > abs(th_direction) else 0
+        throttle = joy_throttle - joy_brake if abs(joy_throttle - joy_brake) > abs(th_throttle) else 0
 
         annotation['direction'] = steering
         annotation['throttle'] = throttle
 
         if not joy_button_x:
             Dataset.save_img_and_annotation(img, annotation, './recorded/')
-            
+
         ser.ChangeAll(annotation['direction'], MAXTHROTTLE * annotation['throttle'])
 
     else:
