@@ -261,6 +261,7 @@ class End2EndTrainer():
                 frcs.append(dict(zip(unique, frc)))
 
                 if show:
+                    print(component.name)
                     plot.plot_bars(d, component.weight_acc)
 
         return frcs

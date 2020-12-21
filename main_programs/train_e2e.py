@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\warehouse\\'
+    train_path = f'{base_path}\\home\\'
     dosdir = True
 
     Dataset = dataset_json.Dataset(
@@ -21,15 +21,15 @@ if __name__ == "__main__":
     input_components = [1]
     output_components = [0, 2]
 
-    load_path = 'test_model\\models\\rbrl_sim7_working.h5'
-    save_path = 'test_model\\models\\warehouse_sim1.h5'
+    load_path = 'test_model\\models\\pretrained_rbrl_sim.h5'
+    save_path = 'test_model\\models\\test_home.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
         save_path=save_path,
         dataset=Dataset,
         dospath=train_path, dosdir=dosdir,
-        proportion=0.4, sequence=False,
+        proportion=0.3, sequence=False,
         smoothing=0.0, label_rdm=0.0,
         input_components=input_components,
         output_components=output_components)
@@ -48,9 +48,9 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=20,
+        epochs=10,
         batch_size=32,
-        show_distr=False)
+        show_distr=True)
 
     model = architectures.safe_load_model(save_path, compile=False)
     if dosdir:

@@ -43,8 +43,6 @@ while(True):
         # PREDICT
         predicted, dt = model.predict(to_pred)
         predicted = predicted[0]
-        for name in predicted.keys():
-            annotation[name] = predicted[name][0]  # in our case we only have 1 value per output, so converting the array to a single float
 
         # print(annotation)
         # print(dt)
@@ -52,8 +50,7 @@ while(True):
         # cv2.imshow('img', img)
         # cv2.waitKey(1)
 
-        ser.ChangePWM(0)
-        ser.ChangeDirection(annotation['direction'])
+        ser.ChangeAll(predicted['direction'][0], 0)
         # print(annotation['direction'], annotation['throttle'])
 
         # SAVE FRAME
