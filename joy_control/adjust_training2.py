@@ -66,19 +66,20 @@ while not joy.Back():
         if not joy_button_x:
             Dataset.save_img_and_annotation(img, annotation, './recorded/')
 
-        ser.ChangeAll(annotation['direction'], MAXTHROTTLE * annotation['throttle'])
+        ser.ChangeAll(steering, MAXTHROTTLE * throttle)
 
     else:
         annotation_list = drive_utils.dict2list(annotation)
         to_pred = Dataset.make_to_pred_annotations(
             [img], [annotation_list], input_components)
 
-        output_dict, elapsed_time = model.predict(to_pred)
-        output_dict = output_dict[0]
-        for key in output_dict:
-            annotation[key] = output_dict[key]
+        predicted, dt = model.predict(to_pred)
+        predicted = predicted[0]
+        
+        steering = predicted['direction'][0]
+        throttle = predicted['throttle'][0]
 
-        ser.ChangeAll(annotation['direction'], MAXTHROTTLE * annotation['throttle'])
+        ser.ChangeAll(steering, MAXTHROTTLE * throttle)
 
 
 joy.close()
