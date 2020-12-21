@@ -26,7 +26,7 @@ MAXTHROTTLE = 0.5
 th_direction = 0.05
 th_throttle = 0.06
 
-comPort = drive_utils.get_port_name()
+comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 cap = cv2.VideoCapture(0)
