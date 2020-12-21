@@ -10,7 +10,7 @@ serialport = '/dev/ttyUSB0'
 os.system('sudo chmod 0666 {}'.format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 0.4
+MAXTHROTTLE = 0.5
 wi = 160
 he = 120
 
