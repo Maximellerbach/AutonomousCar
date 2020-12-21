@@ -67,6 +67,8 @@ while not joy.Back():
 
         if not joy_button_x:
             Dataset.save_img_and_annotation(img, annotation, './recorded/')
+            
+        ser.ChangeAll(annotation['direction'], MAXTHROTTLE * annotation['throttle'])
 
     else:
         annotation_list = drive_utils.dict2list(annotation)
@@ -78,7 +80,7 @@ while not joy.Back():
         for key in output_dict:
             annotation[key] = output_dict[key]
 
-    ser.ChangeAll(annotation['direction'], MAXTHROTTLE * annotation['throttle'], min=[-1, -1], max=[1, 1])
+        ser.ChangeAll(annotation['direction'], MAXTHROTTLE * annotation['throttle'])
 
 
 joy.close()
