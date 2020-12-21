@@ -60,11 +60,16 @@ while not joy.Back():
         steering = joy_steering if abs(joy_steering) > abs(th_direction) else 0
         throttle = joy_throttle - joy_brake if abs(joy_throttle - joy_brake) > abs(th_throttle) else 0
 
-        annotation['direction'] = steering
-        annotation['throttle'] = throttle
-
         if not joy_button_x:
-            Dataset.save_img_and_annotation(img, annotation, './recorded/')
+            Dataset.save_img_and_annotation(
+                img,
+                {
+                    'direction': str(steering),
+                    'speed': str(prev_throttle),
+                    'throttle': str(throttle),
+                    'time': str(time.time())
+                },
+                './recorded/')
 
         ser.ChangeAll(steering, MAXTHROTTLE * throttle)
 
@@ -75,7 +80,7 @@ while not joy.Back():
 
         predicted, dt = model.predict(to_pred)
         predicted = predicted[0]
-        
+
         steering = predicted['direction'][0]
         throttle = predicted['throttle'][0]
 
