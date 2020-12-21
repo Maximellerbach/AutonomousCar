@@ -33,7 +33,7 @@ cap = cv2.VideoCapture(0)
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.load_model(
-    os.path.normpath(f'{basedir}/../test_model/models/rbrl_sim5_working.h5'))
+    os.path.normpath(f'{basedir}/../test_model/models/test_home.h5'))
 architectures.apply_predict_decorator(model)
 
 prev_throttle = 0
