@@ -81,6 +81,8 @@ while not joy.Back():
 
         ser.ChangeAll(steering, MAXTHROTTLE * throttle)
 
+    prev_throttle = throttle
+
 
 joy.close()
 print('terminated')
