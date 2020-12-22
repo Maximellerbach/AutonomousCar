@@ -64,7 +64,7 @@ while not joy.Back():
             Dataset.save_img_and_annotation(
                 img,
                 {
-                    'direction': float(steering),
+                    'direction': float(steering),  # float32 can't be used for JSON so casting to regular float
                     'speed': float(prev_throttle),
                     'throttle': float(throttle),
                     'time': time.time()

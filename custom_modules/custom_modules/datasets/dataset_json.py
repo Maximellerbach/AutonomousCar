@@ -460,9 +460,9 @@ class Dataset():
     def name2component(self, component_name: str):
         mapping = self.names_component_mapping()
         component = mapping.get(component_name)
-        if component is not None:
-            return component()
-        raise ValueError('please enter a valid component name')
+        if component is None:
+            raise ValueError('please enter a valid component name')
+        return component()
 
     def components_names2indexes(self):
         mapping = {}
@@ -495,10 +495,7 @@ class direction_component:
         return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict: dict):
-        if isinstance(item, self.type):
-            annotation_dict[self.name] = item
-        else:
-            ValueError(f'item type: {type(item)} should match {self.type}')
+        annotation_dict[self.name] = self.type(item)
         return annotation_dict
 
     def from_string(self, string):
@@ -525,10 +522,7 @@ class speed_component:
         return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict: dict):
-        if isinstance(item, self.type):
-            annotation_dict[self.name] = item
-        else:
-            ValueError(f'item type: {type(item)} should match {self.type}')
+        annotation_dict[self.name] = self.type(item)
         return annotation_dict
 
     def from_string(self, string):
@@ -553,10 +547,7 @@ class throttle_component:
         return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
 
     def add_item_to_dict(self, item, annotation_dict: dict):
-        if isinstance(item, self.type):
-            annotation_dict[self.name] = item
-        else:
-            ValueError(f'item type: {type(item)} should match {self.type}')
+        annotation_dict[self.name] = self.type(item)
         return annotation_dict
 
     def from_string(self, string):
@@ -572,7 +563,7 @@ class right_lane_component:
         self.normarray = np.array(
             [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
         self.fliparray = np.array(
-            [1, 0, 1, 0])
+            [-1, 0, -1, 0])
         self.default = np.array([[0, 0], [0, 0]], dtype=self.type)
         self.default_flat = np.array([0, 0, 0, 0], dtype=self.type)
 
@@ -598,7 +589,7 @@ class right_lane_component:
         return ast.literal_eval(string)
 
     def flip_item(self, item):  # considering that item is normalised
-        return item*-self.fliparray
+        return item * self.fliparray
 
 
 class left_lane_component:
@@ -612,7 +603,7 @@ class left_lane_component:
         self.normarray = np.array(
             [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
         self.fliparray = np.array(
-            [1, 0, 1, 0])
+            [-1, 0, -1, 0])
 
         self.flip = True
         self.iterable = True
@@ -636,7 +627,7 @@ class left_lane_component:
         return ast.literal_eval(string)
 
     def flip_item(self, item):  # considering that item is normalised
-        return item*-self.fliparray
+        return item * self.fliparray
 
 
 class img_path_component:
