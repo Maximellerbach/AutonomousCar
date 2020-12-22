@@ -69,7 +69,7 @@ while not joy.Back():
                     'throttle': float(throttle),
                     'time': time.time()
                 },
-                './recorded/')
+                dos_save)
 
         ser.ChangeAll(steering, MAXTHROTTLE * throttle)
 

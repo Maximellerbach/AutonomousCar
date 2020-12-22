@@ -50,7 +50,7 @@ while not joy.Back():
                 'throttle': throttle,  # save raw throttle value
                 'time': time.time()
             },
-            './recorded/'
+            dos_save
         )
     prev_throttle = throttle
 
