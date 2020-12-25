@@ -8,28 +8,32 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\home\\'
+    train_path = f'{base_path}\\forza2\\'
     dosdir = True
 
     Dataset = dataset_json.Dataset(
-        ['direction', 'speed', 'throttle', 'time'])
-    direction_comp = Dataset.get_component('direction')
+        ['direction', 'speed', 'throttle'])
+    # direction_comp = Dataset.get_component('direction')
     # direction_comp.offset = -7
     # direction_comp.scale = 1/4
 
+    speed_comp = Dataset.get_component('speed')
+    speed_comp.offset = 0
+    speed_comp.scale = 3.6
+
     # set input and output components (indexes)
     input_components = [1]
-    output_components = [0, 2]
+    output_components = [0]
 
-    load_path = 'test_model\\models\\test_home.h5'
-    save_path = 'test_model\\models\\test_home.h5'
+    load_path = 'test_model\\models\\forza3.h5'
+    save_path = 'test_model\\models\\forza3.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
         save_path=save_path,
         dataset=Dataset,
         dospath=train_path, dosdir=dosdir,
-        proportion=0.3, sequence=False,
+        proportion=0.5, sequence=False,
         smoothing=0.0, label_rdm=0.0,
         input_components=input_components,
         output_components=output_components)
@@ -42,21 +46,21 @@ if __name__ == "__main__":
         loss='mse', lr=0.001, metrics=[])
 
     e2e_trainer.train(
-        flip=True,
+        flip=False,
         augm=True,
         use_earlystop=False,
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=5,
-        batch_size=32,
-        show_distr=True)
+        epochs=10,
+        batch_size=16,
+        show_distr=False)
 
     model = architectures.safe_load_model(save_path, compile=False)
     if dosdir:
-        paths = Dataset.load_dataset(train_path, flat=True)
+        paths = Dataset.load_dataset_sorted(train_path, flat=True)
     else:
-        paths = Dataset.load_dos(train_path)
+        paths = Dataset.load_dos_sorted(train_path)
 
     pred_function.test_predict_paths(Dataset, input_components,
                                      model, paths, waitkey=1)

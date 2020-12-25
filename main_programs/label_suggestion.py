@@ -97,7 +97,7 @@ if __name__ == "__main__":
     import os
     base_path = os.path.expanduser("~") + "\\random_data"
 
-    Dataset = dataset_json.Dataset(['direction', 'speed', 'throttle', 'time'])
+    Dataset = dataset_json.Dataset(['direction', 'speed', 'throttle'])
     lab_helper = LabelisationSuggestion(
         Dataset, 'test_model\\models\\linear_trackmania.h5')
 

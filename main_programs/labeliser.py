@@ -132,7 +132,7 @@ if __name__ == "__main__":
     path = 'C:\\Users\\maxim\\recorded_imgs\\0_1600008448.0622997\\'
 
     Dataset = dataset_json.Dataset(
-        ['direction', 'speed', 'throttle', 'time'])
+        ['direction', 'speed', 'throttle'])
 
     output_components = [0, 1, 2]  # indexes to labelise
 

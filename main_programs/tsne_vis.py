@@ -14,6 +14,7 @@ physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
+
 class data_visualization():
     def __init__(self, Dataset, model_path):
         self.Dataset = Dataset
@@ -94,7 +95,7 @@ if __name__ == "__main__":
     base_path = os.path.expanduser("~") + "\\random_data"
 
     Dataset = dataset_json.Dataset(
-        ['direction', 'speed', 'throttle', 'time'])
+        ['direction', 'speed', 'throttle'])
 
     vis = data_visualization(Dataset, 'test_model\\models\\warehouse_sim1_working.h5')
     vis.computeTSNEProjectionOfLatentSpace(

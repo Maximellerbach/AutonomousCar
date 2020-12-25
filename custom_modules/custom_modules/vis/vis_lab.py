@@ -26,7 +26,7 @@ def lane(img, lane, show=True, name="img", waitkey=None):
 def direction(img, direction, show=True, name="img", waitkey=None):
     h, w, ch = img.shape
     p1 = (w//2, h)
-    p2 = (int(w//2 + direction[0]*40), h-40)
+    p2 = (int(w//2 + direction*40), h-40)
 
     cv2.line(img, p1, p2, (0, 0, 255))
 
@@ -53,7 +53,7 @@ def throttle(img, throttle, show=True, name="img", waitkey=None, offset=5):
         return img
 
 
-def vis_all(Dataset, input_components, model, img, output_dicts, waitkey=1):
+def vis_all(Dataset, input_components, img, output_dicts, waitkey=1):
     for output_dict in output_dicts:
         for output_name in output_dict:
             component = Dataset.get_component(output_name)

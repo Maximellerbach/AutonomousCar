@@ -33,7 +33,7 @@ class Dataset():
             lab_structure (list): list of components (class)
         """
         self.set_label_structure(lab_structure)
-        self.__meta_components = [img_path_component()]  # this is not changing
+        self.__meta_components = []
 
         self.components_name_mapping = dict(
             [(i.name, i) for i in self.__label_structure])
@@ -46,10 +46,9 @@ class Dataset():
             lab_structure (list): list of components(class) or list of string
         """
         if isinstance(lab_structure[0], str):
-            self.__label_structure = [
-                self.name2component(cmpt) for cmpt in lab_structure]
+            self.__label_structure = [self.name2component(cmpt) for cmpt in lab_structure] + [time_component()]
         else:
-            self.__label_structure = [i() for i in lab_structure]
+            self.__label_structure = [i() for i in lab_structure] + [time_component()]
 
     def add_components(self, components_object):
         if isinstance(components_object, list):
@@ -60,49 +59,47 @@ class Dataset():
                 self.__label_structure.append(components_object)
                 return
 
-    def save_annotation_dict(self, annotation):
+    def save_annotation_dict(self, annotation, **kwargs):
         """Save the annotation dict to {dos}{time}{self.format}.
 
         Args:
             annotation (dict): dict containing annotation
+            **kwargs (optional): other components to add.
         """
         if len(annotation.keys()) != len(self.__label_structure):
-            to_save_dict = {}
+            to_save_dict = {**kwargs}
             for component in self.__label_structure:
                 to_save_dict[component.name] = component.get_item(
                     annotation)
         else:
             to_save_dict = annotation
 
-        dos = annotation.get('dos')
+        dos = to_save_dict.get('dos')
         assert dos is not None
 
-        time_cmp = annotation.get('time')
+        time_cmp = to_save_dict.get('time')
         assert time_cmp is not None
-
-        img_path = annotation.get('img_path')
-        assert img_path is not None
 
         filename = f'{dos}{time_cmp}{self.format}'
         with open(os.path.normpath(filename), 'w') as json_file:
-            json.dump(annotation, json_file)
+            json.dump(to_save_dict, json_file)
 
         return filename
 
-    def save_img_and_annotation(self, img, annotation, dos=None):
+    def save_img_and_annotation(self, img, annotation, **kwargs):
         """Save an image with it's annotation.
 
         Args:
             img (np.ndarray): image to be saved
             annotation (dict): dict containing annotation to be saved
-            dos (string, optional): dos component if not set previously. Defaults to None.
+            **kwargs (optional): other components to add.
         """
         if isinstance(annotation, list):
-            if dos is None:
+            if kwargs.get('dos') is None:
                 raise "dos keyword should be specified"
             assert(len(annotation) == len(self.__label_structure))
 
-            to_save_dict = {'dos': dos}
+            to_save_dict = {**kwargs}
             for component, annotation in zip(self.__label_structure, annotation):
                 to_save_dict = component.add_item_to_dict(
                     annotation, to_save_dict)
@@ -110,16 +107,14 @@ class Dataset():
         elif isinstance(annotation, dict):
             # check if there is the expected number of labels
             if len(annotation.keys()) != len(self.__label_structure):
-                to_save_dict = {}
+                to_save_dict = {**kwargs}
                 for component in self.__label_structure:
                     to_save_dict[component.name] = component.get_item(
                         annotation)
             else:
                 to_save_dict = annotation
 
-            if 'dos' not in to_save_dict.keys() and dos is not None:
-                to_save_dict["dos"] = dos
-            else:
+            if to_save_dict.get('dos') is None:
                 raise ValueError('dos keyword should be specified')
 
         else:
@@ -130,8 +125,9 @@ class Dataset():
             to_save_dict = component.add_item_to_dict(to_save_dict)
 
         time_cmp = to_save_dict.get('time', time.time())
-        cv2.imwrite(to_save_dict.get('img_path', ""), img)
-        with open(os.path.normpath(f'{dos}{time_cmp}{self.format}'), 'w') as json_file:
+        dos_cmp = to_save_dict.get('dos', "")
+        cv2.imwrite(f'{dos_cmp}{time_cmp}.png', img)
+        with open(os.path.normpath(f'{dos_cmp}{time_cmp}{self.format}'), 'w') as json_file:
             json.dump(to_save_dict, json_file)
 
     def save_img_and_annotation_deprecated(self, dos, img, annotation):
@@ -222,14 +218,16 @@ class Dataset():
 
     def load_img_and_annotation(self, path, to_list=True):
         annotation = self.load_annotation(path, to_list=to_list)
-        img_path = self.load_meta(path, to_list=False).get('img_path')
-        if img_path is None:
-            raise ValueError('json does not have "img_path" component')
-        img = cv2.imread(img_path)
-        return img, annotation
+        time_cmp = annotation[-1]
+        dos = os.path.dirname(path)
+        img_path = os.path.normpath(f'{dos}{os.path.sep}{time_cmp}.png')
+        return cv2.imread(img_path), annotation
 
     def load_img(self, path):
-        img_path = self.load_meta(path, to_list=False).get('img_path')
+        annotation = self.load_annotation(path, to_list=False)
+        time_cmp = annotation.get('time')
+        dos = os.path.dirname(path)
+        img_path = os.path.normpath(f'{dos}{os.path.sep}{time_cmp}.png')
         return cv2.imread(img_path)
 
     def load_annotation_json_from_img(self, img_path, to_list=True):
@@ -261,8 +259,14 @@ class Dataset():
             ybatch.append([])
 
         for annotation in annotations:
-            for it, lab in enumerate(annotation):
-                ybatch[it].append(lab)
+            if isinstance(annotation, list):
+                for it, lab in enumerate(annotation):
+                    ybatch[it].append(lab)
+            elif isinstance(annotation, dict):
+                for it, key in enumerate(annotation.keys()):
+                    ybatch[it].append(annotation[key])
+            else:
+                ValueError("annotations must be a list or a dictionary")
 
         to_pred = [np.array(xbatch, dtype=np.float32)/255]
 
@@ -272,7 +276,7 @@ class Dataset():
         return to_pred
 
     def load_annotation_img_string(self, img_path, cmp_structure=['direction', 'time']):
-        split_img_path = img_path.split('\\')[-1].split('.png')[0]
+        split_img_path = img_path.split(os.path.sep)[-1].split('.png')[0]
         components_value = split_img_path.split('_')
         tmp_annotation = {}
         for cmp_name, value in zip(cmp_structure, components_value):
@@ -386,12 +390,15 @@ class Dataset():
             if os.path.isdir(dos):
                 yield self.load_dos(dos+"\\")
 
-    def load_dataset_sorted(self, doss: str):
+    def load_dataset_sorted(self, doss: str, flat=False):
         doss_paths = []
         for dos in glob(doss+"*"):
             if os.path.isdir(dos):
                 paths = self.load_dos_sorted(dos+"\\")
-                doss_paths.append(paths)
+                if flat:
+                    doss_paths += paths
+                else:
+                    doss_paths.append(paths)
                 print('loaded dos', dos)
 
         return doss_paths
