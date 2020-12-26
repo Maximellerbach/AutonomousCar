@@ -30,6 +30,8 @@ comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.load_model(
@@ -45,7 +47,7 @@ while not joy.Back():
     joy_button_x = joy.X()
 
     _, cam = cap.read()
-    img = cv2.resize(cam, (160, 120))
+    # img = cv2.resize(cam, (160, 120)) #don't need to resize as 
 
     # annotation template with just what is needed for the prediction
     annotation = {

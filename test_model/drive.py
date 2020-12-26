@@ -23,6 +23,8 @@ model = architectures.load_model(
 
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 # ser.ChangeMotorA(2)
 
 while(True):

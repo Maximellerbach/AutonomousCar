@@ -218,7 +218,10 @@ class Dataset():
 
     def load_img_and_annotation(self, path, to_list=True):
         annotation = self.load_annotation(path, to_list=to_list)
-        time_cmp = annotation[-1]
+        if to_list:
+            time_cmp = annotation[-1]
+        else:
+            time_cmp = annotation.get('time')
         dos = os.path.dirname(path)
         img_path = os.path.normpath(f'{dos}{os.path.sep}{time_cmp}.png')
         return cv2.imread(img_path), annotation

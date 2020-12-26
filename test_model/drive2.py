@@ -23,6 +23,8 @@ model = architectures.load_model(
 architectures.apply_predict_decorator(model)
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 prev_throttle = 0
 while(True):

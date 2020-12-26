@@ -20,6 +20,8 @@ comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
 joy = xbox.Joystick()
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 print(joy.connected())
 
@@ -39,8 +41,7 @@ while not joy.Back():
     ser.ChangeAll(steering, MAXTHROTTLE * throttle, min=[-1, -1], max=[1, 1])
 
     if joy_button_a:
-        _, cam = cap.read()
-        img = cv2.resize(cam, (160, 120))
+        _, img = cap.read()
 
         Dataset.save_img_and_annotation(
             img,

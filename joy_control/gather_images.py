@@ -19,6 +19,8 @@ comPort = drive_utils.get_port_name()
 ser = serial_command.start_serial(comPort)
 joy = xbox.Joystick()
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 ser.ChangeMotorA(serial_command.Motor.MOTOR_FORWARD)
 while not joy.Back():

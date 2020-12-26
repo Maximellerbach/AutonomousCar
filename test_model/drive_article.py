@@ -13,16 +13,17 @@ speed = 70
 model = load_model("models/model.h5")
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 ser = serial_command.control("/dev/ttyS0")
 ser.ChangeMotorA(2)
 
 while(True):
     try:
-        _, cam = cap.read()
+        _, img = cap.read()
 
         # PREPARE IMAGE
-        img = cv2.resize(cam, (160, 120))
         img_pred = np.expand_dims(img, axis=0)
 
         # PREDICT

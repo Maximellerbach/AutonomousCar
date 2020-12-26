@@ -8,25 +8,23 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\forza2\\'
+    train_path = f'{base_path}\\home\\'
     dosdir = True
 
     Dataset = dataset_json.Dataset(
         ['direction', 'speed', 'throttle'])
-    # direction_comp = Dataset.get_component('direction')
-    # direction_comp.offset = -7
-    # direction_comp.scale = 1/4
 
-    speed_comp = Dataset.get_component('speed')
-    speed_comp.offset = 0
-    speed_comp.scale = 3.6
+    # Apply some transformations on the components
+    # speed_comp = Dataset.get_component('speed')
+    # speed_comp.offset = 0
+    # speed_comp.scale = 1
 
     # set input and output components (indexes)
     input_components = [1]
-    output_components = [0]
+    output_components = [0, 2]
 
-    load_path = 'test_model\\models\\forza3.h5'
-    save_path = 'test_model\\models\\forza3.h5'
+    load_path = 'test_model\\models\\test_home.h5'
+    save_path = 'test_model\\models\\test_home.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -45,16 +43,16 @@ if __name__ == "__main__":
         regularizer=(0.0, 0.0001),
         loss='mse', lr=0.001, metrics=[])
 
-    e2e_trainer.train(
-        flip=False,
-        augm=True,
-        use_earlystop=False,
-        use_tensorboard=False,
-        use_plateau_lr=False,
-        verbose=True,
-        epochs=10,
-        batch_size=16,
-        show_distr=False)
+    # e2e_trainer.train(
+    #     flip=False,
+    #     augm=True,
+    #     use_earlystop=False,
+    #     use_tensorboard=False,
+    #     use_plateau_lr=False,
+    #     verbose=True,
+    #     epochs=10,
+    #     batch_size=16,
+    #     show_distr=False)
 
     model = architectures.safe_load_model(save_path, compile=False)
     if dosdir:
@@ -62,5 +60,5 @@ if __name__ == "__main__":
     else:
         paths = Dataset.load_dos_sorted(train_path)
 
-    pred_function.test_predict_paths(Dataset, input_components,
+    pred_function.test_compare_paths(Dataset, input_components,
                                      model, paths, waitkey=1)
