@@ -33,7 +33,7 @@ while not joy.Back():
     joy_button_a = joy.A()
     joy_button_x = joy.X()
 
-    print('{:1.3}'.format(joy_steering))
+    # print('{:1.3}'.format(joy_steering))
 
     steering = joy_steering if abs(joy_steering) > abs(th_direction) and not joy_button_x else 0
     throttle = joy_throttle - joy_brake if abs(joy_throttle - joy_brake) > abs(th_throttle) else 0
