@@ -33,7 +33,7 @@ class control:
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
         self.__ser.timeout = 0  # no timeout
-        self.__command = bytearray([127, 127])
+        self.__command = bytearray([255, 127, 127, 0])
         self.__isRuning = True
         self.__isOperation = False
         self.__boosting = False
@@ -70,13 +70,13 @@ class control:
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
         steering = int(map_value(steering, min, max, 0, 255))
-        self.__command[0] = steering
+        self.__command[1] = steering
         self.__ser.write(self.__command)
 
     def ChangePWM(self, pwm, min=-1, max=1):
         """Change motor speed."""
         pwm = int(map_value(pwm, min, max, 0, 255))
-        self.__command[1] = pwm
+        self.__command[2] = pwm
         self.__ser.write(self.__command)
 
     def ChangeAll(self, steering, pwm, min=[-1, -1], max=[1, 1]):
@@ -89,8 +89,8 @@ class control:
         steering = int(map_value(steering, min[0], max[0], 0, 255))
         pwm = int(map_value(pwm, min[1], max[1], 0, 255))
 
-        self.__command[0] = steering
-        self.__command[1] = pwm
+        self.__command[1] = steering
+        self.__command[2] = pwm
         self.__ser.write(self.__command)
 
 

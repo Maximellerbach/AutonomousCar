@@ -20,7 +20,10 @@ Servo motorESC;
 #define BUTTON_PIN 16
 #define LED_PIN 15
 
-byte buffData[2] = {0, 0}; // one byte for the steering servo, and an other of the motor
+byte dummyBuff[1] = {0};
+byte buffData[4] = {0, 0, 0, 0}; // one byte for start, one byte for the steering servo, an other of the motor and one byte for end
+int expected_start = 255;
+int expected_end = 0;
 long last_received = 0;
 int maxTimout = 500;
 
@@ -51,10 +54,17 @@ void setup() {
 
 void loop() {
   if (Serial.available()) {
-    Serial.readBytes(buffData, 2);
-    last_received = millis();
-    changeSteering();
-    changeThrottle();
+    Serial.readBytes(buffData, 4);
+
+    if (buffData[0] == expected_start and buffData[3] == expected_end)
+    {
+      last_received = millis();
+      changeSteering();
+      changeThrottle();  
+    }
+    else{
+      Serial.readBytes(dummyBuff, 1); // needed to adjust start and end of message
+    }
   }
 
   // if the arduino isn't receiving anything for a given amount of time, stop the motor and servo
@@ -65,14 +75,14 @@ void loop() {
 }
 
 void changeSteering() {
-  float decoded_steering = buffData[0]; // cast byte to int
+  float decoded_steering = buffData[1]; // cast byte to int
   
   int steering = SERVO_MAX - decoded_steering/255 * (SERVO_MAX - SERVO_MIN);
   servoSteering.writeMicroseconds(steering);
 }
 
 void changeThrottle() {
-  float decoded_trottle = buffData[1]; // cast byte to int
+  float decoded_trottle = buffData[2]; // cast byte to int
   
   int throttle = ESC_MIN + decoded_trottle/255 * (ESC_MAX - ESC_MIN);
   motorESC.writeMicroseconds(throttle);

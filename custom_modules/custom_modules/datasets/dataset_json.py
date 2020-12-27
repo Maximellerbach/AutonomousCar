@@ -59,7 +59,7 @@ class Dataset():
                 self.__label_structure.append(components_object)
                 return
 
-    def save_annotation_dict(self, annotation, **kwargs):
+    def save_annotation_dict(self, annotation={}, **kwargs):
         """Save the annotation dict to {dos}{time}{self.format}.
 
         Args:
@@ -86,7 +86,7 @@ class Dataset():
 
         return filename
 
-    def save_img_and_annotation(self, img, annotation, **kwargs):
+    def save_img_and_annotation(self, img, annotation={}, **kwargs):
         """Save an image with it's annotation.
 
         Args:
