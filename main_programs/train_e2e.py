@@ -43,6 +43,8 @@ if __name__ == "__main__":
         regularizer=(0.0, 0.0001),
         loss='mse', lr=0.001, metrics=[])
 
+    e2e_trainer.compile_model(architectures.dir_speed_loss(e2e_trainer.model.get_layer(name='speed')))
+
     e2e_trainer.train(
         flip=True,
         augm=True,

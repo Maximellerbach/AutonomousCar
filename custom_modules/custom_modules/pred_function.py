@@ -15,7 +15,7 @@ def test_predict_paths(Dataset, input_components, model, paths, waitkey=0, apply
                         img, output_dicts[0], waitkey=waitkey)
 
 
-def test_compare_paths(Dataset, input_components, model, paths, waitkey=0):  # not implemented yet
+def test_compare_paths(Dataset, input_components, model, paths, waitkey=0, apply_decorator=True):
     architectures.apply_predict_decorator(model)
 
     for path in paths:

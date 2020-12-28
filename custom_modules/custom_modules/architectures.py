@@ -18,6 +18,12 @@ def dir_loss(y_true, y_pred):
     return mae(y_true, y_pred)/2 + mse(y_true, y_pred)
 
 
+def dir_speed_loss(speed_input):
+    def loss(y_true, y_pred):
+        return speed_input * (y_true - y_pred)
+    return loss
+
+
 def linear2dir(linear, dir_range=(3, 11), to_int=True):
     delta_range = dir_range[1]-dir_range[0]
     direction = (((linear+1)/2)*delta_range)+dir_range[0]

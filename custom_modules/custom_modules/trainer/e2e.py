@@ -84,7 +84,6 @@ class End2EndTrainer():
                     output_components=self.output_components).build()
 
         self.add_pruning(prune)
-        self.compile_model(loss, optimizer, lr, metrics)
         return self.model
 
     def add_pruning(self, prune):
