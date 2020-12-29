@@ -8,19 +8,19 @@ from custom_modules.datasets import dataset_json
 
 import os
 base_path = os.path.expanduser("~") + "\\random_data"
+dos = f'{base_path}\\forza2\\'
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 
-Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = [1]
 
-dos = f'{base_path}\\roboracingleague_1\\0_1600893583.008224\\'
 
 model = architectures.safe_load_model(
-    'test_model\\models\\gentrck_sim1_working.h5', compile=False)
+    'test_model\\models\\forza4.h5', compile=False)
 architectures.apply_predict_decorator(model)
 
 fe = architectures.get_fe(model)
@@ -31,7 +31,7 @@ for it, layer in enumerate(fe.layers):
     if 'activation' in layer.name:
         filter_indexes.append(it)
 
-gdos = Dataset.load_dos_sorted(dos)
+gdos = Dataset.load_dataset_sorted(dos, flat=True)
 np.random.shuffle(gdos)
 
 for labpath in gdos:

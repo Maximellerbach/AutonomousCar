@@ -3,7 +3,6 @@ import math
 import cv2
 import numpy as np
 from tensorflow.keras.models import Model
-from . import vis_img
 
 
 def visualize_fe_output(self, img,

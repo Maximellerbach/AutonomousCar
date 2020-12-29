@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from . import vis_img
 
 
 def lane(img, lane, color=(255, 0, 0), show=True, name="img", waitkey=None):
@@ -53,26 +54,32 @@ def throttle(img, throttle, color=(255, 0, 0), show=True, name="img", waitkey=No
         return img
 
 
-def vis_all(Dataset, input_components, img, output_dict, waitkey=1):
+def vis_all(Dataset, input_components, img, output_dict, show=True, waitkey=1):
     for output_name in output_dict:
         component = Dataset.get_component(output_name)
         img = component.vis_func(
             img, output_dict[output_name], show=False)
 
-    cv2.imshow('img', img)
-    if waitkey is not None:
-        cv2.waitKey(waitkey)
+    if show:
+        cv2.imshow('img', img)
+        if waitkey is not None:
+            cv2.waitKey(waitkey)
+    else:
+        return img
 
 
-def vis_all_compare(Dataset, input_components, img, gt_dict, output_dict, waitkey=1):
+def vis_all_compare(Dataset, input_components, img, gt_dict, output_dict, show=True, waitkey=1):
     for output_name in output_dict:
         component = Dataset.get_component(output_name)
         img = component.vis_func(
-            img, output_dict[output_name], color=(255, 0, 0), show=False)
+            img, output_dict[output_name], color=(0, 0, 255), show=False)
 
         img = component.vis_func(
-            img, gt_dict[output_name], color=(0, 0, 255), show=False)
+            img, gt_dict[output_name], color=(255, 0, 0), show=False)
 
-    cv2.imshow('img', img)
-    if waitkey is not None:
-        cv2.waitKey(waitkey)
+    if show:
+        cv2.imshow('img', img)
+        if waitkey is not None:
+            cv2.waitKey(waitkey)
+    else:
+        return img

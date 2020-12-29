@@ -42,8 +42,8 @@ class image_generator(Sequence):
         self.file_writer = tf.summary.create_file_writer(
             logdir) if self.use_tensorboard else None
 
-    def __data_generation(self, gdos):
-        batchfiles = np.random.choice(gdos, size=self.batch_size)
+    def __data_generation(self):
+        batchfiles = np.random.choice(self.gdos, size=self.batch_size)
         xbatch = []
         ybatch = []
         for _ in range(len(self.Dataset.get_label_structure_name())):
@@ -109,4 +109,4 @@ class image_generator(Sequence):
         return int(self.datalen//self.batch_size)
 
     def __getitem__(self, index):
-        return self.__data_generation(self.gdos)
+        return self.__data_generation()

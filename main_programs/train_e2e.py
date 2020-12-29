@@ -15,16 +15,16 @@ if __name__ == "__main__":
         ['direction', 'speed', 'throttle'])
 
     # Apply some transformations on the components
-    # speed_comp = Dataset.get_component('speed')
-    # speed_comp.offset = 0
-    # speed_comp.scale = 1
+    speed_comp = Dataset.get_component('speed')
+    speed_comp.offset = 0
+    speed_comp.scale = 3.6
 
     # set input and output components (indexes)
     input_components = [1]
     output_components = [0]
 
-    load_path = 'test_model\\models\\forza3.h5'
-    save_path = 'test_model\\models\\forza3.h5'
+    load_path = 'test_model\\models\\forza4.h5'
+    save_path = 'test_model\\models\\forza4.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -37,13 +37,14 @@ if __name__ == "__main__":
         output_components=output_components)
 
     e2e_trainer.build_classifier(
-        load=False,
+        load=True,
         use_bias=False,
         drop_rate=0.05, prune=0.0,
-        regularizer=(0.0, 0.0001),
-        loss='mse', lr=0.001, metrics=[])
+        regularizer=(0.0, 0.0001))
 
-    e2e_trainer.compile_model(architectures.dir_speed_loss(e2e_trainer.model.get_layer(name='speed')))
+    e2e_trainer.compile_model(
+        loss=architectures.tensorflow.keras.losses.Huber(delta=2),
+        lr=0.0005, metrics=[])
 
     e2e_trainer.train(
         flip=True,
@@ -52,9 +53,9 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
-        batch_size=16,
-        show_distr=False)
+        epochs=3,
+        batch_size=64,
+        show_distr=True)
 
     model = architectures.safe_load_model(save_path, compile=False)
     if dosdir:
@@ -63,4 +64,4 @@ if __name__ == "__main__":
         paths = Dataset.load_dos_sorted(train_path)
 
     pred_function.test_compare_paths(Dataset, input_components,
-                                     model, paths, waitkey=1)
+                                     model, paths, waitkey=33)

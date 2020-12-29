@@ -56,9 +56,7 @@ class End2EndTrainer():
         self.callbacks = []
         self.model = None
 
-    def build_classifier(self, load=False, use_bias=True, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0),
-                         optimizer=tensorflow.keras.optimizers.Adam, lr=0.001,
-                         loss=architectures.dir_loss, metrics=["mse"]):
+    def build_classifier(self, load=False, use_bias=True, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0)):
         """Load a model using a model architectures from architectures.py."""
         if load:
             self.model = architectures.safe_load_model(self.load_path, custom_objects={
@@ -91,7 +89,7 @@ class End2EndTrainer():
             self.model = architectures.create_pruning_model(self.model, prune)
             self.callbacks.append(tfmot.sparsity.keras.UpdatePruningStep())
 
-    def compile_model(self, loss, optimizer, lr, metrics):
+    def compile_model(self, loss="mse", optimizer=tensorflow.keras.optimizers.Adam, lr=0.001, metrics=["mse"]):
         self.model.compile(
             loss=loss,
             optimizer=optimizer(lr=lr),
@@ -259,7 +257,6 @@ class End2EndTrainer():
                 frcs.append(dict(zip(unique, frc)))
 
                 if show:
-                    print(component.name)
-                    plot.plot_bars(d, component.weight_acc)
+                    plot.plot_bars(d, component.weight_acc, title=component.name)
 
         return frcs

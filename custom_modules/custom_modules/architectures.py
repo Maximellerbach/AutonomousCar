@@ -1,7 +1,7 @@
 import time
 
-import numpy as np
 import tensorflow
+import tensorflow.keras.backend as K
 from tensorflow.keras import Input
 from tensorflow.keras.layers import (Activation, BatchNormalization, Concatenate,
                                      Conv2D, SeparableConv2D, Dense,
@@ -16,12 +16,6 @@ from tensorflow.keras.regularizers import l1_l2
 def dir_loss(y_true, y_pred):
     '''Loss function for the models.'''
     return mae(y_true, y_pred)/2 + mse(y_true, y_pred)
-
-
-def dir_speed_loss(speed_input):
-    def loss(y_true, y_pred):
-        return speed_input * (y_true - y_pred)
-    return loss
 
 
 def linear2dir(linear, dir_range=(3, 11), to_int=True):
@@ -118,7 +112,7 @@ def prediction2dict(predictions, model_output_names):
                     for _ in range(len(predictions_list))]
     for prediction, output_dict in zip(predictions_list, output_dicts):
         for output_value, output_name in zip(prediction, output_dict):
-            output_dict[output_name] = output_value
+            output_dict[output_name] = K.eval(output_value)
     return output_dicts
 
 
@@ -134,7 +128,12 @@ def predict_decorator(func, model_output_names):
 
 def apply_predict_decorator(model):
     model.predict = predict_decorator(
-        model.predict, get_model_output_names(model))
+        model, get_model_output_names(model))
+
+
+def predict(model, x):
+    prediction = model(x, training=False)
+    return prediction
 
 
 class light_linear_CRNN():
@@ -320,13 +319,16 @@ class light_linear_CNN():
         x = self.conv_block(16, 3, 2, x, drop=True)
         x = self.conv_block(24, 3, 2, x, drop=True)
         x = self.conv_block(24, 3, 2, x, drop=True)
+        x = self.conv_block(32, 3, 2, x, drop=True)
         # useless layer, just here to have a "end_fe" layer
         x = Activation('linear', name='end_fe')(x)
 
-        y1 = self.conv_block(8, (8, 10), (8, 10), x, flatten=True, drop=False)
-        y2 = self.conv_block(12, (8, 1), (8, 1), x, flatten=True, drop=False)
-        y3 = self.conv_block(12, (1, 10), (1, 10), x, flatten=True, drop=False)
-        y = Concatenate()([y1, y2, y3])
+        # y1 = self.conv_block(8, (8, 10), (8, 10), x, flatten=True, drop=False)
+        # y2 = self.conv_block(12, (8, 1), (8, 1), x, flatten=True, drop=False)
+        # y3 = self.conv_block(12, (1, 10), (1, 10), x, flatten=True, drop=False)
+        # y = Concatenate()([y1, y2, y3])
+
+        y = Flatten()(x)
         y = Dropout(self.drop_rate)(y)
         # y = self.conv_block(48, 3, 3, x, flatten=True, drop=True)
 

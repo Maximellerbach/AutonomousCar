@@ -56,14 +56,14 @@ void loop() {
   if (Serial.available()) {
     Serial.readBytes(buffData, 4);
 
-    if (buffData[0] == expected_start and buffData[3] == expected_end)
+    if (buffData[0] == expected_start and buffData[3] == expected_end) // check wether we are reading the right data buffer
     {
       last_received = millis();
       changeSteering();
       changeThrottle();  
     }
     else{
-      Serial.readBytes(dummyBuff, 1); // needed to adjust start and end of message
+      Serial.readBytes(dummyBuff, 1); // needed to adjust start and end of the message
     }
   }
 
