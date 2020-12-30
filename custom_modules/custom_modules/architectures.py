@@ -97,9 +97,7 @@ def safe_load_model(*args, **kwargs):
 
 
 def get_model_output_names(model):
-    tot_out_names = ['left_lane', 'right_lane', 'direction', 'throttle']
-    output_names = [node.op.name.split('/')[0] for node in model.outputs]
-    return [name for name in tot_out_names for output_name in output_names if name in output_name]
+    return [node.op.name.split('/')[0] for node in model.outputs]
 
 
 def prediction2dict(predictions, model_output_names):
@@ -454,9 +452,9 @@ class heavy_linear_CNN():
         inputs.append(inp)
 
         x = BatchNormalization(name='start_fe')(inp)
-        x = self.conv_block(12, 3, 2, x, drop=True)
-        x = self.conv_block(16, 3, 2, x, drop=True)
-        x = self.conv_block(24, 3, 2, x, drop=True)
+        x = self.conv_block(32, 3, 2, x, drop=True)
+        x = self.conv_block(32, 3, 2, x, drop=True)
+        x = self.conv_block(32, 3, 2, x, drop=True)
         x = self.conv_block(32, 3, 2, x, drop=True)
         # useless layer, just here to have a "end_fe" layer
         x = Activation('linear', name='end_fe')(x)

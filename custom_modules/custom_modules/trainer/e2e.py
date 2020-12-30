@@ -56,7 +56,7 @@ class End2EndTrainer():
         self.callbacks = []
         self.model = None
 
-    def build_classifier(self, load=False, use_bias=True, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0)):
+    def build_classifier(self, model_arch, load=False, use_bias=True, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0)):
         """Load a model using a model architectures from architectures.py."""
         if load:
             self.model = architectures.safe_load_model(self.load_path, custom_objects={
@@ -64,22 +64,30 @@ class End2EndTrainer():
             print('loaded model')
 
         else:
-            if self.sequence:
-                self.model = architectures.light_linear_CRNN(
-                    self.Dataset, (None, 120, 160, 3),
-                    drop_rate=drop_rate, regularizer=regularizer,
-                    prev_act="relu", last_act="linear", padding='same',
-                    use_bias=use_bias,
-                    input_components=self.input_components,
-                    output_components=self.output_components).build()
-            else:
-                self.model = architectures.light_linear_CNN(
-                    self.Dataset, (120, 160, 3),
-                    drop_rate=drop_rate, regularizer=regularizer,
-                    prev_act="relu", last_act="linear", padding='same',
-                    use_bias=use_bias,
-                    input_components=self.input_components,
-                    output_components=self.output_components).build()
+            self.model = model_arch(
+                self.Dataset, (120, 160, 3),
+                drop_rate=drop_rate, regularizer=regularizer,
+                prev_act="relu", last_act="linear", padding='same',
+                use_bias=use_bias,
+                input_components=self.input_components,
+                output_components=self.output_components).build()
+            
+            # if self.sequence:
+            #     self.model = architectures.light_linear_CRNN(
+            #         self.Dataset, (None, 120, 160, 3),
+            #         drop_rate=drop_rate, regularizer=regularizer,
+            #         prev_act="relu", last_act="linear", padding='same',
+            #         use_bias=use_bias,
+            #         input_components=self.input_components,
+            #         output_components=self.output_components).build()
+            # else:
+            #     self.model = architectures.light_linear_CNN(
+            #         self.Dataset, (120, 160, 3),
+            #         drop_rate=drop_rate, regularizer=regularizer,
+            #         prev_act="relu", last_act="linear", padding='same',
+            #         use_bias=use_bias,
+            #         input_components=self.input_components,
+            #         output_components=self.output_components).build()
 
         self.add_pruning(prune)
         return self.model
@@ -257,6 +265,7 @@ class End2EndTrainer():
                 frcs.append(dict(zip(unique, frc)))
 
                 if show:
-                    plot.plot_bars(d, component.weight_acc, title=component.name)
+                    plot.plot_bars(d, component.weight_acc,
+                                   title=component.name)
 
         return frcs

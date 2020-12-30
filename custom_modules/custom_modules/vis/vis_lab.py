@@ -1,9 +1,8 @@
 import cv2
 import numpy as np
-from . import vis_img
 
 
-def lane(img, lane, color=(255, 0, 0), show=True, name="img", waitkey=None):
+def lane(img, lane, color=(0, 0, 255), show=True, name="img", waitkey=None):
     def rescale(lane, shape):
         h, w, ch = shape
         rescale_array = np.array((w, h, w, h))/2
@@ -20,11 +19,10 @@ def lane(img, lane, color=(255, 0, 0), show=True, name="img", waitkey=None):
         cv2.imshow(name, img)
         if waitkey is not None:
             cv2.waitKey(waitkey)
-    else:
-        return img
+    return img
 
 
-def direction(img, direction, color=(255, 0, 0), show=True, name="img", waitkey=None):
+def direction(img, direction, color=(0, 0, 255), show=True, name="img", waitkey=None):
     h, w, ch = img.shape
     p1 = (w//2, h)
     p2 = (int(w//2 + direction*40), h-40)
@@ -35,11 +33,10 @@ def direction(img, direction, color=(255, 0, 0), show=True, name="img", waitkey=
         cv2.imshow(name, img)
         if waitkey is not None:
             cv2.waitKey(waitkey)
-    else:
-        return img
+    return img
 
 
-def throttle(img, throttle, color=(255, 0, 0), show=True, name="img", waitkey=None, offset=5):
+def throttle(img, throttle, color=(0, 0, 255), show=True, name="img", waitkey=None, offset=5):
     h, w, ch = img.shape
     p1 = (offset, h)
     p2 = (offset, h-int(throttle*30))
@@ -50,8 +47,7 @@ def throttle(img, throttle, color=(255, 0, 0), show=True, name="img", waitkey=No
         cv2.imshow(name, img)
         if waitkey is not None:
             cv2.waitKey(waitkey)
-    else:
-        return img
+    return img
 
 
 def vis_all(Dataset, input_components, img, output_dict, show=True, waitkey=1):
@@ -64,8 +60,7 @@ def vis_all(Dataset, input_components, img, output_dict, show=True, waitkey=1):
         cv2.imshow('img', img)
         if waitkey is not None:
             cv2.waitKey(waitkey)
-    else:
-        return img
+    return img
 
 
 def vis_all_compare(Dataset, input_components, img, gt_dict, output_dict, show=True, waitkey=1):
@@ -81,5 +76,4 @@ def vis_all_compare(Dataset, input_components, img, gt_dict, output_dict, show=T
         cv2.imshow('img', img)
         if waitkey is not None:
             cv2.waitKey(waitkey)
-    else:
-        return img
+    return img

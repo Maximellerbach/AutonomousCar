@@ -22,7 +22,7 @@ def visualize_fe_output(self, img,
 def visualize_model_layer_filter(model, img, layer_index,
                                  output_size=None, mult=1,
                                  layer_outputs=None, tmp_model=None,
-                                 show=True, sleep_time=0):
+                                 show=True, waitkey=None):
     if tmp_model is None:
         if layer_outputs is None:
             layer_output = model.layers[layer_index].output
@@ -52,8 +52,9 @@ def visualize_model_layer_filter(model, img, layer_index,
             (i % columns)*output_size[0]:(i % columns+1)*output_size[0]
         ] = filter_img
 
-    cv2.imshow(f'{layer_index}', final_image/np.max(final_image))
     if show:
-        cv2.waitKey(sleep_time)
+        cv2.imshow(f'{layer_index}', (final_image-np.min(final_image))/np.max(final_image))
+        if waitkey is not None:
+            cv2.waitKey(waitkey)
 
     return activation, tmp_model

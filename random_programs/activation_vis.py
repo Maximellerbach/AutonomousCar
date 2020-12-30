@@ -42,6 +42,6 @@ for labpath in gdos:
     img = img/255
     for index in filter_indexes[:5]:
         activations, _ = vis_fe.visualize_model_layer_filter(
-            fe, img, index, output_size=(80, 60), show=False)
+            fe, img, index, output_size=(80, 60), show=True)
 
     cv2.waitKey(0)
