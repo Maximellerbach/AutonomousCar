@@ -314,21 +314,15 @@ class light_linear_CNN():
 
         x = BatchNormalization(name='start_fe')(inp)
         x = self.conv_block(6, 3, 2, x, drop=True)
-        x = self.conv_block(16, 3, 2, x, drop=True)
+        x = self.conv_block(12, 3, 2, x, drop=True)
         x = self.conv_block(24, 3, 2, x, drop=True)
         x = self.conv_block(24, 3, 2, x, drop=True)
         x = self.conv_block(32, 3, 2, x, drop=True)
         # useless layer, just here to have a "end_fe" layer
         x = Activation('linear', name='end_fe')(x)
 
-        # y1 = self.conv_block(8, (8, 10), (8, 10), x, flatten=True, drop=False)
-        # y2 = self.conv_block(12, (8, 1), (8, 1), x, flatten=True, drop=False)
-        # y3 = self.conv_block(12, (1, 10), (1, 10), x, flatten=True, drop=False)
-        # y = Concatenate()([y1, y2, y3])
-
         y = Flatten()(x)
         y = Dropout(self.drop_rate)(y)
-        # y = self.conv_block(48, 3, 3, x, flatten=True, drop=True)
 
         y = self.dense_block(75, y, drop=True)
         y = self.dense_block(50, y, drop=True)
@@ -355,6 +349,15 @@ class light_linear_CNN():
                       use_bias=self.use_bias,
                       activation='tanh',
                       name='right_lane')(y)
+            outputs.append(z)
+            y = Concatenate()([y, z])
+
+        if 'cte' in output_components_names:
+            z = self.dense_block(25, y, drop=False)
+            z = Dense(1,
+                      use_bias=self.use_bias,
+                      activation='tanh',
+                      name='cte')(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 
@@ -491,6 +494,15 @@ class heavy_linear_CNN():
                       use_bias=self.use_bias,
                       activation='tanh',
                       name='right_lane')(y)
+            outputs.append(z)
+            y = Concatenate()([y, z])
+
+        if 'cte' in output_components_names:
+            z = self.dense_block(25, y, drop=False)
+            z = Dense(1,
+                      use_bias=self.use_bias,
+                      activation='tanh',
+                      name='cte')(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 

@@ -1,7 +1,7 @@
 import os
 import time
 
-from custom_modules import serial_command2
+from custom_modules import serial_command2, pid_steering
 from custom_modules.datasets import dataset_json
 
 import cv2
@@ -17,8 +17,10 @@ dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
+pidSteering = pid_steering.SimpleSteering()
+
 MAXTHROTTLE = 0.5
-th_steering = 0.05  # 5% threshold
+th_position = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
@@ -32,14 +34,16 @@ print(joy.connected())
 
 prev_throttle = 0
 while not joy.Back():
-    joy_steering = joy.leftX()
+    joy_position = joy.leftX()
     joy_throttle = joy.rightTrigger()
     joy_brake = joy.leftTrigger()
     joy_button_a = joy.A()
 
-    steering = deadzone(joy_steering, th_steering)
+    position = deadzone(joy_position, th_position)
     throttle = deadzone(joy_throttle - joy_brake, th_throttle)
+    last_received = time.time()
 
+    steering = pidSteering.update_steering(position, last_received=last_received)
     ser.ChangeAll(steering, MAXTHROTTLE * throttle, min=[-1, -1], max=[1, 1])
 
     if joy_button_a:
@@ -47,13 +51,13 @@ while not joy.Back():
 
         Dataset.save_img_and_annotation(
             img,
-            {
+            annotation={
                 'direction': steering,
                 'speed': prev_throttle,  # save previous throttle
                 'throttle': throttle,  # save raw throttle value
-                'time': time.time()
+                'time': last_received
             },
-            dos_save
+            dos=dos_save
         )
     prev_throttle = throttle
 

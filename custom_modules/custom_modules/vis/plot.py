@@ -36,14 +36,14 @@ def plot_bars(dict, width, ax1=None, title="", show=True):
 def plot_time_series(*args, ax1=None, title="", show=True):
     lenghts = [len(arg) for arg in args]
     assert lenghts == [lenghts[0]]*len(lenghts)
-    its = [i for i in range(len(args[0]))]
+    its = np.array([i for i in range(len(args[0]))])
 
     if ax1 is None:
         fig = plt.figure()
         ax1 = fig.add_subplot(1, 1, 1)
 
     ax1.clear()
-    ax1.plot(its, args)
+    ax1.plot(its, *args)
     ax1.title.set_text(title)
     if show:
         plt.show()

@@ -348,13 +348,13 @@ if __name__ == "__main__":
     base_path = os.path.expanduser("~") + "\\random_data"
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-    direction_comp = Dataset.get_component("direction")
-    direction_comp.offset = -7
-    direction_comp.scale = 1/4
+    direction_comp = Dataset.get_component("speed")
+    direction_comp.offset = 0
+    direction_comp.scale = 3.6
 
     paths = Dataset.load_dos_sorted(
-        f'{base_path}\\json_dataset\\12 sim circuit 2 new\\')
-    sequence_to_study = (0, 1000)
+        f'{base_path}\\forza2\\recorded_1\\')
+    sequence_to_study = (0, 3000)
     paths = paths[sequence_to_study[0]:sequence_to_study[1]]
 
     annotations = np.array([Dataset.load_annotation(path) for path in paths])
@@ -364,7 +364,7 @@ if __name__ == "__main__":
     dates = annotations[:, -1]
     delta_times = dates[1:]-dates[:-1]
 
-    Estimator = TrackEstimation(steer_coef=14)
+    Estimator = TrackEstimation(steer_coef=1)
 
     pos_list, lightpos_list, vect_list, deg_list = Estimator.get_pos(
         directions, time_series=delta_times, speed_series=speeds)

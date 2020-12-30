@@ -515,6 +515,34 @@ class direction_component:
         return item*-1
 
 
+class cte_component:
+    def __init__(self):
+        self.name = "cte"
+        self.type = float
+        self.default = 0.0
+
+        self.flip = True
+        self.scale = 1.0
+        self.offset = 0.0
+        self.weight_acc = 0.1
+        self.iterable = False
+        self.is_couple = False
+        self.vis_func = vis_lab.direction
+
+    def get_item(self, json_data):
+        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
+
+    def add_item_to_dict(self, item, annotation_dict: dict):
+        annotation_dict[self.name] = self.type(item)
+        return annotation_dict
+
+    def from_string(self, string):
+        return self.type(string)
+
+    def flip_item(self, item):
+        return item*-1
+
+
 class speed_component:
     def __init__(self):
         self.name = "speed"
@@ -704,6 +732,7 @@ class imgbase64_component:
 
 class every_component(Enum):  # not used for the moment
     direction = direction_component
+    cte = cte_component
     speed = speed_component
     throttle = throttle_component
     time = time_component

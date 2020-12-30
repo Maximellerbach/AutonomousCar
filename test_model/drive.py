@@ -41,10 +41,9 @@ while(True):
             'throttle': 0,
             'time': 0
         }
-        annotation_list = drive_utils.dict2list(annotation)
 
         to_pred = Dataset.make_to_pred_annotations(
-            [img], [annotation_list], input_components)
+            [img], [annotation], input_components)
 
         # PREDICT
         st = time.time()

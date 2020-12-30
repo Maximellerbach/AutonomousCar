@@ -65,13 +65,13 @@ while not joy.Back():
         if not joy_button_x:
             Dataset.save_img_and_annotation(
                 img,
-                {
+                annotation={
                     'direction': float(steering),  # float32 can't be used for JSON so casting to regular float
                     'speed': float(prev_throttle),
                     'throttle': float(throttle),
                     'time': time.time()
                 },
-                dos_save)
+                dos=dos_save)
 
         ser.ChangeAll(steering, MAXTHROTTLE * throttle)
 

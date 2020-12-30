@@ -3,7 +3,7 @@ import os
 import cv2
 import time
 
-from custom_modules import serial_command2, architectures
+from custom_modules import serial_command2, architectures, pid_steering
 from custom_modules.datasets import dataset_json
 
 serialport = '/dev/ttyUSB0'
@@ -14,7 +14,9 @@ MAXTHROTTLE = 0.45
 wi = 160
 he = 120
 
-Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+pidSteering = pid_steering.SimpleSteering()
+
+Dataset = dataset_json.Dataset(["direction", "speed", "cte", "throttle", "time"])
 input_components = [1]
 
 basedir = os.path.dirname(os.path.abspath(__file__))
@@ -46,16 +48,11 @@ while(True):
         # PREDICT
         predicted, dt = model.predict(to_pred)
         predicted = predicted[0]
-        steering = predicted['direction'][0]
-        throttle = predicted['throttle'][0]
+        cte = predicted['cte']
 
-        print(predicted)
-        # print(dt)
-
-        # cv2.imshow('img', img)
-        # cv2.waitKey(1)
-
+        steering = pidSteering.update_steering(cte)
         ser.ChangeAll(steering, 0.18)
+
         prev_throttle = predicted['throttle'][0]
 
     except Exception as e:

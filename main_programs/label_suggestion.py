@@ -5,6 +5,8 @@ import tensorflow
 from custom_modules import architectures
 from custom_modules.datasets import dataset_json
 
+from tqdm import tqdm
+
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
@@ -22,7 +24,7 @@ class LabelisationSuggestion():
 
     def load_imgs(self, paths, flip=False):
         X = []
-        for i in paths:
+        for i in tqdm(paths):
             img = self.Dataset.load_img(i)/255
             if flip:
                 imgflip = cv2.flip(img, 1)
@@ -99,7 +101,7 @@ if __name__ == "__main__":
 
     Dataset = dataset_json.Dataset(['direction', 'speed', 'throttle'])
     lab_helper = LabelisationSuggestion(
-        Dataset, 'test_model\\models\\linear_trackmania.h5')
+        Dataset, 'test_model\\models\\forza4.h5')
 
     lab_helper.iterate_main(
         f"{base_path}\\json_dataset\\1 ironcar driving\\")
