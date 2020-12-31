@@ -32,15 +32,27 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 print(joy.connected())
 
+# checking if the controller is working properly
+joy_leftX = 0
+while joy_leftX != 1.0:
+    joy_leftX = joy.leftX()
+    print(joy_leftX)
+
+while joy_leftX != -1.0:
+    joy_leftX = joy.leftX()
+    print(joy_leftX)
+
+print("Starting mainloop")
+
 prev_throttle = 0
 while not joy.Back():
-    joy_position = joy.leftX()
-    joy_throttle = joy.rightTrigger()
-    joy_brake = joy.leftTrigger()
+    joy_leftX = joy.leftX()
+    joy_rightT = joy.rightTrigger()
+    joy_leftT = joy.leftTrigger()
     joy_button_a = joy.A()
 
-    position = deadzone(joy_position, th_position)
-    throttle = deadzone(joy_throttle - joy_brake, th_throttle)
+    position = deadzone(joy_leftX, th_position)
+    throttle = deadzone(joy_rightT - joy_leftT, th_throttle)
     last_received = time.time()
 
     steering = pidSteering.update_steering(position, last_received=last_received)
