@@ -3,6 +3,14 @@ import math
 import cv2
 import numpy as np
 from tensorflow.keras.models import Model
+import tensorflow
+
+from tf_keras_vis.saliency import Saliency
+from tf_keras_vis.gradcam import Gradcam, GradcamPlusPlus
+from tf_keras_vis.utils import normalize
+from tf_keras_vis.activation_maximization import ActivationMaximization
+from tf_keras_vis.utils.callbacks import Print
+import tensorflow.keras.backend as K
 
 
 def visualize_fe_output(self, img,
@@ -53,8 +61,70 @@ def visualize_model_layer_filter(model, img, layer_index,
         ] = filter_img
 
     if show:
-        cv2.imshow(f'{layer_index}', (final_image-np.min(final_image))/np.max(final_image))
+        max_v = np.percentile(final_image, 99.9)
+        print(f'99.9 percentile of final image is :{max_v}')
+        cv2.imshow(f'{layer_index}', (final_image-np.min(final_image)/max_v))
         if waitkey is not None:
             cv2.waitKey(waitkey)
 
     return activation, tmp_model
+
+
+def get_saliency(model, inputs, class_idx, image_input_index=0, **kwargs):
+    def model_modifier(m):
+        m.layers[-1].activation = tensorflow.keras.activations.linear
+        return m
+
+    def loss(output):
+        return output[0][class_idx]
+
+    saliency = Saliency(model,
+                        model_modifier=model_modifier,
+                        clone=True)
+    X = [tensorflow.convert_to_tensor(inp, np.float32) for inp in inputs]
+
+    saliency_map = saliency(loss,
+                            X,
+                            **kwargs)
+    return [normalize(saliency_map[i]) for i in range(len(saliency_map))]
+
+
+def get_gradcam(model, inputs, class_idx, penultimate_layer=-1, **kwargs):  # need to work on activation modifier
+    def model_modifier(m):
+        m.layers[-1].activation = tensorflow.keras.activations.linear
+        return m
+
+    def loss(output):
+        return output[0][class_idx]
+
+    gradcam = Gradcam(model,
+                      model_modifier=model_modifier,
+                      clone=True)
+    X = [tensorflow.convert_to_tensor(inp, np.float32) for inp in inputs]
+
+    cam = gradcam(loss,
+                  X,
+                  penultimate_layer=penultimate_layer,
+                  **kwargs)
+    return [normalize(cam[i]) for i in range(len(cam))]
+
+
+def vis_layer(model, layer_name, filter_number, **kwargs):
+    def model_modifier(current_model):
+        target_layer = current_model.get_layer(name=layer_name)
+        new_model = tensorflow.keras.Model(inputs=current_model.inputs,
+                                           outputs=target_layer.output)
+        new_model.layers[-1].activation = tensorflow.keras.activations.linear
+        return new_model
+
+    def loss(output):
+        return output[..., filter_number]
+
+    activation_maximization = ActivationMaximization(model,
+                                                     model_modifier,
+                                                     clone=True)
+
+    activation = activation_maximization(loss,
+                                         callbacks=[Print(interval=50)],
+                                         **kwargs)[0]
+    return activation/255  # remap to [0; 1]

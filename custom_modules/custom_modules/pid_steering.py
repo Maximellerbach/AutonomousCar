@@ -2,6 +2,9 @@ import time
 
 
 class SimpleSteering():
+    '''
+    PD controller to steer the car
+    '''
     def __init__(self, kp=1, kd=1, high_th=1, low_th=-1):
         self.controller_settings = (kp, kd)
         self.ser = None

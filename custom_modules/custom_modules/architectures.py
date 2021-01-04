@@ -4,13 +4,30 @@ import tensorflow
 import tensorflow.keras.backend as K
 from tensorflow.keras import Input
 from tensorflow.keras.layers import (Activation, BatchNormalization, Concatenate,
-                                     Conv2D, SeparableConv2D, Dense,
+                                     Conv2D, SeparableConv2D, DepthwiseConv2D, Dense,
                                      Dropout, Flatten,
                                      MaxPooling2D)
 from tensorflow.keras.layers import TimeDistributed as TD
 from tensorflow.keras.losses import mae, mse
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.regularizers import l1_l2
+
+
+def get_flops(load_path):
+    session = tensorflow.compat.v1.Session()
+    graph = tensorflow.compat.v1.get_default_graph()
+
+    with graph.as_default():
+        with session.as_default():
+            model = load_model(load_path)
+            run_meta = tensorflow.compat.v1.RunMetadata()
+            opts = tensorflow.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+
+            # We use the Keras session graph in the call to the profiler.
+            flops = tensorflow.compat.v1.profiler.profile(graph=graph,
+                                                          run_meta=run_meta, cmd='op', options=opts)
+
+            return flops.total_float_ops
 
 
 def dir_loss(y_true, y_pred):
@@ -242,7 +259,7 @@ class light_linear_CRNN():
 
 class light_linear_CNN():
     def __init__(self, dataset, img_shape,
-                 prev_act='relu', last_act='linear', padding='same',
+                 prev_act='relu', last_act='linear',
                  drop_rate=0.1, use_bias=False, regularizer=(0, 0),
                  input_components=[], output_components=[]):
 
@@ -250,20 +267,18 @@ class light_linear_CNN():
         self.img_shape = img_shape
         self.prev_act = prev_act
         self.last_act = last_act
-        self.padding = padding
         self.drop_rate = drop_rate
         self.use_bias = use_bias
         self.regularizer = regularizer
         self.input_components = input_components
         self.output_components = output_components
 
-    def conv_block(self, n_filter, kernel_size, strides, x,
-                   conv_type=Conv2D, drop=True,
+    def conv_block(self, n_filter, kernel_size, strides, x, drop=True, conv_type=Conv2D,
                    flatten=False, batchnorm=True, maxpool=False, **kwargs):
 
         x = conv_type(
             n_filter, kernel_size=kernel_size,
-            strides=strides, use_bias=self.use_bias, padding=self.padding,
+            strides=strides, use_bias=self.use_bias,
             kernel_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
             bias_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
             **kwargs
@@ -281,7 +296,7 @@ class light_linear_CNN():
         return x
 
     def dense_block(self, n_neurones, x,
-                    drop=True, batchnorm=True, activation=None, **kwargs):
+                    drop=True, batchnorm=False, activation=None, **kwargs):
         x = Dense(
             n_neurones,
             use_bias=self.use_bias,
@@ -313,11 +328,12 @@ class light_linear_CNN():
         inputs.append(inp)
 
         x = BatchNormalization(name='start_fe')(inp)
-        x = self.conv_block(6, 3, 2, x, drop=True)
-        x = self.conv_block(12, 3, 2, x, drop=True)
-        x = self.conv_block(24, 3, 2, x, drop=True)
-        x = self.conv_block(24, 3, 2, x, drop=True)
-        x = self.conv_block(32, 3, 2, x, drop=True)
+        x = self.conv_block(12, 5, 2, x, drop=True, conv_type=SeparableConv2D)
+        x = self.conv_block(24, 5, 2, x, drop=True, conv_type=SeparableConv2D)
+        x = self.conv_block(32, 3, 2, x, drop=True, conv_type=SeparableConv2D)
+        x = self.conv_block(32, 3, 1, x, drop=True, conv_type=SeparableConv2D)
+        x = self.conv_block(8, 3, 1, x, drop=True, conv_type=SeparableConv2D)
+        x = self.conv_block(64, (9, 14), 1, x, drop=True, conv_type=SeparableConv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation('linear', name='end_fe')(x)
 
@@ -363,7 +379,7 @@ class light_linear_CNN():
 
         if 'direction' in output_components_names:
             z = self.dense_block(25, y, drop=False)
-            z = self.dense_block(25, y, drop=False, activation='softmax')
+            z = self.dense_block(9, z, drop=False, activation='softmax')
             z = Dense(1,
                       use_bias=self.use_bias,
                       activation=self.last_act,
@@ -384,7 +400,7 @@ class light_linear_CNN():
 
 class heavy_linear_CNN():
     def __init__(self, dataset, img_shape,
-                 prev_act='relu', last_act='linear', padding='same',
+                 prev_act='relu', last_act='linear',
                  drop_rate=0.1, use_bias=False, regularizer=(0, 0),
                  input_components=[], output_components=[]):
 
@@ -392,7 +408,6 @@ class heavy_linear_CNN():
         self.img_shape = img_shape
         self.prev_act = prev_act
         self.last_act = last_act
-        self.padding = padding
         self.drop_rate = drop_rate
         self.use_bias = use_bias
         self.regularizer = regularizer
@@ -508,7 +523,7 @@ class heavy_linear_CNN():
 
         if 'direction' in output_components_names:
             z = self.dense_block(25, y, drop=False)
-            z = self.dense_block(25, y, drop=False, activation='softmax')
+            z = self.dense_block(9, y, drop=False, activation="softmax")
             z = Dense(1,
                       use_bias=self.use_bias,
                       activation=self.last_act,

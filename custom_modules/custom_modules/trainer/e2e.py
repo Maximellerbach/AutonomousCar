@@ -67,27 +67,10 @@ class End2EndTrainer():
             self.model = model_arch(
                 self.Dataset, (120, 160, 3),
                 drop_rate=drop_rate, regularizer=regularizer,
-                prev_act="relu", last_act="linear", padding='same',
+                prev_act="relu", last_act="linear",
                 use_bias=use_bias,
                 input_components=self.input_components,
                 output_components=self.output_components).build()
-            
-            # if self.sequence:
-            #     self.model = architectures.light_linear_CRNN(
-            #         self.Dataset, (None, 120, 160, 3),
-            #         drop_rate=drop_rate, regularizer=regularizer,
-            #         prev_act="relu", last_act="linear", padding='same',
-            #         use_bias=use_bias,
-            #         input_components=self.input_components,
-            #         output_components=self.output_components).build()
-            # else:
-            #     self.model = architectures.light_linear_CNN(
-            #         self.Dataset, (120, 160, 3),
-            #         drop_rate=drop_rate, regularizer=regularizer,
-            #         prev_act="relu", last_act="linear", padding='same',
-            #         use_bias=use_bias,
-            #         input_components=self.input_components,
-            #         output_components=self.output_components).build()
 
         self.add_pruning(prune)
         return self.model

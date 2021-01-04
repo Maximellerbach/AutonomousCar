@@ -35,33 +35,27 @@ def imgstring2donkeyjson_dos(src_dos, dst_dos):
         time.sleep(0.0001)
 
 
-# DatasetImg = dataset_img.Dataset(
-#     [dataset_img.direction_component, dataset_img.time_component])
-# DatasetJson = dataset_json.Dataset(
-#     ["direction", "speed", "throttle", "time"])
+def imgstring2json_dos(src_Dataset, dst_Dataset, src_dos, dst_dos):
+    dos_name = src_dos.split('\\')[-1]
+    DatasetJson.imgstring2json_dos(
+        DatasetImg, DatasetJson.imgstring2dict2json, src_dos+"\\", dst_dos+dos_name+"\\")
 
-# src_dos = "D:\\Maxime\\OneDrive\\random_data\\2 donkeycar driving"
-# dst_dos = "D:\\Maxime\\OneDrive\\random_data\\json_dataset\\"
-# dosdir = False
 
-# if dosdir:
-#     doss = glob(src_dos+"*")
-#     for dos in doss:
-#         dos_name = dos.split('\\')[-1]
-#         DatasetJson.imgstring2json_dos(
-#             DatasetImg, DatasetJson.imgstring2dict2json, dos+"\\", dst_dos+dos_name+"\\")
-# else:
-#     dos_name = src_dos.split('\\')[-1]
-#     DatasetJson.imgstring2json_dos(
-#         DatasetImg, DatasetJson.imgstring2dict2json, src_dos+"\\", dst_dos+dos_name+"\\")
+if __name__ == "__main__":
 
-################################
-src_doss = [
-    "C:\\Users\\maxim\\random_data\\10 sim chicane\\",
-    "C:\\Users\\maxim\\random_data\\11 sim circuit 2\\",
-    "C:\\Users\\maxim\\random_data\\7 sim slow+normal\\"
-]
-dst_dos = "C:\\Users\\maxim\\random_data\\output\\"
+    DatasetImg = dataset_img.Dataset(
+        [dataset_img.direction_component, dataset_img.time_component])
+    DatasetJson = dataset_json.Dataset(
+        ["direction", "speed", "throttle", "time"])
+    direction_cmp = DatasetJson.get_component("direction")
+    direction_cmp.offset = -7
+    direction_cmp.scale = 1/4
 
-for src_dos in src_doss:
-    imgstring2donkeyjson_dos(src_dos, dst_dos)
+    src_doss = [
+        "C:\\Users\\maxim\\random_data\\1 ironcar driving\\"
+    ]
+    dst_dos = "C:\\Users\\maxim\\random_data\\ironcar\\ironcar\\"
+
+    for src_dos in src_doss:
+        # imgstring2donkeyjson_dos(src_dos, dst_dos)
+        imgstring2json_dos(DatasetImg, DatasetJson, src_dos, dst_dos)

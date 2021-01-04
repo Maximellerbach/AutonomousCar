@@ -59,13 +59,13 @@ while not joy.Back():
 
         Dataset.save_img_and_annotation(
             img,
-            {
+            annotation={
                 'direction': steering,
                 'speed': prev_throttle,  # save previous throttle
                 'throttle': throttle,  # save raw throttle value
                 'time': time.time()
             },
-            dos_save
+            dos=dos_save
         )
     prev_throttle = throttle
 

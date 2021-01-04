@@ -7,14 +7,12 @@ from custom_modules import architectures
 from custom_modules.datasets import dataset_json
 from custom_modules.vis import vis_fe, vis_lab
 
-base_path = os.path.expanduser("~") + "\\random_data"
-dos = f'{base_path}\\forza2\\'
-
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
-
+base_path = os.path.expanduser("~") + "\\random_data"
+dos = f'{base_path}\\forza2\\'
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
@@ -24,26 +22,25 @@ np.random.shuffle(gdos)
 model = architectures.safe_load_model(
     'test_model\\models\\forza4.h5', compile=False)
 architectures.apply_predict_decorator(model)
+model.summary()
 
-fe = architectures.get_fe(model)
-fe.summary()
-
-filter_indexes = []
-for it, layer in enumerate(fe.layers):
-    if 'activation' in layer.name:
-        filter_indexes.append(it)
-
+vis_model = tensorflow.keras.models.Model(model.inputs, model.layers[-1].output)
 
 for labpath in gdos:
     img, annotation = Dataset.load_img_and_annotation(labpath, to_list=False)
 
-    for index in filter_indexes:
-        activations, _ = vis_fe.visualize_model_layer_filter(
-            fe, img/255, index, output_size=(80, 60), show=True)
-
     to_pred = Dataset.make_to_pred_annotations([img], [annotation], input_components)
     prediction_dict, dt = model.predict(to_pred)
-    img = vis_lab.vis_all_compare(Dataset, input_components, img, annotation, prediction_dict[0], show=False)
+    img = img/255
 
-    cv2.imshow('img', img)
+    for class_idx in range(vis_model.output.shape[1]):
+        vis_img = vis_fe.get_gradcam(
+            vis_model, to_pred, class_idx, penultimate_layer=2)
+        vis_img = np.transpose(vis_img[0], (1, 2, 0))
+
+        # cv2.imshow(f'img_{class_idx}', vis_img * img)
+        cv2.imshow(f'{class_idx}', vis_img)
+
+    vis_lab.vis_all_compare(Dataset, input_components,
+                            img, annotation, prediction_dict[0], waitkey=None)
     cv2.waitKey(0)
