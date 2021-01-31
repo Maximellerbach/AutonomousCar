@@ -1,7 +1,7 @@
 import os
 import time
 
-from custom_modules import serial_command2
+from custom_modules import serial_command2, memory
 from custom_modules.datasets import dataset_json
 
 import cv2
@@ -13,6 +13,8 @@ def deadzone(value, th, default=0):
 
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+memory = memory.Memory(2)
+
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
@@ -49,24 +51,24 @@ while not joy.Back():
     joy_brake = joy.leftTrigger()
     joy_button_a = joy.A()
 
-    steering = deadzone(joy_steering, th_steering)
-    throttle = deadzone(joy_throttle - joy_brake, th_throttle)
+    memory['steering'] = deadzone(joy_steering, th_steering)
+    memory['throttle'] = deadzone(joy_throttle - joy_brake, th_throttle)
+    memory['speed'] = 0
+    memory['time'] = time.time()
 
-    ser.ChangeAll(steering, MAXTHROTTLE * throttle, min=[-1, -1], max=[1, 1])
+    ser.ChangeAll(memory['steering'],
+                  MAXTHROTTLE * memory['throttle'],
+                  min=[-1, -1], max=[1, 1])
 
     if joy_button_a:
         _, img = cap.read()
 
         Dataset.save_img_and_annotation(
             img,
-            annotation={
-                'direction': steering,
-                'speed': prev_throttle,  # save previous throttle
-                'throttle': throttle,  # save raw throttle value
-                'time': time.time()
-            },
+            annotation=memory(),
             dos=dos_save
         )
-    prev_throttle = throttle
+
+    memory.append({})
 
 print('terminated')
