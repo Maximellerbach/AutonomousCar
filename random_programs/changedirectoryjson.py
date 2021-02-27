@@ -43,7 +43,7 @@ def change_directory(base_path: str, datasetJson: dataset_json.Dataset):
 
 
 if __name__ == "__main__":
-    base_path = os.path.expanduser("~") + "\\random_data\\forza2\\"
+    base_path = os.path.expanduser("~") + "\\random_data\\mini_monaco\\"
 
     datasetJson = dataset_json.Dataset(
         ['direction', 'speed', 'throttle'])

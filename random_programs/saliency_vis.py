@@ -12,7 +12,7 @@ for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f'{base_path}\\forza2\\'
+dos = f'{base_path}\\test_scene\\'
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
@@ -20,7 +20,7 @@ gdos = Dataset.load_dataset_sorted(dos, flat=True)
 np.random.shuffle(gdos)
 
 model = architectures.safe_load_model(
-    'test_model\\models\\forza4.h5', compile=False)
+    'test_model\\models\\test_scene.h5', compile=False)
 architectures.apply_predict_decorator(model)
 model.summary()
 

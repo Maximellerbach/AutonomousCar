@@ -333,7 +333,8 @@ class light_linear_CNN():
         x = self.conv_block(32, 3, 2, x, drop=True, conv_type=SeparableConv2D)
         x = self.conv_block(32, 3, 1, x, drop=True, conv_type=SeparableConv2D)
         x = self.conv_block(8, 3, 1, x, drop=True, conv_type=SeparableConv2D)
-        x = self.conv_block(64, (9, 14), 1, x, drop=True, conv_type=SeparableConv2D)
+        x = self.conv_block(64, (9, 14), 1, x, drop=True,
+                            conv_type=SeparableConv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation('linear', name='end_fe')(x)
 

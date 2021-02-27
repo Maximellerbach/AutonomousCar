@@ -140,6 +140,7 @@ class End2EndTrainer():
                 sequence=self.sequence,
                 seq_batchsize=seq_batchsize,
                 augm=augm, flip=flip,
+                proportion=self.proportion,
                 use_tensorboard=use_tensorboard, logdir=logdir),
             steps_per_epoch=datalen//batch_size, epochs=epochs,
             validation_data=image_generator(
@@ -149,6 +150,7 @@ class End2EndTrainer():
                 sequence=self.sequence,
                 seq_batchsize=seq_batchsize,
                 augm=augm, flip=flip,
+                proportion=self.proportion,
                 use_tensorboard=use_tensorboard, logdir=logdir),
             validation_steps=datalen//20//val_batch_size,
             callbacks=self.callbacks, max_queue_size=8, workers=4,

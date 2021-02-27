@@ -59,14 +59,14 @@ class Dataset():
                 self.__label_structure.append(components_object)
                 return
 
-    def save_annotation_dict(self, annotation={}, **kwargs):
+    def save_annotation_dict(self, annotation={}, check_length=False, **kwargs):
         """Save the annotation dict to {dos}{time}{self.format}.
 
         Args:
             annotation (dict): dict containing annotation
             **kwargs (optional): other components to add.
         """
-        if len(annotation.keys()) != len(self.__label_structure):
+        if len(annotation.keys()) != len(self.__label_structure) and check_length:
             to_save_dict = {**kwargs}
             for component in self.__label_structure:
                 to_save_dict[component.name] = component.get_item(
