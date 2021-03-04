@@ -333,16 +333,18 @@ class light_linear_CNN():
         x = self.conv_block(32, 3, 2, x, drop=True, conv_type=SeparableConv2D)
         x = self.conv_block(32, 3, 1, x, drop=True, conv_type=SeparableConv2D)
         x = self.conv_block(8, 3, 1, x, drop=True, conv_type=SeparableConv2D)
-        x = self.conv_block(64, (9, 14), 1, x, drop=True,
-                            conv_type=SeparableConv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation('linear', name='end_fe')(x)
 
-        y = Flatten()(x)
+        y1 = self.conv_block(64, (9, 14), 1, x, drop=True,
+                             conv_type=SeparableConv2D)
+        y2 = MaxPooling2D()(x)
+        y = Concatenate()([Flatten()(y1), Flatten()(y2)])
+
         y = Dropout(self.drop_rate)(y)
 
+        y = self.dense_block(150, y, drop=True)
         y = self.dense_block(75, y, drop=True)
-        y = self.dense_block(50, y, drop=True)
 
         if 'speed' in input_components_names:
             inp = Input((1,),
@@ -379,7 +381,8 @@ class light_linear_CNN():
             y = Concatenate()([y, z])
 
         if 'direction' in output_components_names:
-            z = self.dense_block(25, y, drop=False)
+            z = self.dense_block(50, y, drop=False)
+            z = self.dense_block(25, z, drop=False)
             z = self.dense_block(9, z, drop=False, activation='softmax')
             z = Dense(1,
                       use_bias=self.use_bias,

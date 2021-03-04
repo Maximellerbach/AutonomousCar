@@ -55,8 +55,8 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=40,
-        batch_size=128,
+        epochs=10,
+        batch_size=32,
         show_distr=True)
 
     # print(architectures.get_flops(save_path))

@@ -67,7 +67,7 @@ class End2EndTrainer():
             self.model = model_arch(
                 self.Dataset, (120, 160, 3),
                 drop_rate=drop_rate, regularizer=regularizer,
-                prev_act="relu", last_act="linear",
+                prev_act="relu", last_act="tanh",
                 use_bias=use_bias,
                 input_components=self.input_components,
                 output_components=self.output_components).build()

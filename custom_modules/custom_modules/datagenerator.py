@@ -67,7 +67,9 @@ class image_generator(Sequence):
                 functions=(
                     imaugm.add_random_shadow,
                     imaugm.add_rdm_noise,
-                    imaugm.rescut
+                    imaugm.rescut,
+                    imaugm.inverse_color,
+                    imaugm.night_effect,
                 )
             )
 
