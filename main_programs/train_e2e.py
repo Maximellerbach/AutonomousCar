@@ -8,8 +8,8 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\warren\\'
-    test_path = f'{base_path}\\warren\\'
+    train_path = f'{base_path}\\bigmix\\**\\'
+    test_path = f'{base_path}\\bigmix\\**\\'
     dosdir = True
 
     Dataset = dataset_json.Dataset(
@@ -21,11 +21,11 @@ if __name__ == "__main__":
     # speed_comp.scale = 3.6
 
     # set input and output components (indexes)
-    input_components = [1]
-    output_components = [0, 2]
+    input_components = []
+    output_components = [0]
 
-    load_path = 'test_model\\models\\warren.h5'
-    save_path = 'test_model\\models\\warren.h5'
+    load_path = 'test_model\\models\\test_scene.h5'
+    save_path = 'test_model\\models\\test_scene.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -55,8 +55,8 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
-        batch_size=32,
+        epochs=1,
+        batch_size=128,
         show_distr=True)
 
     # print(architectures.get_flops(save_path))

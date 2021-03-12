@@ -10,6 +10,7 @@ from tensorflow.keras.callbacks import EarlyStopping, TensorBoard, ReduceLROnPla
 from .. import architectures, imaugm
 from ..datagenerator import image_generator
 from ..vis import plot
+from ..datasets import dataset_json
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -19,7 +20,7 @@ for gpu_instance in physical_devices:
 class End2EndTrainer():
     """end to end model trainer class."""
 
-    def __init__(self, load_path, save_path, dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
+    def __init__(self, load_path, save_path, dataset : dataset_json.Dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
                  smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
         """Init the trainer parameters.
 
