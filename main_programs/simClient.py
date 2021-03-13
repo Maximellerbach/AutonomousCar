@@ -15,7 +15,7 @@ from custom_modules import architectures
 from gym_donkeycar.core.sim_client import SDClient
 from PIL import Image
 
-from visual_interface import AutoInterface, windowInterface
+from custom_modules.visual_interface import AutoInterface, windowInterface
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -236,7 +236,7 @@ class SimpleClient(SDClient):
         # to_pred = [np.expand_dims(img, axis=0)/255]
 
         to_pred = self.dataset.make_to_pred_annotations(
-            [img], [[0, self.current_speed]], input_components)
+            [img], [[0, self.current_speed]], self.input_components)
         pred, dt = self.model.predict(to_pred)
         pred = pred[0]
 
@@ -467,6 +467,34 @@ class log_points(SimpleClient):
             if (px, py, pz) != self.last_point:
                 self.log(px, py, pz)
             self.last_point = (px, py, pz)
+
+
+def test_model(dataset: dataset_json.Dataset, input_components, model_path):
+    model = architectures.safe_load_model(model_path, compile=False)
+    architectures.apply_predict_decorator(model)
+
+    host = '127.0.0.1'
+    port = 9091
+
+    window = windowInterface()  # create a window
+
+    config = {
+        'host': host,
+        'port': port,
+        'window': window,
+        'use_speed': (True, True),
+        'sleep_time': 0.01,
+        'PID_settings': [17, 0.5, 0.3, 1.0, 1.0],
+        'loop_settings': [True, False, False, True, False, False],
+        'buffer_time': 11,
+        'track': 'warren',
+        'model': model,
+        'dataset': dataset,
+        'input_components': input_components
+    }
+
+    universal_client(config, True, "model_test")
+    window.mainloop()
 
 
 if __name__ == "__main__":

@@ -8,9 +8,10 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\bigmix\\**\\'
-    test_path = f'{base_path}\\bigmix\\**\\'
+    train_path = f'{base_path}\\test_scene\\'
+    test_path = f'{base_path}\\test_scene\\'
     dosdir = True
+    simTest = True
 
     Dataset = dataset_json.Dataset(
         ['direction', 'speed', 'throttle'])
@@ -57,15 +58,20 @@ if __name__ == "__main__":
         verbose=True,
         epochs=1,
         batch_size=128,
-        show_distr=True)
+        show_distr=False)
 
     # print(architectures.get_flops(save_path))
     model = architectures.safe_load_model(save_path, compile=False)
 
-    if dosdir:
-        paths = Dataset.load_dataset_sorted(test_path, flat=True)
+    if simTest:
+        import simClient
+        simClient.test_model(Dataset, input_components, save_path)
+    
     else:
-        paths = Dataset.load_dos_sorted(test_path)
+        if dosdir:
+            paths = Dataset.load_dataset_sorted(test_path, flat=True)
+        else:
+            paths = Dataset.load_dos_sorted(test_path)
 
-    pred_function.test_compare_paths(Dataset, input_components,
-                                     model, paths, waitkey=1)
+        pred_function.test_compare_paths(Dataset, input_components,
+                                        model, paths, waitkey=1)
