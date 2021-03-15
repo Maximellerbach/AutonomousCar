@@ -69,7 +69,7 @@ def cat2linear(cat, coef=[-1, -0.5, 0, 0.5, 1], av=False):
 
 class SimpleClient(SDClient):
     def __init__(self, address, model, dataset, input_components, name='0',
-                 PID_settings=(0.5, 0.5, 1, 1), buffer_time=0.1, sleep_time=0.01):
+                 PID_settings=(15, 0.5, 0.0, 1.0, 1.0), buffer_time=0.1, sleep_time=0.01):
 
         super().__init__(*address, poll_socket_sleep_time=sleep_time)
         self.model = model
@@ -167,7 +167,7 @@ class SimpleClient(SDClient):
         msg = '{ "msg_type" : "load_scene", "scene_name" : "'+track+'" }'
         self.send_now(msg)
 
-    def startv1(self, custom_body=True, body_msg='', custom_cam=False, cam_msg='', color=[20, 20, 20]):
+    def start(self, custom_body=True, body_msg='', custom_cam=False, cam_msg='', color=[20, 20, 20]):
         if custom_body:  # send custom body info
             if body_msg == '':
                 msg = {
@@ -176,7 +176,7 @@ class SimpleClient(SDClient):
                     "body_r": str(color[0]),
                     "body_g": str(color[1]),
                     "body_b": str(color[2]),
-                    "car_name": f'Maxime_{self.name}',
+                    "car_name": f'car_{self.name}',
                     "font_size": "50"}
             else:
                 msg = body_msg
@@ -229,7 +229,7 @@ class SimpleClient(SDClient):
         img = cv2.resize(img, (160, 120))
         return img
 
-    def predict_st(self, img, transform=True, smooth=True, coef=[-1, -0.5, 0, 0.5, 1]):
+    def predict(self, img, transform=True, smooth=True, coef=[-1, -0.5, 0, 0.5, 1], send=False):
         target_speed, max_throttle, min_throttle, sq, mult = self.PID_settings
 
         img = self.prepare_img(img)
@@ -265,8 +265,10 @@ class SimpleClient(SDClient):
         if transform:
             direction = transform_st(direction, sq, mult)
 
-        self.update(direction, throttle=throttle, brake=0)
+        if send:
+            self.update(direction, throttle=throttle, brake=0)
         self.previous_st = direction
+        return direction
 
     def get_keyboard(self, keys=["left", "up", "right"], bkeys=["down"]):
         pressed = []
@@ -305,7 +307,7 @@ class SimpleClient(SDClient):
     def rdm_color_startv1(self, color=[]):
         if color == []:
             color = np.random.randint(0, 255, size=(3))
-        self.startv1(color=color)
+        self.start(color=color)
 
     def save_img(self, img, **to_save):
         # print("SAVING")
@@ -328,7 +330,7 @@ class SimpleClient(SDClient):
 class universal_client(SimpleClient):
     def __init__(self, params_dict, load_map, name):
         host = params_dict.get('host', '127.0.0.1')
-        port = params_dict.get('port', '9091')
+        port = params_dict.get('port', 9091)
         window = params_dict['window']
         sleep_time = params_dict['sleep_time']
         PID_settings = params_dict['PID_settings']
@@ -346,8 +348,7 @@ class universal_client(SimpleClient):
         if load_map:
             self.load_map(track)
 
-        self.rdm_color_startv1()
-        # have no idea why but first init doesn't work as expected while second works fine
+        time.sleep(1)
         self.rdm_color_startv1()
 
         self.t = threading.Thread(target=self.loop)
@@ -357,7 +358,7 @@ class universal_client(SimpleClient):
 
     def loop(self):
         _, img = self.get_latest()
-        self.predict_st(img)  # do an init pred
+        self.predict(img, send=False)  # do an init pred
         self.update(0, throttle=0.0, brake=0.1)
 
         while(True):
@@ -413,8 +414,9 @@ class universal_client(SimpleClient):
                     else:
                         self.last_time, self.iter_image = self.wait_latest()
 
-                    self.predict_st(self.iter_image,
-                                    transform=transform, smooth=smooth)
+                    self.predict(self.iter_image,
+                                 transform=transform, smooth=smooth,
+                                 send=True)
 
                 # clean up the dict before the next iteration
                 # del self.to_process[self.last_time]
@@ -439,6 +441,7 @@ class log_points(SimpleClient):
 
         super().__init__((host, port), 0, 0, 0)
 
+        time.sleep(1)
         self.rdm_color_startv1()
         self.t = threading.Thread(target=self.loop)
         self.t.start()

@@ -64,8 +64,8 @@ if __name__ == "__main__":
     model = architectures.safe_load_model(save_path, compile=False)
 
     if simTest:
-        import simClient
-        simClient.test_model(Dataset, input_components, save_path)
+        import sim_client
+        sim_client.test_model(Dataset, input_components, save_path)
     
     else:
         if dosdir:
