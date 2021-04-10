@@ -2,11 +2,12 @@ import time
 
 import tensorflow
 import tensorflow.keras.backend as K
+import tensorflow_model_optimization as tfmot
 from tensorflow.keras import Input
-from tensorflow.keras.layers import (Activation, BatchNormalization, Concatenate,
-                                     Conv2D, SeparableConv2D, DepthwiseConv2D, Dense,
-                                     Dropout, Flatten,
-                                     MaxPooling2D)
+from tensorflow.keras.layers import (Activation, BatchNormalization,
+                                     Concatenate, Conv2D, Dense,
+                                     DepthwiseConv2D, Dropout, Flatten,
+                                     MaxPooling2D, SeparableConv2D)
 from tensorflow.keras.layers import TimeDistributed as TD
 from tensorflow.keras.losses import mae, mse
 from tensorflow.keras.models import Model, load_model
@@ -74,7 +75,6 @@ def apply_pruning_to_dense_and_conv(layer):
 
 
 def create_pruning_model(model, sparsity=0.5, clone_function=apply_pruning_to_dense_and_conv):
-    import tensorflow_model_optimization as tfmot
     return tensorflow.keras.models.clone_model(
         model,
         clone_function=clone_function)
@@ -115,6 +115,10 @@ def safe_load_model(*args, **kwargs):
 
 def get_model_output_names(model):
     return [node.op.name.split('/')[0] for node in model.outputs]
+
+
+def get_model_input_names(model):
+    return [node.op.name.split('/')[0] for node in model.inputs]
 
 
 def prediction2dict(predictions, model_output_names):
@@ -324,7 +328,7 @@ class light_linear_CNN():
         output_components_names = self.dataset.indexes2components_names(
             self.output_components)
 
-        inp = Input(shape=self.img_shape)
+        inp = Input(shape=self.img_shape, name='image')
         inputs.append(inp)
 
         x = BatchNormalization(name='start_fe')(inp)

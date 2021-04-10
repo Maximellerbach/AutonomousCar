@@ -52,9 +52,9 @@ if __name__ == "__main__":
     direction_cmp.scale = 1/4
 
     src_doss = [
-        "C:\\Users\\maxim\\random_data\\1 ironcar driving\\"
+        "C:\\Users\\maxim\\random_data\\2 donkeycar driving\\"
     ]
-    dst_dos = "C:\\Users\\maxim\\random_data\\ironcar\\ironcar\\"
+    dst_dos = "C:\\Users\\maxim\\random_data\\donkeycar\\donkeycar\\"
 
     for src_dos in src_doss:
         # imgstring2donkeyjson_dos(src_dos, dst_dos)

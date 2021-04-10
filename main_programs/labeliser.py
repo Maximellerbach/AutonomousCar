@@ -19,8 +19,8 @@ class Labeliser():
 
         self.img_paths = self.Dataset.load_dos(self.dos, search_format='.png')
         self.annotation_paths = self.Dataset.load_dos_sorted(self.dos)
-        self.annotation_img_paths = [self.Dataset.load_meta(annotation_path, to_list=False).get(
-            'img_path') for annotation_path in self.annotation_paths]
+        self.annotation_img_paths = [self.Dataset.get_img_path(
+            annotation_path) for annotation_path in self.annotation_paths]
 
         self.img_paths_mapping = {}
         for annotation_img_path, annotation_path in zip(self.annotation_img_paths, self.annotation_paths):
@@ -40,6 +40,7 @@ class Labeliser():
         # Create the Window and initialize it
         self.window = sg.Window('Labeliser UI', layout)
         self.window.read(timeout=0)
+        self.window["__GRAPH__"].set_cursor('hand2')
         self.main()
 
     def main(self):
@@ -65,7 +66,6 @@ class Labeliser():
             img_path = to_label_paths[i]
             self.window["__GRAPH__"].draw_image(
                 filename=img_path, location=(0, 0))
-            self.window["__GRAPH__"].set_cursor('hand2')
 
             self.window["__INDEX__"].update(f'image {i+1}/{to_label_len}')
 
@@ -104,6 +104,27 @@ class Labeliser():
                     list_of_point[pt_list_iteration % 2] = pt_value
                     self.window[component.name].update(str(list_of_point))
 
+                    if component.name == "left_lane":
+                        self.window["__GRAPH__"].draw_image(
+                            filename=img_path, location=(0, 0))
+
+                        right_list_of_point = component.from_string(
+                            values["right_lane"])
+                        self.window["__GRAPH__"].draw_lines(
+                            list_of_point, color="blue")
+                        self.window["__GRAPH__"].draw_lines(
+                            right_list_of_point, color="red")
+                    elif component.name == "right_lane":
+                        self.window["__GRAPH__"].draw_image(
+                            filename=img_path, location=(0, 0))
+
+                        left_list_of_point = component.from_string(
+                            values["left_lane"])
+                        self.window["__GRAPH__"].draw_lines(
+                            list_of_point, color="red")
+                        self.window["__GRAPH__"].draw_lines(
+                            left_list_of_point, color="blue")
+
                     pt_list_iteration = (
                         pt_list_iteration+1) % (2 * len(self.iterable_components))
 
@@ -128,13 +149,14 @@ class Labeliser():
 if __name__ == "__main__":
     import os
     base_path = os.path.expanduser("~") + "\\random_data"
-    path = f"{base_path}\\1 ironcar driving\\"
-    path = 'C:\\Users\\maxim\\recorded_imgs\\0_1600008448.0622997\\'
+    # path = f"{base_path}\\1 ironcar driving\\"
+    # path = 'C:\\Users\\maxim\\recorded_imgs\\0_1600008448.0622997\\'
+    path = f"{base_path}\\test_scene\\0_1611408252.2687962\\"
 
     Dataset = dataset_json.Dataset(
-        ['direction', 'speed', 'throttle'])
+        ['direction', 'speed', 'throttle', 'left_lane', 'right_lane'])
 
-    output_components = [0, 1, 2]  # indexes to labelise
+    output_components = [0, 1, 2, 3, 4]  # indexes to labelise
 
     labeliser = Labeliser(Dataset, output_components,
                           path, mode="union")

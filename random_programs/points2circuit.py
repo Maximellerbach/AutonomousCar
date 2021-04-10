@@ -26,14 +26,17 @@ def plot_points(left_point, right_point):
 
 if __name__ == '__main__':
 
-    point_path = "C:\\Users\\maxim\\GITHUB\\sim\\sdsandbox\\sdsim\\Assets\\Resources\\Track\\roboracingleague_1.txt"
+    point_path = "C:\\Users\\maxim\\GITHUB\\sim\\sdsandbox\\sdsim\\Assets\\Resources\\Track\\warehouse_path.txt"
     points = []
 
     with open(point_path, 'r') as f:
         for line in f:
-            # considering: [x, y, z] : [width, height, depth]
-            x, y, z = line.split(',')
-            points.append(np.array([float(x), float(y), float(z)]))
+            try:
+                # considering: [x, y, z] : [width, height, depth]
+                x, y, z = line.split(',')
+                points.append(np.array([float(x), float(y), float(z)]))
+            except:
+                pass
 
     print(f"found {len(points)} points")
 

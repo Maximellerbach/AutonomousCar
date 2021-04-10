@@ -4,8 +4,7 @@ import logging
 import pprint
 
 from gym_donkeycar.core.sim_client import SDClient
-
-
+import random
 
 class PrivateAPIClient(SDClient):
 
@@ -69,10 +68,10 @@ def test_clients():
     logging.basicConfig(level=logging.DEBUG)
 
     # test params
-    host = "127.0.0.1"  # "donkey-sim.roboticist.dev"
+    host = "donkey-sim.roboticist.dev"  # "127.0.0.1"
     port = 9092
     # please enter your private key (provided in the menu of the simulator)
-    private_key = "93618961"
+    private_key = "80630199"
 
     client = PrivateAPIClient((host, port), private_key)
     client.send_verify()
@@ -89,6 +88,11 @@ def test_clients():
         if msg == "reset":
             print("#########")
             client.on_reset()
+
+        if msg == "rdm":
+            print("#########")
+            client.on_reset()
+            client.send_seed(random.randint(0, 99999))
 
 
 if __name__ == "__main__":

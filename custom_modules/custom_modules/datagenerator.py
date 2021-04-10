@@ -100,6 +100,11 @@ class image_generator(Sequence):
             Y.append(np.float32([np.float32(tmp_array)
                                  for tmp_array in ybatch[i]]))
 
+        # W = []
+        # if 'speed' in self.names2index.keys():
+        #     index = self.names2index['speed']
+        #     W.append(ybatch[index])
+
         if self.use_tensorboard:
             with self.file_writer.as_default():
                 tf.summary.image(

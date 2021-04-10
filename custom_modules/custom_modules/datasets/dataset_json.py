@@ -46,9 +46,11 @@ class Dataset():
             lab_structure (list): list of components(class) or list of string
         """
         if isinstance(lab_structure[0], str):
-            self.__label_structure = [self.name2component(cmpt) for cmpt in lab_structure] + [time_component()]
+            self.__label_structure = [self.name2component(
+                cmpt) for cmpt in lab_structure] + [time_component()]
         else:
-            self.__label_structure = [i() for i in lab_structure] + [time_component()]
+            self.__label_structure = [i()
+                                      for i in lab_structure] + [time_component()]
 
     def add_components(self, components_object):
         if isinstance(components_object, list):
@@ -227,11 +229,15 @@ class Dataset():
         return cv2.imread(img_path), annotation
 
     def load_img(self, path):
+        img_path = self.get_img_path(path)
+        return cv2.imread(img_path)
+
+    def get_img_path(self, path):
         annotation = self.load_annotation(path, to_list=False)
         time_cmp = annotation.get('time')
         dos = os.path.dirname(path)
         img_path = os.path.normpath(f'{dos}{os.path.sep}{time_cmp}.png')
-        return cv2.imread(img_path)
+        return img_path
 
     def load_annotation_json_from_img(self, img_path, to_list=True):
         annotation_path = img_path.split('.png')[0] + self.format
@@ -602,8 +608,8 @@ class right_lane_component:
             [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
         self.fliparray = np.array(
             [-1, 0, -1, 0])
-        self.default = np.array([[0, 0], [0, 0]], dtype=self.type)
-        self.default_flat = np.array([0, 0, 0, 0], dtype=self.type)
+        self.default = [[0, 0], [0, 0]]
+        self.default_flat = [0, 0, 0, 0]
 
         self.flip = True
         self.iterable = True
@@ -634,14 +640,14 @@ class left_lane_component:
     def __init__(self):
         self.name = "left_lane"
         self.type = np.float32
-        self.default = [[0, 0], [0, 0]]
-        self.default_flat = [0, 0, 0, 0]
         self.xnorm = 80
         self.ynorm = 60
         self.normarray = np.array(
             [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
         self.fliparray = np.array(
             [-1, 0, -1, 0])
+        self.default = [[0, 0], [0, 0]]
+        self.default_flat = [0, 0, 0, 0]
 
         self.flip = True
         self.iterable = True

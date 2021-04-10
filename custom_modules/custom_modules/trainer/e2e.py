@@ -20,7 +20,7 @@ for gpu_instance in physical_devices:
 class End2EndTrainer():
     """end to end model trainer class."""
 
-    def __init__(self, load_path, save_path, dataset : dataset_json.Dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
+    def __init__(self, load_path, save_path, dataset: dataset_json.Dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
                  smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
         """Init the trainer parameters.
 
@@ -87,8 +87,9 @@ class End2EndTrainer():
             optimizer=optimizer(lr=lr),
             metrics=metrics)
 
-        assert len(self.model.outputs) == len(self.output_components)
-        assert len(self.model.inputs)-1 == len(self.input_components)
+        # turn this off for the moment
+        # assert len(self.model.outputs) == len(self.output_components)
+        # assert len(self.model.inputs)-1 == len(self.input_components)
         self.model.summary()
 
     def train(self, flip=True, augm=True,

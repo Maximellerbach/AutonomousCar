@@ -5,17 +5,18 @@ import threading
 import time
 from collections.abc import Iterable
 from io import BytesIO
+import math
 
 import cv2
 import keyboard
 import numpy as np
+import quaternion
 import tensorflow
-from custom_modules.datasets import dataset_json
 from custom_modules import architectures
+from custom_modules.datasets import dataset_json
+from custom_modules.visual_interface import AutoInterface, windowInterface
 from gym_donkeycar.core.sim_client import SDClient
 from PIL import Image
-
-from custom_modules.visual_interface import AutoInterface, windowInterface
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -139,6 +140,28 @@ class SimpleClient(SDClient):
         msg = {"msg_type": "reset_car"}
         self.send_now(json.dumps(msg))
 
+    def get_active_node_coords(self, index=0):
+        msg = {"msg_type": "node_position", "index": str(index)}
+        self.send_now(json.dumps(msg))
+
+    def move_car(self, x, y, z, qx=None, qy=None, qz=None, qw=None):
+        if (qx is not None and qy is not None and qz is not None and qw is not None):
+            msg = {"msg_type": "set_position",
+                   "pos_x": str(x),
+                   "pos_y": str(y),
+                   "pos_z": str(z),
+                   "Qx": str(qx),
+                   "Qy": str(qy),
+                   "Qz": str(qz),
+                   "Qw": str(qw)}
+        else:
+            msg = {"msg_type": "set_position",
+                   "pos_x": str(x),
+                   "pos_y": str(y),
+                   "pos_z": str(z)}
+
+        self.send_now(json.dumps(msg))
+
     def delay_buffer(self, img):
         now = time.time()
         self.img_buffer.append((img, now))
@@ -164,8 +187,8 @@ class SimpleClient(SDClient):
         self.aborted = True
 
     def load_map(self, track):
-        msg = '{ "msg_type" : "load_scene", "scene_name" : "'+track+'" }'
-        self.send_now(msg)
+        msg = {"msg_type": "load_scene", "scene_name": str(track)}
+        self.send_now(json.dumps(msg))
 
     def start(self, custom_body=True, body_msg='', custom_cam=False, cam_msg='', color=[20, 20, 20]):
         if custom_body:  # send custom body info
@@ -176,7 +199,7 @@ class SimpleClient(SDClient):
                     "body_r": str(color[0]),
                     "body_g": str(color[1]),
                     "body_b": str(color[2]),
-                    "car_name": f'car_{self.name}',
+                    "car_name": f'Maxime_{self.name}',
                     "font_size": "50"}
             else:
                 msg = body_msg
@@ -431,12 +454,12 @@ class universal_client(SimpleClient):
 
 
 class log_points(SimpleClient):
-    def __init__(self, host='127.0.0.1', port=9091, filename='log_points'):
+    def __init__(self, host='127.0.0.1', port=9091, filename='log_points.txt'):
         self.filename = filename
         self.out_file = open(self.filename, "w")
         self.out_file.close()
-        self.last_point = (0, 0, 0)
-        self.time_interval = 1
+        self.last_point = None
+        self.distance_interval = 2
         self.last_time = time.time()
 
         super().__init__((host, port), 0, 0, 0)
@@ -448,11 +471,15 @@ class log_points(SimpleClient):
 
     def log(self, px, py, pz):
         # not really efficient way to do this, but it works
-        if abs(time.time()-self.last_time) >= self.time_interval:
+        distance = (
+            (px-self.last_point[0])**2 + (py-self.last_point[1])**2 + (pz-self.last_point[2])**2)**0.5
+
+        if distance >= self.distance_interval:
             self.out_file = open(self.filename, "a")
             self.out_file.write(f'{px},{py},{pz}\n')
             self.out_file.close()
             self.last_time = time.time()
+            self.last_point = (px, py, pz)
 
     def loop(self):
         self.update(0, throttle=0.0, brake=0.1)
@@ -461,15 +488,16 @@ class log_points(SimpleClient):
 
             if toogle_manual:
                 manual, throttle = self.get_throttle()
-                self.update(manual_st, throttle=0.2*bk)
+                self.update(manual_st, throttle=0.5*bk)
 
             px = self.last_packet.get('pos_x')
             py = self.last_packet.get('pos_y')
             pz = self.last_packet.get('pos_z')
 
-            if (px, py, pz) != self.last_point:
+            if self.last_point is None:
+                self.last_point = (px, py, pz)
+            elif (px, py, pz) != self.last_point:
                 self.log(px, py, pz)
-            self.last_point = (px, py, pz)
 
 
 def test_model(dataset: dataset_json.Dataset, input_components, model_path):
@@ -502,7 +530,7 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 if __name__ == "__main__":
     model = architectures.safe_load_model(
-        'C:\\Users\\maxim\\GITHUB\\AutonomousCar\\test_model\\models\\test_scene.h5', compile=False)
+        'test_model\\models\\auto_label.h5', compile=False)
     architectures.apply_predict_decorator(model)
     model.summary()
 
@@ -532,10 +560,9 @@ if __name__ == "__main__":
     }
 
     load_map = True
-    client_number = 3
+    client_number = 1
     for i in range(client_number):
         universal_client(config, load_map, str(i))
-        # log_points()
         print("started client", i)
         load_map = False
 
