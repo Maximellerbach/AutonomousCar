@@ -6,6 +6,7 @@ import pprint
 from gym_donkeycar.core.sim_client import SDClient
 import random
 
+
 class PrivateAPIClient(SDClient):
 
     def __init__(self, address, private_key, poll_socket_sleep_time=0.01):
@@ -53,12 +54,13 @@ class PrivateAPIClient(SDClient):
             self.raceSummary[car_name] = {}
             self.raceSummary[car_name]['lapTimes'] = []
             self.raceSummary[car_name]['lastCrossingLine'] = json_packet['timeStamp']
+            self.raceSummary[car_name]['penalties'] = 0
 
     def on_colliding_cone(self, json_packet):
         car_name = json_packet['car_name']
 
-        if car_name in self.raceSummary and len(self.raceSummary[car_name]['lapTimes']) > 0:
-            self.raceSummary[car_name]['lapTimes'][-1] += 1
+        if car_name in self.raceSummary:
+            self.raceSummary[car_name]['penalties'] += 1
 
     def on_reset(self):
         self.raceSummary = {}
@@ -71,7 +73,7 @@ def test_clients():
     host = "donkey-sim.roboticist.dev"  # "127.0.0.1"
     port = 9092
     # please enter your private key (provided in the menu of the simulator)
-    private_key = "80630199"
+    private_key = "29118641"  # "29990250"
 
     client = PrivateAPIClient((host, port), private_key)
     client.send_verify()
@@ -83,7 +85,7 @@ def test_clients():
 
     while True:
         msg = input("")
-        print(client.raceSummary)
+        pprint.pprint(client.raceSummary)
 
         if msg == "reset":
             print("#########")

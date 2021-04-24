@@ -1,5 +1,17 @@
-import sim_client
+import base64
+import os
+import threading
+import time
+from io import BytesIO
+
+import cv2
+import numpy as np
+import quaternion
 from custom_modules.datasets import dataset_json
+from PIL import Image
+
+import sim_client
+
 
 class auto_labeling(sim_client.SimpleClient):
     def __init__(self, dataset, host='127.0.0.1', port=9091):
@@ -93,7 +105,7 @@ class auto_labeling(sim_client.SimpleClient):
                                       self.node_info['pos_z']])
 
             # point ahead
-            self.await_get_active_node_coords(index + 10)
+            self.await_get_active_node_coords(index + 5)
             target_node_rotation = np.quaternion(self.node_info.get('Qx'),
                                                  self.node_info.get('Qy'),
                                                  self.node_info.get('Qz'),
@@ -134,7 +146,7 @@ class auto_labeling(sim_client.SimpleClient):
                     self.save_img(self.image, direction=steering,
                                   time=time.time())
 
-            index += 10  # you can skip some nodes
+            index += 4  # you can skip some nodes
 
 
 if __name__ == '__main__':

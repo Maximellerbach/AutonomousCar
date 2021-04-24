@@ -8,10 +8,10 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\donkeycar\\'
-    test_path = f'{base_path}\\donkeycar\\'
+    train_path = f'{base_path}\\ironcar2\\'
+    test_path = f'{base_path}\\ironcar\\'
     dosdir = True
-    simTest = False
+    simTest = True
 
     Dataset = dataset_json.Dataset(
         ['direction', 'speed', 'throttle'])
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = 'test_model\\models\\auto_label.h5'
+    load_path = 'test_model\\models\\auto_label3.h5'
     save_path = 'test_model\\models\\auto_label3.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     e2e_trainer.compile_model(
         loss=architectures.tensorflow.keras.losses.Huber(delta=1),
-        lr=0.001, metrics=[])
+        lr=0.0005, metrics=[])
 
     e2e_trainer.train(
         flip=True,
@@ -56,8 +56,8 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=2,
-        batch_size=32,
+        epochs=10,
+        batch_size=64,
         show_distr=False)
 
     # print(architectures.get_flops(save_path))

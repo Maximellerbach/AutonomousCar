@@ -5,12 +5,10 @@ import threading
 import time
 from collections.abc import Iterable
 from io import BytesIO
-import math
 
 import cv2
 import keyboard
 import numpy as np
-import quaternion
 import tensorflow
 from custom_modules import architectures
 from custom_modules.datasets import dataset_json
@@ -125,15 +123,20 @@ class SimpleClient(SDClient):
                 self.last_packet = json_packet
 
                 # if "lidar" in json_packet and json_packet["lidar"] is not None:
-                #     print(len(json_packet["lidar"]), time.time())
-                # else: print(0, time.time())
+                #     print(len(json_packet["lidar"]))
+
+                # if 'pitch' in json_packet:
+                #     pitch = json_packet["pitch"]
+                #     roll = json_packet["roll"]
+                #     yaw = json_packet["yaw"]
+                #     print(pitch, roll, yaw)
 
             else:
                 print(json_packet)
 
-        except:
+        except Exception as e:
             if json_packet != {}:
-                print(json_packet)
+                print(e)
             pass
 
     def reset_car(self):
@@ -190,6 +193,10 @@ class SimpleClient(SDClient):
         msg = {"msg_type": "load_scene", "scene_name": str(track)}
         self.send_now(json.dumps(msg))
 
+    def exit_scene(self):
+        msg = {"msg_type": "exit_scene"}
+        self.send_now(json.dumps(msg))
+
     def start(self, custom_body=True, body_msg='', custom_cam=False, cam_msg='', color=[20, 20, 20]):
         if custom_body:  # send custom body info
             if body_msg == '':
@@ -217,7 +224,7 @@ class SimpleClient(SDClient):
                     "img_w": "160",
                     "img_h": "120",
                     "img_d": "3",
-                    "img_enc": "JPG",
+                    "img_enc": "PNG",
                     "offset_x": "0.0",
                     "offset_y": "1.120395",
                     "offset_z": "0.5528488",
@@ -229,10 +236,22 @@ class SimpleClient(SDClient):
             self.send_now(dumped_msg)
             time.sleep(1.0)
 
-        # send lidar settings (debug purpose)
-        # msg = '{ "msg_type" : "lidar_config", "degPerSweepInc" : "2.0", "degAngDown" : "0", "degAngDelta" : "-1.0", "numSweepsLevels" : "1", "maxRange" : "50.0", "noise" : "0.4", "offset_x" : "0.0", "offset_y" : "0.5", "offset_z" : "0.5", "rot_x" : "0.0" }'
-        # self.send_now(msg)
-        # time.sleep(0.2)
+        # send lidar settings
+        # if self.name == '0':
+        #     msg = {"msg_type": "lidar_config",
+        #            "degPerSweepInc": "2.0",
+        #            "degAngDown": "5",
+        #            "degAngDelta": "-1.0",
+        #            "numSweepsLevels": "1",
+        #            "maxRange": "50.0",
+        #            "noise": "0.4",
+        #            "offset_x": "0.0",
+        #            "offset_y": "0.5",
+        #            "offset_z": "0.5",
+        #            "rot_x": "0.0"}
+
+        #     self.send_now(json.dumps(msg))
+        #     time.sleep(0.2)
 
     def send_controls(self, steering, throttle, brake):
         p = {"msg_type": "control",
@@ -395,7 +414,7 @@ class universal_client(SimpleClient):
                 else:
                     self.last_time, self.iter_image = self.wait_latest()
 
-                cv2.imshow(self.name, self.iter_image)
+                cv2.imshow(self.name, self.prepare_img(self.iter_image))
                 cv2.waitKey(1)
 
                 if self.aborted:
@@ -539,7 +558,7 @@ if __name__ == "__main__":
     input_components = [1]
 
     hosts = ['127.0.0.1', 'donkey-sim.roboticist.dev', 'sim.diyrobocars.fr']
-    host = hosts[0]
+    host = hosts[1]
     port = 9091
 
     window = windowInterface()  # create a window
@@ -551,7 +570,7 @@ if __name__ == "__main__":
         'use_speed': (True, True),
         'sleep_time': 0.01,
         'PID_settings': [17, 0.5, 0.3, 1.0, 1.0],
-        'loop_settings': [True, False, False, True, False, True],
+        'loop_settings': [True, False, False, True, False, False],
         'buffer_time': 11,
         'track': 'warren',
         'model': model,

@@ -138,7 +138,7 @@ def prediction2dict(predictions, model_output_names):
 def predict_decorator(func, model_output_names):
     def wrapped_f(*args, **kwargs):
         st = time.time()
-        predictions = func(*args, **kwargs)
+        predictions = func(*args, **kwargs, training=False)
         output_dicts = prediction2dict(predictions, model_output_names)
         et = time.time()
         return output_dicts, et-st
