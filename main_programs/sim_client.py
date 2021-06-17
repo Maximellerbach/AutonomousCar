@@ -116,6 +116,9 @@ class SimpleClient(SDClient):
                 tmp_img = np.asarray(Image.open(
                     BytesIO(base64.b64decode(imgString))))
                 tmp_img = cv2.cvtColor(tmp_img, cv2.COLOR_RGB2BGR)
+
+                # print(tmp_img.shape)
+
                 self.delay_buffer(tmp_img)
                 self.current_speed = json_packet["speed"]
 
@@ -193,6 +196,10 @@ class SimpleClient(SDClient):
         msg = {"msg_type": "load_scene", "scene_name": str(track)}
         self.send_now(json.dumps(msg))
 
+    def get_scene_map(self):
+        msg = {"msg_type": "get_scene_names"}
+        self.send_now(json.dumps(msg))
+
     def exit_scene(self):
         msg = {"msg_type": "exit_scene"}
         self.send_now(json.dumps(msg))
@@ -223,7 +230,7 @@ class SimpleClient(SDClient):
                     "fish_eye_y": "0.7",
                     "img_w": "160",
                     "img_h": "120",
-                    "img_d": "3",
+                    "img_d": "4",
                     "img_enc": "PNG",
                     "offset_x": "0.0",
                     "offset_y": "1.120395",
@@ -549,7 +556,7 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 if __name__ == "__main__":
     model = architectures.safe_load_model(
-        'test_model\\models\\auto_label.h5', compile=False)
+        'test_model\\models\\rbrl_sim7.h5', compile=False)
     architectures.apply_predict_decorator(model)
     model.summary()
 
@@ -558,7 +565,7 @@ if __name__ == "__main__":
     input_components = [1]
 
     hosts = ['127.0.0.1', 'donkey-sim.roboticist.dev', 'sim.diyrobocars.fr']
-    host = hosts[1]
+    host = hosts[0]
     port = 9091
 
     window = windowInterface()  # create a window
@@ -571,7 +578,7 @@ if __name__ == "__main__":
         'sleep_time': 0.01,
         'PID_settings': [17, 0.5, 0.3, 1.0, 1.0],
         'loop_settings': [True, False, False, True, False, False],
-        'buffer_time': 11,
+        'buffer_time': 0,
         'track': 'warren',
         'model': model,
         'dataset': dataset,

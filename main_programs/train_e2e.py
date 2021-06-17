@@ -8,8 +8,8 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\ironcar2\\'
-    test_path = f'{base_path}\\ironcar\\'
+    train_path = f'{base_path}\\auto_labels\\'
+    test_path = f'{base_path}\\auto_labels\\'
     dosdir = True
     simTest = True
 
@@ -26,14 +26,14 @@ if __name__ == "__main__":
     output_components = [0]
 
     load_path = 'test_model\\models\\auto_label3.h5'
-    save_path = 'test_model\\models\\auto_label3.h5'
+    save_path = 'test_model\\models\\auto_label5.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
         save_path=save_path,
         dataset=Dataset,
         dospath=train_path, dosdir=dosdir,
-        proportion=0.2, sequence=False,
+        proportion=0.1, sequence=False,
         smoothing=0.0, label_rdm=0.0,
         input_components=input_components,
         output_components=output_components)
@@ -56,8 +56,8 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
-        batch_size=64,
+        epochs=5,
+        batch_size=32,
         show_distr=False)
 
     # print(architectures.get_flops(save_path))

@@ -17,11 +17,11 @@ class auto_labeling(sim_client.SimpleClient):
     def __init__(self, dataset, host='127.0.0.1', port=9091):
         super().__init__((host, port), "", dataset, "")
         self.n_lateral = 2
-        self.road_width = 4
+        self.road_width = 2
         self.width_offset = 0
-        self.height_offset = 0.1
+        self.height_offset = 0.0
 
-        self.n_rot_y = 2
+        self.n_rot_y = 3
         self.max_rot = 30/180
 
         self.pos_offset_values = [
@@ -33,8 +33,8 @@ class auto_labeling(sim_client.SimpleClient):
         print(self.rot_offset_values)
 
         # steering controller factor
-        self.kp = 1
-        self.kd = 1
+        self.kp = 1.25
+        # self.kd = 1
 
         self.node_info = {}
         self.got_node_coords = False
@@ -55,12 +55,16 @@ class auto_labeling(sim_client.SimpleClient):
                 self.node_info = json_packet
                 self.got_node_coords = True
 
-            if msg_type == "telemetry" and self.got_telemetry is False:
-                imgString = json_packet["image"]
-                tmp_img = np.asarray(Image.open(
-                    BytesIO(base64.b64decode(imgString))))
-                self.image = cv2.cvtColor(tmp_img, cv2.COLOR_RGB2BGR)
-                self.got_telemetry = True
+            elif msg_type == "telemetry":
+                if self.got_telemetry is False:
+                    imgString = json_packet["image"]
+                    tmp_img = np.asarray(Image.open(
+                        BytesIO(base64.b64decode(imgString))))
+                    self.image = cv2.cvtColor(tmp_img, cv2.COLOR_RGB2BGR)
+                    self.got_telemetry = True
+
+            else:
+                print(json_packet)
 
         except:
             if json_packet != {}:
@@ -93,7 +97,7 @@ class auto_labeling(sim_client.SimpleClient):
     def loop(self):
         self.update(0, throttle=0.0, brake=0.1)
 
-        index = 0
+        index = 8
         while(True):
             self.await_get_active_node_coords(index)
             node_rotation = np.quaternion(self.node_info.get('Qx'),
@@ -105,7 +109,7 @@ class auto_labeling(sim_client.SimpleClient):
                                       self.node_info['pos_z']])
 
             # point ahead
-            self.await_get_active_node_coords(index + 5)
+            self.await_get_active_node_coords(index + 2)
             target_node_rotation = np.quaternion(self.node_info.get('Qx'),
                                                  self.node_info.get('Qy'),
                                                  self.node_info.get('Qz'),
@@ -146,7 +150,7 @@ class auto_labeling(sim_client.SimpleClient):
                     self.save_img(self.image, direction=steering,
                                   time=time.time())
 
-            index += 4  # you can skip some nodes
+            index += 1  # you can skip some nodes
 
 
 if __name__ == '__main__':
