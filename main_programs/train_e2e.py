@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f'{base_path}\\auto_labels\\'
+    train_path = f'{base_path}\\auto_labels2\\'
     test_path = f'{base_path}\\auto_labels\\'
     dosdir = True
     simTest = True
@@ -25,8 +25,8 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = 'test_model\\models\\auto_label3.h5'
-    save_path = 'test_model\\models\\auto_label5.h5'
+    load_path = 'test_model\\models\\auto_label5.h5'
+    save_path = 'test_model\\models\\auto_label6.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,

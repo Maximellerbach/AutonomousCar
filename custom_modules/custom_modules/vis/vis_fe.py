@@ -62,7 +62,7 @@ def visualize_model_layer_filter(model, img, layer_index,
 
     if show:
         max_v = np.percentile(final_image, 99.9)
-        print(f'99.9 percentile of final image is :{max_v}')
+        # print(f'99.9 percentile of final image is :{max_v}')
         cv2.imshow(f'{layer_index}', (final_image-np.min(final_image)/max_v))
         if waitkey is not None:
             cv2.waitKey(waitkey)

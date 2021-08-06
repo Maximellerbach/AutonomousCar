@@ -421,6 +421,7 @@ class universal_client(SimpleClient):
                 else:
                     self.last_time, self.iter_image = self.wait_latest()
 
+                # print(self.last_packet)
                 cv2.imshow(self.name, self.prepare_img(self.iter_image))
                 cv2.waitKey(1)
 
@@ -457,7 +458,7 @@ class universal_client(SimpleClient):
                     self.update(manual_st, throttle=throttle*bk)
 
                 else:
-                    # print(len(self.to_process))
+                    # print(len(self.to_process)/(time.time() - self.last_time))
                     if len(self.to_process) > 0:
                         self.last_time, self.iter_image = self.get_latest()
                     else:
@@ -514,7 +515,7 @@ class log_points(SimpleClient):
 
             if toogle_manual:
                 manual, throttle = self.get_throttle()
-                self.update(manual_st, throttle=0.5*bk)
+                self.update(manual_st, throttle=0.3*bk)
 
             px = self.last_packet.get('pos_x')
             py = self.last_packet.get('pos_y')
@@ -556,7 +557,7 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 if __name__ == "__main__":
     model = architectures.safe_load_model(
-        'test_model\\models\\rbrl_sim7.h5', compile=False)
+        'test_model\\models\\auto_label5.h5', compile=False)
     architectures.apply_predict_decorator(model)
     model.summary()
 
@@ -576,10 +577,10 @@ if __name__ == "__main__":
         'window': window,
         'use_speed': (True, True),
         'sleep_time': 0.01,
-        'PID_settings': [17, 0.5, 0.3, 1.0, 1.0],
-        'loop_settings': [True, False, False, True, False, False],
+        'PID_settings': [17, 0.5, 0.3, 1.1, 1.0],
+        'loop_settings': [True, False, False, True, False, True],
         'buffer_time': 0,
-        'track': 'warren',
+        'track': 'circuit_launch',
         'model': model,
         'dataset': dataset,
         'input_components': input_components

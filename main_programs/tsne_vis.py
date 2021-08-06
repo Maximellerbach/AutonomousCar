@@ -66,9 +66,13 @@ class data_visualization():
         ax.update_datalim(np.column_stack([x, y]))
         ax.autoscale()
 
-    def computeTSNEProjectionOfLatentSpace(self, dos, display=True):
-        paths = self.Dataset.load_dos_sorted(dos)
+    def computeTSNEProjectionOfLatentSpace(self, dos, doss=False, display=True):
+        if doss:
+            paths = self.Dataset.load_dataset(dos, flat=True)
+        else:
+            paths = self.Dataset.load_dos_sorted(dos)
         batchs = self.get_batchs(paths, max_img=1000)
+        print(len(batchs), len(paths))
 
         for batch in batchs:
             X = self.load_imgs(batch, flip=True)
@@ -86,8 +90,6 @@ class data_visualization():
                 self.imscatter(X_tsne[:, 0], X_tsne[:, 1],
                                imageData=X, ax=ax, zoom=0.4)
                 plt.show()
-            else:
-                yield X_tsne
 
 
 if __name__ == "__main__":
@@ -97,7 +99,7 @@ if __name__ == "__main__":
     Dataset = dataset_json.Dataset(
         ['direction', 'speed', 'throttle'])
 
-    vis = data_visualization(Dataset, 'test_model\\models\\warehouse_sim1_working.h5')
+    vis = data_visualization(Dataset, 'test_model\\models\\auto_label5.h5')
     vis.computeTSNEProjectionOfLatentSpace(
-        f"{base_path}\\warehouse\\0_1607858711.03117\\", display=True)
+        f"{base_path}\\test_scene\\", doss=True, display=True)
     # vis.clustering(doss)

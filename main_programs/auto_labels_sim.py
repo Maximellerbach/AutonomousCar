@@ -97,7 +97,7 @@ class auto_labeling(sim_client.SimpleClient):
     def loop(self):
         self.update(0, throttle=0.0, brake=0.1)
 
-        index = 8
+        index = 100
         while(True):
             self.await_get_active_node_coords(index)
             node_rotation = np.quaternion(self.node_info.get('Qx'),
@@ -137,7 +137,7 @@ class auto_labeling(sim_client.SimpleClient):
                                   qw=car_rot.w)
 
                     # wait for the msg to get to the server and to be processed
-                    time.sleep(1/20)
+                    time.sleep(1/40)
                     self.got_telemetry = False
 
                     self.await_telemetry()

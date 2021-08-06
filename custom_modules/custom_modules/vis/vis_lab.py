@@ -73,7 +73,7 @@ def vis_all_compare(Dataset, input_components, img, gt_dict, output_dict, show=T
             img, gt_dict[output_name], color=(255, 0, 0), show=False)
 
     if show:
-        cv2.imshow('img', img)
+        cv2.imshow('compare', img)
         if waitkey is not None:
             cv2.waitKey(waitkey)
     return img

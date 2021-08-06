@@ -42,12 +42,19 @@ class PrivateAPIClient(SDClient):
         self.send_now(json.dumps(msg))
 
     def on_crossing_line(self, json_packet):
+        # Not really nice but does the job
         car_name = json_packet['car_name']
 
         if car_name in self.raceSummary:
             timeStamp = json_packet['timeStamp']
-            lastTime = self.raceSummary[car_name]['lastCrossingLine']
-            self.raceSummary[car_name]['lapTimes'].append(timeStamp-lastTime)
+            if 'lastCrossingLine' in self.raceSummary[car_name]:
+                lastTime = self.raceSummary[car_name]['lastCrossingLine']
+                self.raceSummary[car_name]['lapTimes'].append(timeStamp-lastTime)
+                if len(self.raceSummary[car_name]['lapTimes']) <= 3:
+                    self.raceSummary[car_name]['total3Time'] += self.raceSummary[car_name]['lapTimes'][-1]
+            else:
+                self.raceSummary[car_name]['lapTimes'] = []
+
             self.raceSummary[car_name]['lastCrossingLine'] = timeStamp
 
         else:
@@ -55,12 +62,19 @@ class PrivateAPIClient(SDClient):
             self.raceSummary[car_name]['lapTimes'] = []
             self.raceSummary[car_name]['lastCrossingLine'] = json_packet['timeStamp']
             self.raceSummary[car_name]['penalties'] = 0
+            self.raceSummary[car_name]['total3Time'] = 0
 
     def on_colliding_cone(self, json_packet):
         car_name = json_packet['car_name']
 
         if car_name in self.raceSummary:
             self.raceSummary[car_name]['penalties'] += 1
+            if 'lapTimes' in self.raceSummary[car_name] and len(self.raceSummary[car_name]['lapTimes']) < 3:
+                self.raceSummary[car_name]['total3Time'] += 1
+        else:
+            self.raceSummary[car_name] = {}
+            self.raceSummary[car_name]['penalties'] = 1
+            self.raceSummary[car_name]['total3Time'] = 1
 
     def on_reset(self):
         self.raceSummary = {}

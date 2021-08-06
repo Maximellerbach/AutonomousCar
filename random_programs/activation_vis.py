@@ -8,7 +8,7 @@ from custom_modules.datasets import dataset_json
 from custom_modules.vis import vis_fe, vis_lab
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f'{base_path}\\test_scene\\'
+dos = f'{base_path}\\donkeycar\\'
 
 physical_devices = tensorflow.config.list_physical_devices('GPU')
 for gpu_instance in physical_devices:
@@ -18,11 +18,11 @@ for gpu_instance in physical_devices:
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
-gdos = Dataset.load_dataset_sorted(dos, flat=True)
+gdos = Dataset.load_dataset(dos, flat=True)
 np.random.shuffle(gdos)
 
 model = architectures.safe_load_model(
-    'test_model\\models\\test_scene.h5', compile=False)
+    'test_model\\models\\auto_label5.h5', compile=False)
 architectures.apply_predict_decorator(model)
 
 fe = architectures.get_fe(model)
@@ -45,5 +45,5 @@ for labpath in gdos:
     prediction_dict, dt = model.predict(to_pred)
     img = vis_lab.vis_all_compare(Dataset, input_components, img, annotation, prediction_dict[0], show=False)
 
-    cv2.imshow('img', img)
+    cv2.imshow('image', img)
     cv2.waitKey(0)

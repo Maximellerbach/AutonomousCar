@@ -9,8 +9,8 @@ def get_circuit_bound(prev_pos, now_pos):
     vWidth = np.cross(pos_vec, np.array([0, 1, 0]))
     vWidth = vWidth / np.linalg.norm(vWidth)
 
-    left_point = now_pos + (vWidth * 3.25)
-    right_point = now_pos - (vWidth * 3.25)
+    left_point = now_pos + (vWidth * 6)
+    right_point = now_pos - (vWidth * 6)
 
     return left_point, right_point
 
@@ -26,7 +26,7 @@ def plot_points(left_point, right_point):
 
 if __name__ == '__main__':
 
-    point_path = "C:\\Users\\maxim\\GITHUB\\sim\\sdsandbox\\sdsim\\Assets\\Resources\\Track\\warehouse_path.txt"
+    point_path = "C:\\Users\\maxim\\GITHUB\\sim\\sdsandbox\\sdsim\\Assets\\Resources\\Track\\circuit_launch.txt"
     points = []
 
     with open(point_path, 'r') as f:

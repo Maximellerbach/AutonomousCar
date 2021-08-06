@@ -20,7 +20,7 @@ gdos = Dataset.load_dataset_sorted(dos, flat=True)
 np.random.shuffle(gdos)
 
 model = architectures.safe_load_model(
-    'test_model\\models\\test_scene.h5', compile=False)
+    'test_model\\models\\auto_label5.h5', compile=False)
 architectures.apply_predict_decorator(model)
 model.summary()
 
