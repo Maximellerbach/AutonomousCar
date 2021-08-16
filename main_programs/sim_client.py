@@ -403,7 +403,7 @@ class universal_client(SimpleClient):
         self.t = threading.Thread(target=self.loop)
         self.t.start()
 
-        AutoInterface(window, self)
+        #  AutoInterface(window, self)
 
     def loop(self):
         _, img = self.get_latest()
@@ -556,8 +556,8 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 
 if __name__ == "__main__":
-    model = architectures.safe_load_model(
-        'test_model\\models\\auto_label5.h5', compile=False)
+    model_path = os.getcwd() + os.path.normpath("/test_model/models/auto_label5.h5")
+    model = architectures.safe_load_model(model_path, compile=False)
     architectures.apply_predict_decorator(model)
     model.summary()
 
