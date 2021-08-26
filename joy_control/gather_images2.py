@@ -5,7 +5,7 @@ from custom_modules import serial_command2, memory
 from custom_modules.datasets import dataset_json
 
 import cv2
-import xbox
+import xbox_controller
 
 
 def deadzone(value, th, default=0):
@@ -25,31 +25,30 @@ th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
-joy = xbox.Joystick()
+joy = xbox_controller.XboxController()
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
-print(joy.connected())
 
 # checking if the controller is working properly
 joy_leftX = 0
 while joy_leftX != 1.0:
-    joy_leftX = joy.leftX()
+    joy_leftX = joy.LeftJoystickX
     print(joy_leftX)
 
 while joy_leftX != -1.0:
-    joy_leftX = joy.leftX()
+    joy_leftX = joy.LeftJoystickX
     print(joy_leftX)
 
 print("Starting mainloop")
 
 prev_throttle = 0
 while not joy.Back():
-    joy_steering = joy.leftX()
-    joy_throttle = joy.rightTrigger()
-    joy_brake = joy.leftTrigger()
-    joy_button_a = joy.A()
+    joy_steering = joy.LeftJoystickX
+    joy_throttle = joy.RightTrigger
+    joy_brake = joy.LeftTrigger
+    joy_button_a = joy.A
 
     memory['steering'] = deadzone(joy_steering, th_steering)
     memory['throttle'] = deadzone(joy_throttle - joy_brake, th_throttle)
