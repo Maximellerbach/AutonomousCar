@@ -20,6 +20,7 @@ class Joystick(object):
         self.button_map = []
         self.jsdev = None
         self.dev_fn = dev_fn
+        self.connected = False
 
     def init(self):
         try:
@@ -79,6 +80,7 @@ class Joystick(object):
         th = threading.Thread(target=self.poll)
         th.start()
 
+        self.connected = True
         return True
 
     def show_map(self):
@@ -104,6 +106,8 @@ class Joystick(object):
             # Main event loop
             evbuf = self.jsdev.read(8)
 
+            print(evbuf, self.jsdev, self.jsdev.readable())
+
             if evbuf:
                 tval, value, typev, number = struct.unpack('IhBB', evbuf)
 
@@ -122,6 +126,7 @@ class Joystick(object):
                     if axis:
                         fvalue = value / 32767.0
                         self.axis_states[axis] = fvalue
+        self.connected = False
 
 
 class XboxOneJoystick(Joystick):
