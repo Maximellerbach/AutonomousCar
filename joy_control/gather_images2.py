@@ -32,7 +32,9 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
+print(img.shape)
 assert img.shape == (120, 160, 3)
+
 
 # checking if the controller is working properly
 joy_leftX = 0
