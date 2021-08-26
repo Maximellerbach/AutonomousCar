@@ -109,8 +109,7 @@ class Joystick(object):
                 evbuf = self.jsdev.read(8)
             except OSError:
                 self.connected = False
-
-            print(evbuf, self.jsdev, self.jsdev.readable())
+                break
 
             if evbuf:
                 tval, value, typev, number = struct.unpack('IhBB', evbuf)
