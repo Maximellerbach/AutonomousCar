@@ -56,6 +56,5 @@ if __name__ == "__main__":
     assert(mem == [{'duzhadjzahdaz': 12, 'blublu': 52},
                    {'img_path': '/images.dzhaduaudz.png'}])
 
-    assert(mem() == [{'img_path': '/images.dzhaduaudz.png'}])
+    assert(mem() == {'img_path': '/images.dzhaduaudz.png'})
 
-    print(mem)
