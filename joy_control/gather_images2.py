@@ -44,7 +44,7 @@ while joy_leftX >= -0.9:
 print("Starting mainloop")
 
 prev_throttle = 0
-while not joy.Back():
+while not joy.Back:
     joy_steering = joy.LeftJoystickX
     joy_throttle = joy.RightTrigger
     joy_brake = joy.LeftTrigger
