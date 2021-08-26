@@ -3,6 +3,7 @@
 import os
 import struct
 import array
+import threading
 
 
 class Joystick(object):
@@ -73,7 +74,10 @@ class Joystick(object):
             btn_name = self.button_names.get(btn, 'unknown(0x%03x)' % btn)
             self.button_map.append(btn_name)
             self.button_states[btn_name] = 0
-            #print('btn', '0x%03x' % btn, 'name', btn_name)
+            # print('btn', '0x%03x' % btn, 'name', btn_name)
+
+        th = threading.Thread(target=self.poll)
+        th.start()
 
         return True
 
@@ -92,39 +96,32 @@ class Joystick(object):
         pressed, or released. axis_val will be a float from -1 to +1. button and axis will
         be the string label determined by the axis map in init.
         '''
-        button = None
-        button_state = None
-        axis = None
-        axis_val = None
 
-        if self.jsdev is None:
-            return button, button_state, axis, axis_val
+        while True:
+            if self.jsdev is None:
+                break
 
-        # Main event loop
-        evbuf = self.jsdev.read(8)
+            # Main event loop
+            evbuf = self.jsdev.read(8)
 
-        if evbuf:
-            tval, value, typev, number = struct.unpack('IhBB', evbuf)
+            if evbuf:
+                tval, value, typev, number = struct.unpack('IhBB', evbuf)
 
-            if typev & 0x80:
-                # ignore initialization event
-                return button, button_state, axis, axis_val
+                if typev & 0x80:
+                    # ignore initialization event
+                    pass
 
-            if typev & 0x01:
-                button = self.button_map[number]
-                # print(tval, value, typev, number, button, 'pressed')
-                if button:
-                    self.button_states[button] = value
-                    button_state = value
+                if typev & 0x01:
+                    button = self.button_map[number]
+                    # print(tval, value, typev, number, button, 'pressed')
+                    if button:
+                        self.button_states[button] = value
 
-            if typev & 0x02:
-                axis = self.axis_map[number]
-                if axis:
-                    fvalue = value / 32767.0
-                    self.axis_states[axis] = fvalue
-                    axis_val = fvalue
-
-        return button, button_state, axis, axis_val
+                if typev & 0x02:
+                    axis = self.axis_map[number]
+                    if axis:
+                        fvalue = value / 32767.0
+                        self.axis_states[axis] = fvalue
 
 
 class XboxOneJoystick(Joystick):
@@ -180,7 +177,6 @@ if __name__ == "__main__":
     js.init()
 
     while True:
-        button, button_state, axis, axis_val = js.poll()
-        if button is not None or axis is not None:
-            print(button, button_state, axis, axis_val)
-        time.sleep(0.01)
+        print(js.axis_states)
+        print(js.button_states)
+        time.sleep(0.05)
