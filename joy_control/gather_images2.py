@@ -5,7 +5,7 @@ from custom_modules import serial_command2, memory
 from custom_modules.datasets import dataset_json
 
 import cv2
-import xbox_controller
+import controller
 
 
 def deadzone(value, th, default=0):
