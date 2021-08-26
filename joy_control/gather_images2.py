@@ -50,7 +50,7 @@ while not joy.button_states['back']:
     joy_brake = joy.axis_states['z']
     joy_button_a = joy.button_states['a']
 
-    memory[-1]['steering'] = deadzone(joy_steering, th_steering)
+    memory[-1]['direction'] = deadzone(joy_steering, th_steering)
     memory[-1]['throttle'] = deadzone(joy_throttle - joy_brake, th_throttle)
     memory[-1]['speed'] = 0
     memory[-1]['time'] = time.time()
