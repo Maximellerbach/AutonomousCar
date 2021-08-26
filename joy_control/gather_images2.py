@@ -25,7 +25,7 @@ th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
-joy = xbox_controller.XboxController()
+joy = controller.XboxOneJoystick()
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
@@ -34,21 +34,20 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 # checking if the controller is working properly
 joy_leftX = 0
 while joy_leftX <= 0.9:
-    joy_leftX = joy.LeftJoystickX
+    joy_leftX = joy.axis_states['x']
     print(joy_leftX)
 
 while joy_leftX >= -0.9:
-    joy_leftX = joy.LeftJoystickX
+    joy_leftX = joy.axis_states['x']
     print(joy_leftX)
 
 print("Starting mainloop")
 
-prev_throttle = 0
-while not joy.Back:
-    joy_steering = joy.LeftJoystickX
-    joy_throttle = joy.RightTrigger
-    joy_brake = joy.LeftTrigger
-    joy_button_a = joy.A
+while not joy.button_states['options']:
+    joy_steering = joy.axis_states['x']
+    joy_throttle = joy.axis_states['rz']
+    joy_brake = joy.axis_states['z']
+    joy_button_a = joy.button_states['a']
 
     memory[-1]['steering'] = deadzone(joy_steering, th_steering)
     memory[-1]['throttle'] = deadzone(joy_throttle - joy_brake, th_throttle)

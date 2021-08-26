@@ -46,8 +46,8 @@ while not joy.Back():
     joy_button_a = joy.A()
     joy_button_x = joy.X()
 
-    _, cam = cap.read()
-    # img = cv2.resize(cam, (160, 120)) #don't need to resize as 
+    _, img = cap.read()
+    # img = cv2.resize(img, (160, 120)) #don't need to resize
 
     # annotation template with just what is needed for the prediction
     annotation = {
