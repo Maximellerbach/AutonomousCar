@@ -150,12 +150,14 @@ class XboxOneJoystick(Joystick):
         self.axis_names = {
             0x00: 'x',
             0x01: 'y',
-            0x02: 'rx',
-            0x05: 'ry',
-            0x0a: 'z',
-            0x09: 'rz',
-            0x10: 'dpad_horiz',
-            0x11: 'dpad_vert'
+            0x02: 'z',
+            0x03: 'rx',
+            0x04: 'ry',
+            0x05: 'rz',
+            0x10: 'hat0x',
+            0x11: 'hat0y',
+            0x12: 'hat1x',
+            0x13: 'hat1y',
         }
 
         self.button_names = {
@@ -164,7 +166,7 @@ class XboxOneJoystick(Joystick):
             0x133: 'x',
             0x134: 'y',
             0x13a: 'back',
-            0x13b: 'options',
+            0x13b: 'start',
             0x136: 'lb',
             0x137: 'rb',
         }
