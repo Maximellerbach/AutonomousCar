@@ -33,11 +33,11 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 
 # checking if the controller is working properly
 joy_leftX = 0
-while joy_leftX != 1.0:
+while joy_leftX <= 0.9:
     joy_leftX = joy.LeftJoystickX
     print(joy_leftX)
 
-while joy_leftX != -1.0:
+while joy_leftX >= -0.9:
     joy_leftX = joy.LeftJoystickX
     print(joy_leftX)
 
