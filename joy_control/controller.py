@@ -99,12 +99,16 @@ class Joystick(object):
         be the string label determined by the axis map in init.
         '''
 
+        evbuf = None
+
         while True:
             if self.jsdev is None:
                 break
 
-            # Main event loop
-            evbuf = self.jsdev.read(8)
+            try:
+                evbuf = self.jsdev.read(8)
+            except OSError:
+                self.connected = False
 
             print(evbuf, self.jsdev, self.jsdev.readable())
 
@@ -126,7 +130,6 @@ class Joystick(object):
                     if axis:
                         fvalue = value / 32767.0
                         self.axis_states[axis] = fvalue
-        self.connected = False
 
 
 class XboxOneJoystick(Joystick):
