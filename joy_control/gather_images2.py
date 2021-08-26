@@ -55,7 +55,7 @@ while not joy.button_states['back']:
     memory[-1]['speed'] = 0
     memory[-1]['time'] = time.time()
 
-    ser.ChangeAll(memory[-1]['steering'],
+    ser.ChangeAll(memory[-1]['direction'],
                   MAXTHROTTLE * memory[-1]['throttle'],
                   min=[-1, -1], max=[1, 1])
 
