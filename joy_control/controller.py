@@ -163,6 +163,7 @@ class XboxOneJoystick(Joystick):
             0x131: 'b',
             0x133: 'x',
             0x134: 'y',
+            0x13a: 'back',
             0x13b: 'options',
             0x136: 'lb',
             0x137: 'rb',

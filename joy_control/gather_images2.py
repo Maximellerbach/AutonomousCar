@@ -43,7 +43,7 @@ while joy_leftX >= -0.9:
 
 print("Starting mainloop")
 
-while not joy.button_states['options']:
+while not joy.button_states['back']:
     joy_steering = joy.axis_states['x']
     joy_throttle = joy.axis_states['rz']
     joy_brake = joy.axis_states['z']
