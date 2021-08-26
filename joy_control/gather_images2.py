@@ -67,7 +67,7 @@ while not joy.button_states['back'] and joy.connected:
 
         Dataset.save_img_and_annotation(
             img,
-            annotation=memory(),
+            annotation=memory,
             dos=dos_save
         )
 
