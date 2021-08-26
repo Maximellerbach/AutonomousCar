@@ -24,10 +24,12 @@ th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
+
 joy = controller.XboxOneJoystick()
 joy.init()
-cap = cv2.VideoCapture(0)
+assert joy.connected is True
 
+cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
 
