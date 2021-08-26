@@ -50,13 +50,13 @@ while not joy.Back:
     joy_brake = joy.LeftTrigger
     joy_button_a = joy.A
 
-    memory['steering'] = deadzone(joy_steering, th_steering)
-    memory['throttle'] = deadzone(joy_throttle - joy_brake, th_throttle)
-    memory['speed'] = 0
-    memory['time'] = time.time()
+    memory[-1]['steering'] = deadzone(joy_steering, th_steering)
+    memory[-1]['throttle'] = deadzone(joy_throttle - joy_brake, th_throttle)
+    memory[-1]['speed'] = 0
+    memory[-1]['time'] = time.time()
 
-    ser.ChangeAll(memory['steering'],
-                  MAXTHROTTLE * memory['throttle'],
+    ser.ChangeAll(memory[-1]['steering'],
+                  MAXTHROTTLE * memory[-1]['throttle'],
                   min=[-1, -1], max=[1, 1])
 
     if joy_button_a:
