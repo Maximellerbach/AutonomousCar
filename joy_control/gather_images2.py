@@ -27,8 +27,8 @@ ser = serial_command2.start_serial(comPort)
 joy = controller.XboxOneJoystick()
 joy.init()
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 80)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 60)
 
 ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
