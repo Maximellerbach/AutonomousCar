@@ -20,7 +20,7 @@ input_components = []
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.load_model(
-    os.path.normpath(f'{basedir}/models/test_home.h5'))
+    os.path.normpath(f'{basedir}/models/auto_label5.h5'))
 architectures.apply_predict_decorator(model)
 
 cap = cv2.VideoCapture(0)
@@ -50,7 +50,7 @@ while(True):
 
         print(predicted, dt)
 
-        ser.ChangeAll(memory['direction'], MAXTHROTTLE*memory['throttle'])
+        # ser.ChangeAll(memory['direction'], MAXTHROTTLE*memory['throttle'])
 
     except Exception as e:
         print(e)
