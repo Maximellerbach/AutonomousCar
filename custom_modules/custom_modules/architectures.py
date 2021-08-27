@@ -2,7 +2,7 @@ import time
 
 import tensorflow
 import tensorflow.keras.backend as K
-import tensorflow_model_optimization as tfmot
+# import tensorflow_model_optimization as tfmot
 from tensorflow.keras import Input
 from tensorflow.keras.layers import (Activation, BatchNormalization,
                                      Concatenate, Conv2D, Dense,
