@@ -202,7 +202,7 @@ class TFLite():
         return self.input_details[0]['shape']
 
     def predict(self, input_data):
-        self.interpreter.set_tensors(
+        self.interpreter.set_tensor(
             self.input_details[0]['index'], input_data)
         self.interpreter.invoke()
         output_data = self.interpreter.get_tensor(
