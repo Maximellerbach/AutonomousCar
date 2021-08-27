@@ -1,55 +1,84 @@
-import cv2
 import os
 import time
 
-import xbox
-from custom_modules import serial_command, drive_utils
+from custom_modules import serial_command2
 from custom_modules.datasets import dataset_json
 
+import cv2
+import controller
+
+
+def deadzone(value, th, default=0):
+    return value if abs(value) > th else default
+
+
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-dos_save = os.getcwd()+os.path.normpath("/recorded/")
+
+dos_save = os.path.expanduser('~') + "/recorded/"
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
-MAXTHROTTLE = 120
-th_direction = 0.05
-th_throttle = 0.1
+MAXTHROTTLE = 0.5
+th_steering = 0.05  # 5% threshold
+th_throttle = 0.06  # 6% threshold
 
-comPort = drive_utils.get_port_name()
-ser = serial_command.start_serial(comPort)
-joy = xbox.Joystick()
+comPort = "/dev/ttyUSB0"
+ser = serial_command2.start_serial(comPort)
+
+joy = controller.XboxOneJoystick()
+joy.init()
+assert joy.connected is True
+
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
+ret, img = cap.read()  # read the camera once to make sure it works
+assert ret is True
 
-ser.ChangeMotorA(serial_command.Motor.MOTOR_FORWARD)
-while not joy.Back():
-    joy_steering, joy_throttle, joy_brake, joy_button_a, joy_button_x = drive_utils.get_controller_buttons(
-        joy)
+# checking if the controller is working properly
+joy_leftX = 0
+while joy_leftX <= 0.9:
+    joy_leftX = joy.axis_states['x']
+    print(joy_leftX, end="\r")
+    time.sleep(0.01)
 
-    steering = joy_steering if abs(joy_steering) > abs(
-        th_direction) and not joy_button_x else 0
-    throttle = joy_throttle - \
-        joy_brake if abs(joy_throttle) > abs(th_throttle) else 0
-    current_speed = ser.GetCurrentSpeed()
+while joy_leftX >= -0.9:
+    joy_leftX = joy.axis_states['x']
+    print(joy_leftX, end="\r")
+    time.sleep(0.01)
 
-    pwm = int(MAXTHROTTLE * throttle)
-    ser.ChangeDirection(drive_utils.direction2categorical(steering))
-    ser.ChangePWM(pwm)
+print("Starting mainloop")
 
-    if joy_button_a:
+while not joy.button_states['back'] and joy.connected:
+    joy_steering = joy.axis_states['x']
+    joy_throttle = joy.axis_states['rz']
+    joy_brake = joy.axis_states['z']
+    joy_button_a = joy.button_states['a']
+
+    memory = {}
+
+    memory['direction'] = deadzone(joy_steering, th_steering)
+    memory['throttle'] = deadzone(joy_throttle - joy_brake, th_throttle)
+    memory['speed'] = 0
+    memory['time'] = time.time()
+
+    ser.ChangeAll(memory['direction'],
+                  MAXTHROTTLE * memory['throttle'],
+                  min=[-1, -1], max=[1, 1])
+
+    if joy_button_a:  # save the image
         _, img = cap.read()
+        img = cv2.resize(img, (160, 120))
 
         Dataset.save_img_and_annotation(
             img,
-            {
-                'direction': steering,
-                'speed': current_speed,
-                'throttle': throttle,
-                'time': time.time()
-            }
+            annotation=memory,
+            dos=dos_save
         )
 
 
-joy.close()
-print('terminated')
+# stop steering and throttle
+ser.ChangeAll(0, 0)
+
+if not joy.connected:
+    print("Lost connection with joystick")
+else:
+    print('Terminated')
