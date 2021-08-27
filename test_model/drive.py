@@ -21,7 +21,7 @@ input_components = []
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
     os.path.normpath(f'{basedir}/models/auto_label5.tflite'))
-architectures.apply_predict_decorator(model)
+# architectures.apply_predict_decorator(model)
 
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
