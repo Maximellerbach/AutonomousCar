@@ -11,7 +11,7 @@ serialport = '/dev/ttyUSB0'
 os.system('sudo chmod 0666 {}'.format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 0.3
+MAXTHROTTLE = 1
 wi = 160
 he = 120
 
@@ -37,7 +37,7 @@ while(True):
         memory = {}
         memory['direction'] = 0
         memory['speed'] = 0
-        memory['throttle'] = 0.18
+        memory['throttle'] = 0.1
         memory['time'] = time.time()
 
         to_pred = Dataset.make_to_pred_annotations(
@@ -57,5 +57,5 @@ while(True):
     except KeyboardInterrupt:
         sys.exit()
 
-
+ser.ChangeAll(0, 0)
 cap.release()
