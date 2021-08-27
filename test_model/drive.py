@@ -21,7 +21,6 @@ input_components = []
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
     os.path.normpath(f'{basedir}/models/auto_label5.tflite'))
-# architectures.apply_predict_decorator(model)
 
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
@@ -44,11 +43,12 @@ while(True):
             [img], [memory], input_components)
 
         # PREDICT
-        predicted = model.predict(to_pred)
-        print(predicted)
+        st = time.time()
+        direction, = model.predict(to_pred)
+        dt = time.time() - st
+        memory['direction'] = direction[0]
 
-        # memory['direction'] = predicted[0]['direction']
-        # print(predicted, dt)
+        print(direction, dt, 1/dt)
 
         ser.ChangeAll(memory['direction'], MAXTHROTTLE*memory['throttle'])
 
