@@ -45,12 +45,11 @@ while(True):
 
         # PREDICT
         predicted, dt = model.predict(to_pred)
-        # for key in predicted[0].keys():
-        #     memory[key] = predicted[0][key][0]
+        memory['direction'] = predicted[0]['direction']
 
         print(predicted, dt)
 
-        # ser.ChangeAll(memory['direction'], MAXTHROTTLE*memory['throttle'])
+        ser.ChangeAll(memory['direction'], MAXTHROTTLE*memory['throttle'])
 
     except Exception as e:
         print(e)
