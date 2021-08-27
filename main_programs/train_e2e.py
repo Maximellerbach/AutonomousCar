@@ -26,7 +26,7 @@ if __name__ == "__main__":
     output_components = [0]
 
     load_path = 'test_model\\models\\auto_label5.h5'
-    save_path = 'test_model\\models\\auto_label6.h5'
+    save_path = 'test_model\\models\\auto_label5.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         regularizer=(0.0, 0.0))
 
     e2e_trainer.compile_model(
-        loss=architectures.tensorflow.keras.losses.Huber(delta=1),
+        loss=architectures.tf.keras.losses.Huber(delta=1),
         lr=0.0005, metrics=[])
 
     e2e_trainer.train(
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=5,
+        epochs=0,
         batch_size=32,
         show_distr=False)
 

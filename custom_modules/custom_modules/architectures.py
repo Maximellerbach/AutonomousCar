@@ -1,8 +1,7 @@
 import time
 
-import tensorflow
+import tensorflow as tf
 import tensorflow.keras.backend as K
-# import tensorflow_model_optimization as tfmot
 from tensorflow.keras import Input
 from tensorflow.keras.layers import (Activation, BatchNormalization,
                                      Concatenate, Conv2D, Dense,
@@ -13,20 +12,25 @@ from tensorflow.keras.losses import mae, mse
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.regularizers import l1_l2
 
+try:
+    import tensorflow_model_optimization as tfmot
+except Exception:
+    print("tfmot couldn't be imported")
+
 
 def get_flops(load_path):
-    session = tensorflow.compat.v1.Session()
-    graph = tensorflow.compat.v1.get_default_graph()
+    session = tf.compat.v1.Session()
+    graph = tf.compat.v1.get_default_graph()
 
     with graph.as_default():
         with session.as_default():
             model = load_model(load_path)
-            run_meta = tensorflow.compat.v1.RunMetadata()
-            opts = tensorflow.compat.v1.profiler.ProfileOptionBuilder.float_operation()
+            run_meta = tf.compat.v1.RunMetadata()
+            opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
 
             # We use the Keras session graph in the call to the profiler.
-            flops = tensorflow.compat.v1.profiler.profile(graph=graph,
-                                                          run_meta=run_meta, cmd='op', options=opts)
+            flops = tf.compat.v1.profiler.profile(graph=graph,
+                                                  run_meta=run_meta, cmd='op', options=opts)
 
             return flops.total_float_ops
 
@@ -57,25 +61,25 @@ def cat2linear(ny):
 
 
 def apply_pruning_to_dense(layer):
-    if isinstance(layer, tensorflow.keras.layers.Dense):
+    if isinstance(layer, tf.keras.layers.Dense):
         return tfmot.sparsity.keras.prune_low_magnitude(layer)
     return layer
 
 
 def apply_pruning_to_conv(layer):
-    if isinstance(layer, tensorflow.keras.layers.Conv2D):
+    if isinstance(layer, tf.keras.layers.Conv2D):
         return tfmot.sparsity.keras.prune_low_magnitude(layer)
     return layer
 
 
 def apply_pruning_to_dense_and_conv(layer):
-    if isinstance(layer, tensorflow.keras.layers.Conv2D) or isinstance(layer, tensorflow.keras.layers.Dense):
+    if isinstance(layer, tf.keras.layers.Conv2D) or isinstance(layer, tf.keras.layers.Dense):
         return tfmot.sparsity.keras.prune_low_magnitude(layer)
     return layer
 
 
 def create_pruning_model(model, sparsity=0.5, clone_function=apply_pruning_to_dense_and_conv):
-    return tensorflow.keras.models.clone_model(
+    return tf.keras.models.clone_model(
         model,
         clone_function=clone_function)
 
@@ -153,6 +157,57 @@ def apply_predict_decorator(model):
 def predict(model, x):
     prediction = model(x, training=False)
     return prediction
+
+
+def keras_model_to_tflite(in_filename, out_filename, data_gen=None):
+    model = tf.keras.models.load_model(in_filename)
+    keras_to_tflite(model, out_filename, data_gen)
+
+
+def keras_to_tflite(model, out_filename, data_gen=None):
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS,
+                                           tf.lite.OpsSet.SELECT_TF_OPS]
+    converter.allow_custom_ops = True
+    if data_gen is not None:
+        # when we have a data_gen that is the trigger to use it to create
+        # integer weights and calibrate them. Warning: this model will no
+        # longer run with the standard tflite engine. That uses only float.
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.representative_dataset = data_gen
+        try:
+            converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+        except:
+            pass
+        try:
+            converter.target_spec.supported_ops \
+                = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+        except:
+            pass
+        converter.inference_input_type = tf.uint8
+        converter.inference_output_type = tf.uint8
+    tflite_model = converter.convert()
+    open(out_filename, "wb").write(tflite_model)
+
+
+class TFLite():
+    def __init__(self, model_path):
+        self.interpreter = tf.lite.Interpreter(model_path=model_path)
+        self.interpreter.allocate_tensors()
+
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+
+    def get_input_shape(self):
+        return self.input_details[0]['shape']
+
+    def predict(self, input_data):
+        self.interpreter.set_tensors(
+            self.input_details[0]['index'], input_data)
+        self.interpreter.invoke()
+        output_data = self.interpreter.get_tensor(
+            self.output_details[0]['index'])
+        return output_data
 
 
 class light_linear_CRNN():
