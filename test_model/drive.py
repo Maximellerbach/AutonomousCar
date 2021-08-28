@@ -25,9 +25,6 @@ assert ret is True
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
     os.path.normpath(f'{basedir}/models/auto_label5.tflite'), ['direction'])
-model.predict(Dataset.make_to_pred_annotations(
-    [[img/255]], [{'speed': 0}], input_components))
-
 
 print("Starting mainloop")
 
