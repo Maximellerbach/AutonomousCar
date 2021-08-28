@@ -26,7 +26,7 @@ if __name__ == "__main__":
     output_components = [0]
 
     load_path = 'test_model\\models\\auto_label5.h5'
-    save_path = 'test_model\\models\\auto_label6.h5'
+    save_path = 'test_model\\models\\auto_label7.h5'
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     e2e_trainer.build_classifier(
         architectures.light_linear_CNN,
-        load=True,
+        load=False,
         use_bias=False,
         drop_rate=0.05, prune=0,
         regularizer=(0.0, 0.0))
