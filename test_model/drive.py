@@ -18,13 +18,16 @@ he = 120
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
-basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.TFLite(
-    os.path.normpath(f'{basedir}/models/auto_label5.tflite'), ['direction'])
-
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
+
+basedir = os.path.dirname(os.path.abspath(__file__))
+model = architectures.TFLite(
+    os.path.normpath(f'{basedir}/models/auto_label5.tflite'), ['direction'])
+model.predict(Dataset.make_to_pred_annotations(
+    [img], [{'speed': 0}], input_components))
+
 
 print("Starting mainloop")
 
@@ -57,7 +60,7 @@ while(True):
         print(e)
 
     except KeyboardInterrupt:
-        sys.exit()
+        break
 
 ser.ChangeAll(0, 0)
 cap.release()
