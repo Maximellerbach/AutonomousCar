@@ -20,7 +20,7 @@ input_components = []
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
-    os.path.normpath(f'{basedir}/models/auto_label5.tflite'))
+    os.path.normpath(f'{basedir}/models/auto_label5.tflite'), ['direction'])
 
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
@@ -30,6 +30,8 @@ print("Starting mainloop")
 
 while(True):
     try:
+        st = time.time()
+
         _, cam = cap.read()
         img = cv2.resize(cam, (wi, he))
 
@@ -43,14 +45,13 @@ while(True):
             [img], [memory], input_components)
 
         # PREDICT
-        st = time.time()
-        direction, = model.predict(to_pred)
-        dt = time.time() - st
-        memory['direction'] = direction[0]
-
-        print(direction, dt, 1/dt)
+        prediction_dict, elapsed_time = model.predict(to_pred)
+        memory['direction'] = prediction_dict['direction']
 
         ser.ChangeAll(memory['direction'], MAXTHROTTLE*memory['throttle'])
+
+        dt = time.time() - st
+        print(prediction_dict, 1/elapsed_time, 1/dt)
 
     except Exception as e:
         print(e)

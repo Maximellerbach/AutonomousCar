@@ -159,55 +159,50 @@ def predict(model, x):
     return prediction
 
 
-def keras_model_to_tflite(in_filename, out_filename, data_gen=None):
+def keras_model_to_tflite(in_filename, out_filename):
     model = tf.keras.models.load_model(in_filename)
-    keras_to_tflite(model, out_filename, data_gen)
+    keras_to_tflite(model, out_filename)
 
 
-def keras_to_tflite(model, out_filename, data_gen=None):
+def keras_to_tflite(model, out_filename):
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS,
                                            tf.lite.OpsSet.SELECT_TF_OPS]
     converter.allow_custom_ops = True
-    if data_gen is not None:
-        # when we have a data_gen that is the trigger to use it to create
-        # integer weights and calibrate them. Warning: this model will no
-        # longer run with the standard tflite engine. That uses only float.
-        converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.representative_dataset = data_gen
-        try:
-            converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-        except:
-            pass
-        try:
-            converter.target_spec.supported_ops \
-                = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-        except:
-            pass
-        converter.inference_input_type = tf.uint8
-        converter.inference_output_type = tf.uint8
     tflite_model = converter.convert()
     open(out_filename, "wb").write(tflite_model)
 
 
 class TFLite():
-    def __init__(self, model_path):
+    def __init__(self, model_path, output_names=[]):
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
 
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
 
+        self.output_names = output_names
+
     def get_input_shape(self):
-        return self.input_details[0]['shape']
+        return [inp['shape'] for inp in self.input_details]
 
     def predict(self, input_data):
-        self.interpreter.set_tensor(
-            self.input_details[0]['index'], input_data)
+        st = time.time()
+
+        for i, inp in enumerate(input_data):
+            self.interpreter.set_tensor(self.input_details[i]['index'], inp)
         self.interpreter.invoke()
-        output_data = self.interpreter.get_tensor(
-            self.output_details[0]['index'])
-        return output_data
+
+        output_dict = {}
+        if self.output_names != []:
+            for tensor, name in zip(self.output_details, self.output_names):
+                output_dict[name] = self.interpreter.get_tensor(tensor['index'])[0][0]
+        else:
+            for tensor in self.output_details:
+                output_dict[tensor['name']] = self.interpreter.get_tensor(tensor['index'])[0][0]
+
+        elapsed_time = time.time() - st
+        return output_dict, elapsed_time
 
 
 class light_linear_CRNN():
