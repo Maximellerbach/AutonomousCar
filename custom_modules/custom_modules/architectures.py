@@ -175,7 +175,7 @@ def keras_to_tflite(model, out_filename):
 
 class TFLite():
     def __init__(self, model_path, output_names=[]):
-        self.interpreter = tf.lite.Interpreter(model_path=model_path)
+        self.interpreter = tf.lite.Interpreter(model_path=model_path, num_threads=1)
         print("created interpreter")
 
         self.interpreter.allocate_tensors()
