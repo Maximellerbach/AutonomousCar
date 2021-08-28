@@ -24,7 +24,7 @@ assert ret is True
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
-    os.path.normpath(f'{basedir}/models/auto_label6.tflite'), ['direction'])
+    '/home/pi/AutonomousCar/joy_control/auto_label6.tflite', ['direction'])
 
 print("Starting mainloop")
 
