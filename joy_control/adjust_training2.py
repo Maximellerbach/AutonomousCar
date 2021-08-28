@@ -14,7 +14,7 @@ def deadzone(value, th, default=0):
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
-dos_save = os.getcwd()+os.path.normpath("/recorded/")
+dos_save = os.path.expanduser('~') + "/recorded/"
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
