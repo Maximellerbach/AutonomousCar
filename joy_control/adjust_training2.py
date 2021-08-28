@@ -6,7 +6,7 @@ import cv2
 from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
 
-import controller
+# import controller
 
 serialport = '/dev/ttyUSB0'
 os.system('sudo chmod 0666 {}'.format(serialport))
