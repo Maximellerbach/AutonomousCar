@@ -72,6 +72,7 @@ while not joy.button_states['back'] and joy.connected:
             [img], [annotation], input_components)
 
         predicted, dt = model.predict(to_pred)
+        print(predicted)
         ser.ChangeAll(predicted['direction'], MAXTHROTTLE * joy_throttle)
 
 ser.ChangeAll(0, 0)
