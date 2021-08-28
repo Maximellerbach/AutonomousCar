@@ -1,9 +1,21 @@
 import os
+import sys
 import time
 
 import cv2
-from custom_modules import serial_command2, architectures
+from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
+
+serialport = '/dev/ttyUSB0'
+os.system('sudo chmod 0666 {}'.format(serialport))
+ser = serial_command2.control(serialport)
+
+MAXTHROTTLE = 1
+wi = 160
+he = 120
+
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+input_components = []
 
 # import controller
 
@@ -92,22 +104,6 @@ from custom_modules.datasets import dataset_json
 #     print("Lost connection with joystick")
 # else:
 #     print('Terminated')
-
-import os
-import sys
-
-import cv2
-import time
-
-from custom_modules import serial_command2, architectures
-from custom_modules.datasets import dataset_json
-
-MAXTHROTTLE = 1
-wi = 160
-he = 120
-
-Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-input_components = []
 
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
