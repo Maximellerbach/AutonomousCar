@@ -19,7 +19,7 @@ input_components = []
 
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
-assert ret is True
+# assert ret is True
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
