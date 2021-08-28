@@ -43,40 +43,48 @@ model = architectures.TFLite(
 print("Starting mainloop")
 
 while not joy.button_states['back'] and joy.connected:
-    joy_steering = joy.axis_states['x']
-    joy_throttle = joy.axis_states['rz']
-    joy_brake = joy.axis_states['z']
-    joy_button_a = joy.button_states['a']
-    joy_button_x = joy.button_states['x']
 
-    _, img = cap.read()
-    img = cv2.resize(img, (160, 120))
+    try:
+        joy_steering = joy.axis_states['x']
+        joy_throttle = joy.axis_states['rz']
+        joy_brake = joy.axis_states['z']
+        joy_button_a = joy.button_states['a']
+        joy_button_x = joy.button_states['x']
 
-    # annotation template with just what is needed for the prediction
-    annotation = {
-        'direction': deadzone(joy_steering, th_steering),
-        'speed': 0,
-        'throttle': deadzone(joy_throttle - joy_brake, th_throttle),
-        'time': time.time()
-    }
+        _, img = cap.read()
+        img = cv2.resize(img, (160, 120))
 
-    if joy_button_a or joy_button_x:
+        # annotation template with just what is needed for the prediction
+        annotation = {
+            'direction': deadzone(joy_steering, th_steering),
+            'speed': 0,
+            'throttle': deadzone(joy_throttle - joy_brake, th_throttle),
+            'time': time.time()
+        }
 
-        if not joy_button_x:
-            Dataset.save_img_and_annotation(
-                img,
-                annotation=annotation,
-                dos=dos_save)
+        if joy_button_a or joy_button_x:
 
-        ser.ChangeAll(annotation['direction'], annotation['throttle'])
+            if not joy_button_x:
+                Dataset.save_img_and_annotation(
+                    img,
+                    annotation=annotation,
+                    dos=dos_save)
 
-    else:
-        to_pred = Dataset.make_to_pred_annotations(
-            [img], [annotation], input_components)
+            ser.ChangeAll(annotation['direction'], annotation['throttle'])
 
-        predicted, dt = model.predict(to_pred)
-        print(predicted)
-        ser.ChangeAll(predicted['direction'], MAXTHROTTLE * joy_throttle)
+        else:
+            to_pred = Dataset.make_to_pred_annotations(
+                [img], [annotation], input_components)
+
+            predicted, dt = model.predict(to_pred)
+            print(predicted)
+            ser.ChangeAll(predicted['direction'], MAXTHROTTLE * joy_throttle)
+
+    except Exception as e:
+        print(e)
+
+    except KeyboardInterrupt:
+        break
 
 ser.ChangeAll(0, 0)
 
