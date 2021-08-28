@@ -5,7 +5,7 @@ import cv2
 from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
 
-import controller
+# import controller
 
 
 def deadzone(value, th, default=0):
