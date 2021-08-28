@@ -1,95 +1,84 @@
-'''
-joystick button usage:
-    'joy_steering': 'direction',
-    'joy_throttle': 'throttle',
-    'joy_brake': 'brake',
-    'joy_button_a': 'overide prediction and save img'
-    'joy_button_x': 'disable direction when joy_button_a is pressed'
-'''
-import cv2
 import os
 import time
 
-import xbox
-from custom_modules import serial_command2, architectures, drive_utils
+import cv2
+from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
+
+import controller
+
+def deadzone(value, th, default=0):
+    return value if abs(value) > th else default
 
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-input_components = [1]
+input_components = []
 
 dos_save = os.getcwd()+os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
 MAXTHROTTLE = 0.5
-th_direction = 0.05
-th_throttle = 0.06
+th_steering = 0.05  # 5% threshold
+th_throttle = 0.06  # 6% threshold
 
 comPort = "/dev/ttyUSB0"
 ser = serial_command2.start_serial(comPort)
-joy = xbox.Joystick()
+
+joy = controller.XboxOneJoystick()
+joy.init()
+assert joy.connected is True
+
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 160)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
+ret, img = cap.read()  # read the camera once to make sure it works
+assert ret is True
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.load_model(
-    os.path.normpath(f'{basedir}/../test_model/models/test_home.h5'))
-architectures.apply_predict_decorator(model)
+model = architectures.TFLite(
+    os.path.normpath(f'{basedir}/models/auto_label6.tflite'), ['direction'])
 
-prev_throttle = 0
-while not joy.Back():
-    joy_steering = joy.leftX()
-    joy_throttle = joy.rightTrigger()
-    joy_brake = joy.leftTrigger()
-    joy_button_a = joy.A()
-    joy_button_x = joy.X()
+while not joy.button_states['back'] and joy.connected:
+    joy_steering = joy.axis_states['x']
+    joy_throttle = joy.axis_states['rz']
+    joy_brake = joy.axis_states['z']
+    joy_button_a = joy.button_states['a']
+    joy_button_x = joy.button_states['x']
 
     _, img = cap.read()
-    # img = cv2.resize(img, (160, 120)) #don't need to resize
+    img = cv2.resize(img, (160, 120))
 
     # annotation template with just what is needed for the prediction
     annotation = {
-        'direction': 0,
-        'speed': prev_throttle,
-        'throttle': 0,
+        'direction': deadzone(joy_steering, th_steering),
+        'speed': 0,
+        'throttle': deadzone(joy_throttle - joy_brake, th_throttle),
         'time': time.time()
     }
 
     if joy_button_a or joy_button_x:
 
-        steering = joy_steering if abs(joy_steering) > abs(th_direction) else 0
-        throttle = joy_throttle - joy_brake if abs(joy_throttle - joy_brake) > abs(th_throttle) else 0
-
         if not joy_button_x:
             Dataset.save_img_and_annotation(
                 img,
-                annotation={
-                    'direction': float(steering),  # float32 can't be used for JSON so casting to regular float
-                    'speed': float(prev_throttle),
-                    'throttle': float(throttle),
-                    'time': time.time()
-                },
+                annotation=annotation,
                 dos=dos_save)
 
-        ser.ChangeAll(steering, MAXTHROTTLE * throttle)
+        ser.ChangeAll(annotation['direction'], annotation['throttle'])
 
     else:
-        annotation_list = drive_utils.dict2list(annotation)
         to_pred = Dataset.make_to_pred_annotations(
-            [img], [annotation_list], input_components)
+            [img], [annotation], input_components)
 
         predicted, dt = model.predict(to_pred)
         predicted = predicted[0]
 
         steering = predicted['direction'][0]
-        throttle = predicted['throttle'][0]
 
-        ser.ChangeAll(steering, MAXTHROTTLE * throttle)
+        ser.ChangeAll(steering, MAXTHROTTLE * joy_throttle)
 
-    prev_throttle = throttle
+ser.ChangeAll(0, 0)
 
-
-joy.close()
-print('terminated')
+if not joy.connected:
+    print("Lost connection with joystick")
+else:
+    print('Terminated')
