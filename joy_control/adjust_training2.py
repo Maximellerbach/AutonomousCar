@@ -27,10 +27,10 @@ serialport = "/dev/ttyUSB0"
 os.system('sudo chmod 0666 {}'.format(serialport))
 ser = serial_command2.start_serial(serialport)
 
-joy = controller.XboxOneJoystick()
-joy.init()
-assert joy.connected is True
-print("joy working")
+# joy = controller.XboxOneJoystick()
+# joy.init()
+# assert joy.connected is True
+# print("joy working")
 
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
@@ -43,14 +43,19 @@ model = architectures.TFLite(
 
 print("Starting mainloop")
 
-while not joy.button_states['back'] and joy.connected:
-
+# while not joy.button_states['back'] and joy.connected:
+while True:
     try:
-        joy_steering = joy.axis_states['x']
-        joy_throttle = joy.axis_states['rz']
-        joy_brake = joy.axis_states['z']
-        joy_button_a = joy.button_states['a']
-        joy_button_x = joy.button_states['x']
+        # joy_steering = joy.axis_states['x']
+        # joy_throttle = joy.axis_states['rz']
+        # joy_brake = joy.axis_states['z']
+        # joy_button_a = joy.button_states['a']
+        # joy_button_x = joy.button_states['x']
+        joy_steering = 0
+        joy_throttle = 0
+        joy_brake = 0
+        joy_button_a = 0
+        joy_button_x = 0
 
         _, img = cap.read()
         img = cv2.resize(img, (160, 120))
@@ -89,7 +94,7 @@ while not joy.button_states['back'] and joy.connected:
 
 ser.ChangeAll(0, 0)
 
-if not joy.connected:
-    print("Lost connection with joystick")
-else:
-    print('Terminated')
+# if not joy.connected:
+#     print("Lost connection with joystick")
+# else:
+#     print('Terminated')
