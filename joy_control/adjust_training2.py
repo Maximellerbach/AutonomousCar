@@ -29,10 +29,12 @@ ser = serial_command2.start_serial(comPort)
 joy = controller.XboxOneJoystick()
 joy.init()
 assert joy.connected is True
+print("joy working")
 
 cap = cv2.VideoCapture(0)
 ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
+print("cam working")
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
