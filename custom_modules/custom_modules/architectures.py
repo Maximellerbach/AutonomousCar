@@ -177,9 +177,12 @@ class TFLite():
     def __init__(self, model_path, output_names=[]):
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
+        print("alocating tensors")
 
         self.input_details = self.interpreter.get_input_details()
+        print("got input details")
         self.output_details = self.interpreter.get_output_details()
+        print("got output details")
 
         self.output_names = output_names
 
