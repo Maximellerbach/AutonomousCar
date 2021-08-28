@@ -1,10 +1,8 @@
 import os
-import sys
-
-import cv2
 import time
 
-from custom_modules import serial_command2, architectures
+import cv2
+from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
 
 serialport = '/dev/ttyUSB0'
