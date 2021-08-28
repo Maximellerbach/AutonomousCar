@@ -37,8 +37,8 @@ assert ret is True
 print("cam working")
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-# model = architectures.TFLite(
-#     '/home/pi/AutonomousCar/test_model/models/auto_label6.tflite', ['direction'])
+model = architectures.TFLite(
+    '/home/pi/AutonomousCar/test_model/models/auto_label6.tflite', ['direction'])
 
 print("Starting mainloop")
 
