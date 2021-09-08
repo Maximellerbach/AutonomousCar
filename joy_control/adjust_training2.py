@@ -23,7 +23,7 @@ ret, img = cap.read()  # read the camera once to make sure it works
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(
-    os.path.normpath(f'{basedir}/../test_model/models/auto_label8.tflite'), output_names=['direction'])
+    os.path.normpath(f'{basedir}/../test_model/models/auto_label7.tflite'), output_names=['direction'])
 
 print("Starting mainloop")
 
