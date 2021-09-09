@@ -13,7 +13,7 @@ def deadzone(value, th, default=0):
 
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-dos_save = os.getcwd()+os.path.normpath("/recorded/")
+dos_save = os.getcwd() + os.path.normpath("/recorded/")
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
@@ -64,13 +64,13 @@ while not joy.Back():
         Dataset.save_img_and_annotation(
             img,
             annotation={
-                'direction': steering,
-                'speed': prev_throttle,  # save previous throttle
-                'throttle': throttle,  # save raw throttle value
-                'time': last_received
+                "direction": steering,
+                "speed": prev_throttle,  # save previous throttle
+                "throttle": throttle,  # save raw throttle value
+                "time": last_received,
             },
-            dos=dos_save
+            dos=dos_save,
         )
     prev_throttle = throttle
 
-print('terminated')
+print("terminated")

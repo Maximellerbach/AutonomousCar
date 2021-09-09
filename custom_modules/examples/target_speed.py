@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # controller.init_ser()
 
     state = 0
-    while(True):
+    while True:
         new_pwm = controller.update(state, time.time())
         if new_pwm is not None:
             print(new_pwm)

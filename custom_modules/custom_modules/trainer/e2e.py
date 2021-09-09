@@ -12,16 +12,28 @@ from ..datagenerator import image_generator
 from ..vis import plot
 from ..datasets import dataset_json
 
-physical_devices = tensorflow.config.list_physical_devices('GPU')
+physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 
-class End2EndTrainer():
+class End2EndTrainer:
     """end to end model trainer class."""
 
-    def __init__(self, load_path, save_path, dataset: dataset_json.Dataset, dospath='', dosdir=True, proportion=0.15, sequence=False,
-                 smoothing=0, label_rdm=0, input_components=[], output_components=[0]):
+    def __init__(
+        self,
+        load_path,
+        save_path,
+        dataset: dataset_json.Dataset,
+        dospath="",
+        dosdir=True,
+        proportion=0.15,
+        sequence=False,
+        smoothing=0,
+        label_rdm=0,
+        input_components=[],
+        output_components=[0],
+    ):
         """Init the trainer parameters.
 
         Args:
@@ -60,18 +72,21 @@ class End2EndTrainer():
     def build_classifier(self, model_arch, load=False, use_bias=True, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0)):
         """Load a model using a model architectures from architectures.py."""
         if load:
-            self.model = architectures.safe_load_model(self.load_path, custom_objects={
-                "dir_loss": architectures.dir_loss})
-            print('loaded model')
+            self.model = architectures.safe_load_model(self.load_path, custom_objects={"dir_loss": architectures.dir_loss})
+            print("loaded model")
 
         else:
             self.model = model_arch(
-                self.Dataset, (120, 160, 3),
-                drop_rate=drop_rate, regularizer=regularizer,
-                prev_act="relu", last_act="tanh",
+                self.Dataset,
+                (120, 160, 3),
+                drop_rate=drop_rate,
+                regularizer=regularizer,
+                prev_act="relu",
+                last_act="tanh",
                 use_bias=use_bias,
                 input_components=self.input_components,
-                output_components=self.output_components).build()
+                output_components=self.output_components,
+            ).build()
 
         self.add_pruning(prune)
         return self.model
@@ -82,85 +97,101 @@ class End2EndTrainer():
             self.callbacks.append(tfmot.sparsity.keras.UpdatePruningStep())
 
     def compile_model(self, loss="mse", optimizer=tensorflow.keras.optimizers.Adam, lr=0.001, metrics=["mse"]):
-        self.model.compile(
-            loss=loss,
-            optimizer=optimizer(lr=lr),
-            metrics=metrics)
+        self.model.compile(loss=loss, optimizer=optimizer(lr=lr), metrics=metrics)
 
         # turn this off for the moment
         # assert len(self.model.outputs) == len(self.output_components)
         # assert len(self.model.inputs)-1 == len(self.input_components)
         self.model.summary()
 
-    def train(self, flip=True, augm=True,
-              use_earlystop=False, use_tensorboard=False, use_plateau_lr=False, verbose=0,
-              epochs=5, batch_size=64, seq_batchsize=16, show_distr=False, datagen=False):
+    def train(
+        self,
+        flip=True,
+        augm=True,
+        use_earlystop=False,
+        use_tensorboard=False,
+        use_plateau_lr=False,
+        verbose=0,
+        epochs=5,
+        batch_size=64,
+        seq_batchsize=16,
+        show_distr=False,
+        datagen=False,
+    ):
         """Train the model loaded as self.model."""
         gdos, valdos, frc, datalen = self.get_gdos(flip=flip, show=show_distr)
         print(gdos.shape, valdos.shape)
-        logdir = f'logs\\{time.time()}\\'
+        logdir = f"logs\\{time.time()}\\"
 
         if batch_size > len(valdos):
             val_batch_size = len(valdos)
         else:
             val_batch_size = batch_size
-        it_per_epochs = len(gdos)/batch_size
+        it_per_epochs = len(gdos) / batch_size
 
         if self.model is None:
             self.build_classifier()
 
         if use_earlystop:
             earlystop = EarlyStopping(
-                monitor='loss',
-                min_delta=0,
-                patience=(1000//it_per_epochs)+1,
-                verbose=verbose,
-                restore_best_weights=True)
+                monitor="loss", min_delta=0, patience=(1000 // it_per_epochs) + 1, verbose=verbose, restore_best_weights=True
+            )
             self.callbacks.append(earlystop)
 
         if use_tensorboard:
-            tensorboard = TensorBoard(
-                log_dir=logdir,
-                update_freq='batch'
-            )
+            tensorboard = TensorBoard(log_dir=logdir, update_freq="batch")
             self.callbacks.append(tensorboard)
 
         if use_plateau_lr:
             plateau_lr = ReduceLROnPlateau(
-                monitor='loss',
-                patience=(1000//it_per_epochs)+1,
-                min_lr=0.0001,
-                verbose=verbose
+                monitor="loss", patience=(1000 // it_per_epochs) + 1, min_lr=0.0001, verbose=verbose
             )
             self.callbacks.append(plateau_lr)
 
         self.model.fit(
             x=image_generator(
-                gdos, self.Dataset,
-                datalen, frc, batch_size,
-                self.input_components, self.output_components,
+                gdos,
+                self.Dataset,
+                datalen,
+                frc,
+                batch_size,
+                self.input_components,
+                self.output_components,
                 sequence=self.sequence,
                 seq_batchsize=seq_batchsize,
-                augm=augm, flip=flip,
+                augm=augm,
+                flip=flip,
                 proportion=self.proportion,
-                use_tensorboard=use_tensorboard, logdir=logdir),
-            steps_per_epoch=datalen//batch_size, epochs=epochs,
+                use_tensorboard=use_tensorboard,
+                logdir=logdir,
+            ),
+            steps_per_epoch=datalen // batch_size,
+            epochs=epochs,
             validation_data=image_generator(
-                valdos, self.Dataset,
-                datalen, frc, val_batch_size,
-                self.input_components, self.output_components,
+                valdos,
+                self.Dataset,
+                datalen,
+                frc,
+                val_batch_size,
+                self.input_components,
+                self.output_components,
                 sequence=self.sequence,
                 seq_batchsize=seq_batchsize,
-                augm=augm, flip=flip,
+                augm=augm,
+                flip=flip,
                 proportion=self.proportion,
-                use_tensorboard=use_tensorboard, logdir=logdir),
-            validation_steps=datalen//20//val_batch_size,
-            callbacks=self.callbacks, max_queue_size=8, workers=4,
-            verbose=verbose
+                use_tensorboard=use_tensorboard,
+                logdir=logdir,
+            ),
+            validation_steps=datalen // 20 // val_batch_size,
+            callbacks=self.callbacks,
+            max_queue_size=8,
+            workers=4,
+            verbose=verbose,
         )
 
         self.model.save(self.save_path)
-        tf_lite_file = self.save_path.split('.h5')[0] + '.tflite'
+        tf_lite_file = self.save_path.split(".h5")[0] + ".tflite"
         architectures.keras_model_to_tflite(self.save_path, tf_lite_file)
 
     def get_gdos(self, flip=True, show=False):
@@ -187,16 +218,16 @@ class End2EndTrainer():
                 datalen += len(s)
 
             np.random.shuffle(gdos)
-            traindos, valdos = np.split(gdos, [len(gdos)-len(gdos)//20])
+            traindos, valdos = np.split(gdos, [len(gdos) - len(gdos) // 20])
 
         else:
             gdos = np.concatenate([i for i in gdos])
             datalen = len(gdos)
 
             np.random.shuffle(gdos)
-            traindos, valdos = np.split(gdos, [datalen-datalen//20])
+            traindos, valdos = np.split(gdos, [datalen - datalen // 20])
         et = time.time()
-        elapsed_time = et-st
+        elapsed_time = et - st
         print(f"fetched dataset {self.dospath} in {elapsed_time} seconds")
         frc = self.get_frc_lin(gdos, flip=flip, show=show)
         return traindos, valdos, frc, datalen
@@ -212,17 +243,18 @@ class End2EndTrainer():
         Returns:
             dict: dictionnary of label frequency
         """
+
         def flatten_paths(paths):
             if isinstance(paths[0], list):
                 return flatten_paths([p for p in listp for listp in paths])
             elif isinstance(paths[0], str):
                 return paths
 
-        Y = [[] for _ in self.output_components+self.input_components]
+        Y = [[] for _ in self.output_components + self.input_components]
         for path in flatten_paths(gdos):
             annotation = self.Dataset.load_annotation(path, to_list=False)
 
-            for it, index in enumerate(self.output_components+self.input_components):
+            for it, index in enumerate(self.output_components + self.input_components):
                 component = self.Dataset.get_component(index)
                 lab = annotation[component.name]
 
@@ -239,22 +271,20 @@ class End2EndTrainer():
                     Y[it].append(rounded)
 
         frcs = []
-        for it, index in enumerate(self.output_components+self.input_components):
+        for it, index in enumerate(self.output_components + self.input_components):
             component = self.Dataset.get_component(index)
             if component.iterable:
-                frcs.append([1]*len(component.default_flat))
+                frcs.append([1] * len(component.default_flat))
 
             else:
                 Y_component = Y[it]
 
                 d = collections.Counter(Y_component)
                 unique = np.unique(Y_component)
-                frc = class_weight.compute_class_weight(
-                    'balanced', unique, Y_component)
+                frc = class_weight.compute_class_weight("balanced", unique, Y_component)
                 frcs.append(dict(zip(unique, frc)))
 
                 if show:
-                    plot.plot_bars(d, component.weight_acc,
-                                   title=component.name)
+                    plot.plot_bars(d, component.weight_acc, title=component.name)
 
         return frcs

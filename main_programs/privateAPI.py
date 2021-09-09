@@ -8,7 +8,6 @@ import random
 
 
 class PrivateAPIClient(SDClient):
-
     def __init__(self, address, private_key, poll_socket_sleep_time=0.01):
         super().__init__(*address, poll_socket_sleep_time=poll_socket_sleep_time)
 
@@ -18,63 +17,61 @@ class PrivateAPIClient(SDClient):
         self.raceSummary = {}
 
     def on_msg_recv(self, json_packet):
-        msg_type = json_packet.get('msg_type')
-        if msg_type == 'verified':
+        msg_type = json_packet.get("msg_type")
+        if msg_type == "verified":
             self.is_verified = True
 
-        elif msg_type == 'collision_with_starting_line':
+        elif msg_type == "collision_with_starting_line":
             self.on_crossing_line(json_packet)
 
-        elif msg_type == 'collision_with_cone':
+        elif msg_type == "collision_with_cone":
             self.on_colliding_cone(json_packet)
 
         elif json_packet != {}:
             pprint.pprint(json_packet)
 
     def send_verify(self):
-        msg = {"msg_type": "verify",
-               "private_key": str(self.private_key)}
+        msg = {"msg_type": "verify", "private_key": str(self.private_key)}
         self.send_now(json.dumps(msg))
 
     def send_seed(self, seed):
-        msg = {"msg_type": "set_random_seed",
-               "seed": str(seed)}
+        msg = {"msg_type": "set_random_seed", "seed": str(seed)}
         self.send_now(json.dumps(msg))
 
     def on_crossing_line(self, json_packet):
         # Not really nice but does the job
-        car_name = json_packet['car_name']
+        car_name = json_packet["car_name"]
 
         if car_name in self.raceSummary:
-            timeStamp = json_packet['timeStamp']
-            if 'lastCrossingLine' in self.raceSummary[car_name]:
-                lastTime = self.raceSummary[car_name]['lastCrossingLine']
-                self.raceSummary[car_name]['lapTimes'].append(timeStamp-lastTime)
-                if len(self.raceSummary[car_name]['lapTimes']) <= 3:
-                    self.raceSummary[car_name]['total3Time'] += self.raceSummary[car_name]['lapTimes'][-1]
+            timeStamp = json_packet["timeStamp"]
+            if "lastCrossingLine" in self.raceSummary[car_name]:
+                lastTime = self.raceSummary[car_name]["lastCrossingLine"]
+                self.raceSummary[car_name]["lapTimes"].append(timeStamp - lastTime)
+                if len(self.raceSummary[car_name]["lapTimes"]) <= 3:
+                    self.raceSummary[car_name]["total3Time"] += self.raceSummary[car_name]["lapTimes"][-1]
             else:
-                self.raceSummary[car_name]['lapTimes'] = []
+                self.raceSummary[car_name]["lapTimes"] = []
 
-            self.raceSummary[car_name]['lastCrossingLine'] = timeStamp
+            self.raceSummary[car_name]["lastCrossingLine"] = timeStamp
 
         else:
             self.raceSummary[car_name] = {}
-            self.raceSummary[car_name]['lapTimes'] = []
-            self.raceSummary[car_name]['lastCrossingLine'] = json_packet['timeStamp']
-            self.raceSummary[car_name]['penalties'] = 0
-            self.raceSummary[car_name]['total3Time'] = 0
+            self.raceSummary[car_name]["lapTimes"] = []
+            self.raceSummary[car_name]["lastCrossingLine"] = json_packet["timeStamp"]
+            self.raceSummary[car_name]["penalties"] = 0
+            self.raceSummary[car_name]["total3Time"] = 0
 
     def on_colliding_cone(self, json_packet):
-        car_name = json_packet['car_name']
+        car_name = json_packet["car_name"]
 
         if car_name in self.raceSummary:
-            self.raceSummary[car_name]['penalties'] += 1
-            if 'lapTimes' in self.raceSummary[car_name] and len(self.raceSummary[car_name]['lapTimes']) < 3:
-                self.raceSummary[car_name]['total3Time'] += 1
+            self.raceSummary[car_name]["penalties"] += 1
+            if "lapTimes" in self.raceSummary[car_name] and len(self.raceSummary[car_name]["lapTimes"]) < 3:
+                self.raceSummary[car_name]["total3Time"] += 1
         else:
             self.raceSummary[car_name] = {}
-            self.raceSummary[car_name]['penalties'] = 1
-            self.raceSummary[car_name]['total3Time'] = 1
+            self.raceSummary[car_name]["penalties"] = 1
+            self.raceSummary[car_name]["total3Time"] = 1
 
     def on_reset(self):
         self.raceSummary = {}

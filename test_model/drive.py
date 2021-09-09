@@ -1,12 +1,19 @@
 import os
+
+os.environ["OMP_NUM_THREADS"] = "4"
+
 import time
 
 import cv2
 from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
 
-serialport = '/dev/ttyUSB0'
-os.system('sudo chmod 0666 {}'.format(serialport))
+core_count = 4
+architectures.tf.config.threading.set_inter_op_parallelism_threads(core_count)
+architectures.tf.config.threading.set_intra_op_parallelism_threads(core_count)
+
+serialport = "/dev/ttyUSB0"
+os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
 
 MAXTHROTTLE = 1
@@ -21,12 +28,12 @@ ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.TFLite(
-    os.path.normpath(f'{basedir}/models/auto_label7.tflite'), ['direction'])
+model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
+architectures.apply_predict_decorator(model)
 
 print("Starting mainloop")
 
-while(True):
+while True:
     try:
         st = time.time()
 
@@ -34,22 +41,22 @@ while(True):
         img = cv2.resize(cam, (wi, he))
 
         memory = {}
-        memory['direction'] = 0
-        memory['speed'] = 0
-        memory['throttle'] = 0.1
-        memory['time'] = time.time()
+        memory["direction"] = 0
+        memory["speed"] = 0
+        memory["throttle"] = 0.1
+        memory["time"] = time.time()
 
-        to_pred = Dataset.make_to_pred_annotations(
-            [img], [memory], input_components)
+        to_pred = Dataset.make_to_pred_annotations([img], [memory], input_components)
 
         # PREDICT
         prediction_dict, elapsed_time = model.predict(to_pred)
-        memory['direction'] = prediction_dict['direction']
+        prediction_dict = prediction_dict[0]
+        memory["direction"] = prediction_dict["direction"]
 
-        ser.ChangeAll(memory['direction'], MAXTHROTTLE*memory['throttle'])
+        ser.ChangeAll(memory["direction"], MAXTHROTTLE * memory["throttle"])
 
         dt = time.time() - st
-        print(prediction_dict, 1/elapsed_time, 1/dt)
+        print(prediction_dict, 1 / elapsed_time, 1 / dt)
 
     except Exception as e:
         print(e)

@@ -19,7 +19,7 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 120)
 ser = serial_command.control("/dev/ttyS0")
 ser.ChangeMotorA(2)
 
-while(True):
+while True:
     try:
         _, img = cap.read()
 

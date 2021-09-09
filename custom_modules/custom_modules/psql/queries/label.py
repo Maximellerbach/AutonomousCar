@@ -1,4 +1,3 @@
-
 def fetch_number_items(conn):
     sql = """
         select count(id)
@@ -18,7 +17,7 @@ def fetch_number_items_dataset(conn, dataset_name):
         """
 
     cursor = conn.cursor()
-    cursor.execute(sql.format(d={'dataset_name': dataset_name}))
+    cursor.execute(sql.format(d={"dataset_name": dataset_name}))
     return cursor.fetchone()[0]
 
 
@@ -75,7 +74,7 @@ def fetch_by_id(conn, label_id):
         where id = {d[label_id]}
     """
     cursor = conn.cursor()
-    cursor.execute(sql.format(d={'label_id': label_id}))
+    cursor.execute(sql.format(d={"label_id": label_id}))
     return cursor.fetchone()
 
 
@@ -89,7 +88,7 @@ def fetch_list(conn, offset=0, limit=100):
         """
 
     cursor = conn.cursor()
-    cursor.execute(sql.format(d={'offset': offset, 'limit': limit}))
+    cursor.execute(sql.format(d={"offset": offset, "limit": limit}))
     return cursor.fetchall()
 
 
@@ -104,8 +103,7 @@ def fetch_list_dataset(conn, dataset_name, offset=0, limit=100):
         """
 
     cursor = conn.cursor()
-    cursor.execute(sql.format(
-        d={'dataset_name': dataset_name, 'offset': offset, 'limit': limit}))
+    cursor.execute(sql.format(d={"dataset_name": dataset_name, "offset": offset, "limit": limit}))
     return cursor.fetchall()
 
 

@@ -4,14 +4,15 @@ import time
 from custom_modules import serial_command, rotatecar
 
 if __name__ == "__main__":
+
     def getParams(argv):
         for it, arg in enumerate(argv):
             if arg in ("-a", "--angle"):
-                angle = int(argv[it+1].strip())
+                angle = int(argv[it + 1].strip())
             elif arg in ("-w", "--way"):
-                way = int(argv[it+1].strip())
+                way = int(argv[it + 1].strip())
             elif arg in ("-o", "--orientation"):
-                orientation = int(argv[it+1].strip())
+                orientation = int(argv[it + 1].strip())
 
         return angle, way, orientation
 

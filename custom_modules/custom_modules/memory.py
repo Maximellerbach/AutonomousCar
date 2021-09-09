@@ -1,5 +1,4 @@
-
-class Memory():
+class Memory:
     def __init__(self, queue_size=50):
         self.memory = [{}]  # stored batch of memory
         self.queue_size = queue_size
@@ -41,20 +40,17 @@ if __name__ == "__main__":
     # just some tests
     mem = Memory(2)
 
-    mem['img_path'] = '/images.dzhaduaudz.png'
-    assert(mem == [{'img_path': '/images.dzhaduaudz.png'}])
+    mem["img_path"] = "/images.dzhaduaudz.png"
+    assert mem == [{"img_path": "/images.dzhaduaudz.png"}]
 
     mem.append({})
 
-    mem[-1]['duzhadjzahdaz'] = 12
-    mem['blublu'] = 52
-    assert(mem == [{'img_path': '/images.dzhaduaudz.png'},
-                   {'duzhadjzahdaz': 12, 'blublu': 52}])
+    mem[-1]["duzhadjzahdaz"] = 12
+    mem["blublu"] = 52
+    assert mem == [{"img_path": "/images.dzhaduaudz.png"}, {"duzhadjzahdaz": 12, "blublu": 52}]
 
     mem.append({})
-    mem['img_path'] = '/images.dzhaduaudz.png'
-    assert(mem == [{'duzhadjzahdaz': 12, 'blublu': 52},
-                   {'img_path': '/images.dzhaduaudz.png'}])
+    mem["img_path"] = "/images.dzhaduaudz.png"
+    assert mem == [{"duzhadjzahdaz": 12, "blublu": 52}, {"img_path": "/images.dzhaduaudz.png"}]
 
-    assert(mem() == {'img_path': '/images.dzhaduaudz.png'})
-
+    assert mem() == {"img_path": "/images.dzhaduaudz.png"}
