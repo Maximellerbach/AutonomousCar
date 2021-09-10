@@ -8,7 +8,6 @@ from custom_modules.datasets import dataset_json
 
 def get_key_by_name(dict, name):
     for k in dict.keys():
-        print(k, name, name in k)
         if name in k:
             return dict[k]
     return None
