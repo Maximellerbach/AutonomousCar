@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from ..datasets.dataset_json import Dataset
+
 
 def lane(img, lane, color=(0, 0, 255), show=True, name="img", waitkey=None):
     def rescale(lane, shape):
@@ -50,10 +52,10 @@ def throttle(img, throttle, color=(0, 0, 255), show=True, name="img", waitkey=No
     return img
 
 
-def vis_all(Dataset, input_components, img, output_dict, show=True, waitkey=1):
+def vis_all(Dataset: Dataset, input_components, img, output_dict, show=True, waitkey=1):
     for output_name in output_dict:
         component = Dataset.get_component(output_name)
-        img = component.vis_func(img, output_dict[output_name], show=False)
+        img = component.vis_func(img, output_dict[component.name], show=False)
 
     if show:
         cv2.imshow("img", img)
@@ -62,12 +64,12 @@ def vis_all(Dataset, input_components, img, output_dict, show=True, waitkey=1):
     return img
 
 
-def vis_all_compare(Dataset, input_components, img, gt_dict, output_dict, show=True, waitkey=1):
+def vis_all_compare(Dataset: Dataset, input_components, img, gt_dict, output_dict, show=True, waitkey=1):
     for output_name in output_dict:
         component = Dataset.get_component(output_name)
         img = component.vis_func(img, output_dict[output_name], color=(0, 0, 255), show=False)
 
-        img = component.vis_func(img, gt_dict[output_name], color=(255, 0, 0), show=False)
+        img = component.vis_func(img, gt_dict[component.name], color=(255, 0, 0), show=False)
 
     if show:
         cv2.imshow("compare", img)

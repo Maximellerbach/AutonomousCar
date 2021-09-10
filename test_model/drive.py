@@ -1,17 +1,9 @@
 import os
-os.environ['MKL_NUM_THREADS'] = '4'
-os.environ['GOTO_NUM_THREADS'] = '4'
-os.environ['OMP_NUM_THREADS'] = '4'
-os.environ['openmp'] = 'True'
 import time
 
 import cv2
 from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
-
-core_count = 4
-architectures.tf.config.threading.set_inter_op_parallelism_threads(core_count)
-architectures.tf.config.threading.set_intra_op_parallelism_threads(core_count)
 
 serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))

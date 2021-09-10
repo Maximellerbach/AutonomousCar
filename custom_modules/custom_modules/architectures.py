@@ -80,7 +80,10 @@ def apply_pruning_to_conv(layer):
 
 
 def apply_pruning_to_dense_and_conv(layer):
-    if isinstance(layer, tf.keras.layers.Conv2D) or isinstance(layer, tf.keras.layers.Dense):
+    if (
+        isinstance(layer, tf.keras.layers.Conv2D)
+        or isinstance(layer, tf.keras.layers.Dense)
+    ):
         return tfmot.sparsity.keras.prune_low_magnitude(layer)
     return layer
 

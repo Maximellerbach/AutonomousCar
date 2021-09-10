@@ -168,7 +168,9 @@ class Dataset:
         if isinstance(n_component, int):
             return self.__label_structure[n_component]
         elif isinstance(n_component, str):
-            return self.components_name_mapping[n_component]
+            for n in self.components_name_mapping:
+                if n in n_component:
+                    return self.components_name_mapping[n]
         else:
             raise TypeError("n_component must be an integer or a string")
 

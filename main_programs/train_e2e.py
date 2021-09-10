@@ -24,7 +24,7 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\auto_label6.h5"
+    load_path = "test_model\\models\\auto_label7.h5"
     save_path = "test_model\\models\\auto_label7.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     )
 
     e2e_trainer.build_classifier(
-        architectures.light_linear_CNN, load=True, use_bias=False, drop_rate=0.05, prune=0, regularizer=(0.0, 0.0)
+        architectures.light_linear_CNN, load=True, use_bias=False, drop_rate=0.05, prune=0.5, regularizer=(0.0, 0.0)
     )
 
     e2e_trainer.compile_model(loss=architectures.tf.keras.losses.Huber(delta=1), lr=0.0005, metrics=[])
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         use_plateau_lr=False,
         verbose=True,
         epochs=10,
-        batch_size=32,
+        batch_size=64,
         show_distr=False,
     )
 
