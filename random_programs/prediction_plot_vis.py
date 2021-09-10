@@ -17,7 +17,7 @@ def get_key_by_name(dict, name):
 
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f"{base_path}\\donkeycar\\"
+dos = f"{base_path}\\real_car\\"
 
 physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:

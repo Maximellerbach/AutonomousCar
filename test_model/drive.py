@@ -29,9 +29,11 @@ ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.safe_load_model(
-    f"{basedir}/models/auto_label7.h5", compile=False)
-architectures.apply_predict_decorator(model)
+# model = architectures.safe_load_model(
+#     f"{basedir}/models/auto_label7.h5", compile=False)
+# architectures.apply_predict_decorator(model)
+
+model = architectures.TFLite(f"{basedir}/models/auto_label7.h5", ["direction"])
 
 print("Starting mainloop")
 
@@ -53,7 +55,9 @@ while True:
 
         # PREDICT
         prediction_dict, elapsed_time = model.predict(to_pred)
-        prediction_dict = prediction_dict[0]
+
+        if isinstance(prediction_dict, list):
+            prediction_dict = prediction_dict[0]
         memory["direction"] = get_key_by_name(prediction_dict, "direction")
 
         ser.ChangeAll(memory["direction"], MAXTHROTTLE * memory["throttle"])
