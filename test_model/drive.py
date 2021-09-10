@@ -5,6 +5,14 @@ import cv2
 from custom_modules import architectures, serial_command2
 from custom_modules.datasets import dataset_json
 
+
+def get_key_by_name(dict, name):
+    for k in dict.keys():
+        if name in k:
+            return k
+    return None
+
+
 serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
@@ -21,7 +29,8 @@ ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
+model = architectures.safe_load_model(
+    f"{basedir}/models/auto_label7.h5", compile=False)
 architectures.apply_predict_decorator(model)
 
 print("Starting mainloop")
@@ -39,13 +48,13 @@ while True:
         memory["throttle"] = 0.1
         memory["time"] = time.time()
 
-        to_pred = Dataset.make_to_pred_annotations([img], [memory], input_components)
+        to_pred = Dataset.make_to_pred_annotations(
+            [img], [memory], input_components)
 
         # PREDICT
         prediction_dict, elapsed_time = model.predict(to_pred)
-        print(prediction_dict)
         prediction_dict = prediction_dict[0]
-        memory["direction"] = prediction_dict["direction"]
+        memory["direction"] = get_key_by_name(prediction_dict, "direction")
 
         ser.ChangeAll(memory["direction"], MAXTHROTTLE * memory["throttle"])
 
