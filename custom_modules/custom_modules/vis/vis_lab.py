@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from ..datasets.dataset_json import Dataset
+from .. datasets.dataset_json import Dataset
 
 
 def lane(img, lane, color=(0, 0, 255), show=True, name="img", waitkey=None):
