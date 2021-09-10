@@ -8,5 +8,5 @@ setup(
     author="Maxime Ellerbach",
     licence="MIT License",
     packages=["custom_modules"],
-    install_requires=["opencv-python", "pillow", "numpy", "pykalman", "matplotlib", "serial", "tqdm"],
+    install_requires=["opencv-python", "pillow", "numpy", "pykalman", "matplotlib", "pyserial", "tqdm"],
 )

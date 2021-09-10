@@ -43,6 +43,7 @@ while True:
 
         # PREDICT
         prediction_dict, elapsed_time = model.predict(to_pred)
+        print(prediction_dict)
         prediction_dict = prediction_dict[0]
         memory["direction"] = prediction_dict["direction"]
 
