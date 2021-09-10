@@ -192,8 +192,8 @@ class End2EndTrainer:
 
         self.model.save(self.save_path)
 
-        # tf_lite_file = self.save_path.split(".h5")[0] + ".tflite"
-        # architectures.keras_model_to_tflite(self.save_path, tf_lite_file)
+        tf_lite_file = self.save_path.split(".h5")[0] + ".tflite"
+        architectures.keras_model_to_tflite(self.save_path, tf_lite_file)
 
     def get_gdos(self, flip=True, show=False):
         """Get list of paths in self.dospath.

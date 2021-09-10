@@ -176,8 +176,13 @@ def keras_model_to_tflite(in_filename, out_filename):
 def keras_to_tflite(model, out_filename):
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     converter.target_spec.supported_ops = [
-        tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
-    converter.allow_custom_ops = True
+        tf.lite.OpsSet.TFLITE_BUILTINS,
+        tf.lite.OpsSet.SELECT_TF_OPS]
+    converter.optimizations = [
+        tf.lite.Optimize.OPTIMIZE_FOR_LATENCY
+    ]
+    converter.target_spec.supported_types = [tf.float16]
+    # converter.allow_custom_ops = True
     tflite_model = converter.convert()
     open(out_filename, "wb").write(tflite_model)
 
