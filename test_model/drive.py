@@ -2,7 +2,7 @@ import os
 os.environ['MKL_NUM_THREADS'] = '4'
 os.environ['GOTO_NUM_THREADS'] = '4'
 os.environ['OMP_NUM_THREADS'] = '4'
-os.eviron['openmp'] = 'True'
+os.environ['openmp'] = 'True'
 import time
 
 import cv2
