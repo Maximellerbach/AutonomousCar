@@ -20,10 +20,11 @@ def print_ret(func):
         ret = func(*args, **kwargs)
         print(ret)
         return ret
+
     return wrapped_f
 
 
-class Dataset():
+class Dataset:
     """Dataset class that contains everything needed to load and save a json dataset."""
 
     def __init__(self, lab_structure):
@@ -35,9 +36,8 @@ class Dataset():
         self.set_label_structure(lab_structure)
         self.__meta_components = []
 
-        self.components_name_mapping = dict(
-            [(i.name, i) for i in self.__label_structure])
-        self.format = '.json'
+        self.components_name_mapping = dict([(i.name, i) for i in self.__label_structure])
+        self.format = ".json"
 
     def set_label_structure(self, lab_structure):
         """Set the label structure to the given lab structure.
@@ -46,11 +46,9 @@ class Dataset():
             lab_structure (list): list of components(class) or list of string
         """
         if isinstance(lab_structure[0], str):
-            self.__label_structure = [self.name2component(
-                cmpt) for cmpt in lab_structure] + [time_component()]
+            self.__label_structure = [self.name2component(cmpt) for cmpt in lab_structure] + [time_component()]
         else:
-            self.__label_structure = [i()
-                                      for i in lab_structure] + [time_component()]
+            self.__label_structure = [i() for i in lab_structure] + [time_component()]
 
     def add_components(self, components_object):
         if isinstance(components_object, list):
@@ -71,19 +69,18 @@ class Dataset():
         if len(annotation.keys()) != len(self.__label_structure) and check_length:
             to_save_dict = {**kwargs}
             for component in self.__label_structure:
-                to_save_dict[component.name] = component.get_item(
-                    annotation)
+                to_save_dict[component.name] = component.get_item(annotation)
         else:
             to_save_dict = annotation
 
-        dos = to_save_dict.get('dos')
+        dos = to_save_dict.get("dos")
         assert dos is not None
 
-        time_cmp = to_save_dict.get('time')
+        time_cmp = to_save_dict.get("time")
         assert time_cmp is not None
 
-        filename = f'{dos}{time_cmp}{self.format}'
-        with open(os.path.normpath(filename), 'w') as json_file:
+        filename = f"{dos}{time_cmp}{self.format}"
+        with open(os.path.normpath(filename), "w") as json_file:
             json.dump(to_save_dict, json_file)
 
         return filename
@@ -97,57 +94,54 @@ class Dataset():
             **kwargs (optional): other components to add.
         """
         if isinstance(annotation, list):
-            if kwargs.get('dos') is None:
+            if kwargs.get("dos") is None:
                 raise "dos keyword should be specified"
-            assert(len(annotation) == len(self.__label_structure))
+            assert len(annotation) == len(self.__label_structure)
 
             to_save_dict = {**kwargs}
             for component, annotation in zip(self.__label_structure, annotation):
-                to_save_dict = component.add_item_to_dict(
-                    annotation, to_save_dict)
+                to_save_dict = component.add_item_to_dict(annotation, to_save_dict)
 
         elif isinstance(annotation, dict):
             # check if there is the expected number of labels
             if len(annotation.keys()) != len(self.__label_structure):
                 to_save_dict = {**kwargs}
                 for component in self.__label_structure:
-                    to_save_dict[component.name] = component.get_item(
-                        annotation)
+                    to_save_dict[component.name] = component.get_item(annotation)
             else:
                 to_save_dict = annotation
 
-            if to_save_dict.get('dos') is None:
-                raise ValueError('dos keyword should be specified')
+            if to_save_dict.get("dos") is None:
+                raise ValueError("dos keyword should be specified")
 
         else:
-            raise ValueError(
-                f'annotation should be a list or a dict, not {type(annotation)}')
+            raise ValueError(f"annotation should be a list or a dict, not {type(annotation)}")
 
         for component in self.__meta_components:
             to_save_dict = component.add_item_to_dict(to_save_dict)
 
-        time_cmp = to_save_dict.get('time', time.time())
-        dos_cmp = to_save_dict.get('dos', "")
-        cv2.imwrite(f'{dos_cmp}{time_cmp}.png', img)
-        with open(os.path.normpath(f'{dos_cmp}{time_cmp}{self.format}'), 'w') as json_file:
+        time_cmp = to_save_dict.get("time", time.time())
+        dos_cmp = to_save_dict.get("dos", "")
+        cv2.imwrite(f"{dos_cmp}{time_cmp}.png", img)
+        with open(os.path.normpath(f"{dos_cmp}{time_cmp}{self.format}"), "w") as json_file:
             json.dump(to_save_dict, json_file)
 
     def save_img_and_annotation_deprecated(self, dos, img, annotation):
-        path = dos+str(annotation[-1])  # save json with time component
-        annotation.insert(-1, path+'.png')  # add the img_path component
+        path = dos + str(annotation[-1])  # save json with time component
+        annotation.insert(-1, path + ".png")  # add the img_path component
         cv2.imwrite(annotation[-2], img)
 
         annotation_dict = self.annotation_to_dict_deprecated(annotation)
-        with open(path+self.format, 'w') as json_file:
+        with open(path + self.format, "w") as json_file:
             json.dump(annotation_dict, json_file)
 
     def save_img_encoded_json_deprecated(self, dos, imgpath, annotation):
-        path = dos+str(annotation[-1])
-        component = self.get_component('img_base64')
+        path = dos + str(annotation[-1])
+        component = self.get_component("img_base64")
         annotation.insert(-1, component.encode_img(imgpath))
 
         annotation_dict = self.annotation_to_dict_deprecated(annotation)
-        with open(path+self.format, 'w') as json_file:
+        with open(path + self.format, "w") as json_file:
             json.dump(annotation_dict, json_file)
 
     def annotation_to_dict_deprecated(self, annotation):
@@ -194,6 +188,7 @@ class Dataset():
     def load_annotation(self, path, to_list=True, load_all=False):
         def get_item_comp(component):
             return component.get_item(json_data)
+
         json_data = self.load_json(path)
         if to_list:
             return list([get_item_comp(comp) for comp in self.__label_structure])
@@ -209,6 +204,7 @@ class Dataset():
     def load_meta(self, path, to_list=True):
         def get_item_comp(component):
             return component.get_item(json_data)
+
         json_data = self.load_json(path)
         if to_list:
             return list(map(get_item_comp, self.__meta_components))
@@ -223,9 +219,9 @@ class Dataset():
         if to_list:
             time_cmp = annotation[-1]
         else:
-            time_cmp = annotation.get('time')
+            time_cmp = annotation.get("time")
         dos = os.path.dirname(path)
-        img_path = os.path.normpath(f'{dos}{os.path.sep}{time_cmp}.png')
+        img_path = os.path.normpath(f"{dos}{os.path.sep}{time_cmp}.png")
         return cv2.imread(img_path), annotation
 
     def load_img(self, path):
@@ -234,13 +230,13 @@ class Dataset():
 
     def get_img_path(self, path):
         annotation = self.load_annotation(path, to_list=False)
-        time_cmp = annotation.get('time')
+        time_cmp = annotation.get("time")
         dos = os.path.dirname(path)
-        img_path = os.path.normpath(f'{dos}{os.path.sep}{time_cmp}.png')
+        img_path = os.path.normpath(f"{dos}{os.path.sep}{time_cmp}.png")
         return img_path
 
     def load_annotation_json_from_img(self, img_path, to_list=True):
-        annotation_path = img_path.split('.png')[0] + self.format
+        annotation_path = img_path.split(".png")[0] + self.format
         return self.load_annotation(annotation_path, to_list=to_list)
 
     def make_to_pred_paths(self, paths, input_components):
@@ -255,11 +251,10 @@ class Dataset():
             for it, lab in enumerate(annotation):
                 ybatch[it].append(lab)
 
-        to_pred = [np.array(xbatch, dtype=np.float32)/255]
+        to_pred = [np.array(xbatch, dtype=np.float32) / 255]
 
         for i in input_components:
-            to_pred.append(np.float32([np.float32(tmp_array)
-                                       for tmp_array in ybatch[i]]))
+            to_pred.append(np.float32([np.float32(tmp_array) for tmp_array in ybatch[i]]))
         return to_pred
 
     def make_to_pred_annotations(self, xbatch, annotations, input_components):
@@ -277,16 +272,15 @@ class Dataset():
             else:
                 ValueError("annotations must be a list or a dictionary")
 
-        to_pred = [np.array(xbatch, dtype=np.float32)/255]
+        to_pred = [np.array(xbatch, dtype=np.float32) / 255]
 
         for i in input_components:
-            to_pred.append(np.float32([np.float32(tmp_array)
-                                       for tmp_array in ybatch[i]]))
+            to_pred.append(np.float32([np.float32(tmp_array) for tmp_array in ybatch[i]]))
         return to_pred
 
-    def load_annotation_img_string(self, img_path, cmp_structure=['direction', 'time']):
-        split_img_path = img_path.split(os.path.sep)[-1].split('.png')[0]
-        components_value = split_img_path.split('_')
+    def load_annotation_img_string(self, img_path, cmp_structure=["direction", "time"]):
+        split_img_path = img_path.split(os.path.sep)[-1].split(".png")[0]
+        components_value = split_img_path.split("_")
         tmp_annotation = {}
         for cmp_name, value in zip(cmp_structure, components_value):
             tmp_annotation[cmp_name] = float(value)
@@ -316,13 +310,13 @@ class Dataset():
         n_split = 0
 
         for i in range(1, len(paths)):
-            prev = paths[i-1]
+            prev = paths[i - 1]
             actual = paths[i]
 
             prev_t = self.load_component_item(prev, -1)
             actual_t = self.load_component_item(actual, -1)
 
-            dt = actual_t-prev_t
+            dt = actual_t - prev_t
             if abs(dt) > time_interval:
                 n_split += 1
                 splitted.append([])
@@ -334,13 +328,13 @@ class Dataset():
     def generator_split_sorted_paths(self, paths, time_interval=0.2):
         splitted = []
         for i in range(1, len(paths)):
-            prev = paths[i-1]
+            prev = paths[i - 1]
             actual = paths[i]
 
             prev_t = self.load_component_item(prev, -1)
             actual_t = self.load_component_item(actual, -1)
 
-            dt = actual_t-prev_t
+            dt = actual_t - prev_t
             if abs(dt) > time_interval:
                 yield splitted
                 splitted = []
@@ -349,92 +343,89 @@ class Dataset():
 
     def save_json_sorted(self, sorted, path):
         save_dict = dict(enumerate(sorted))
-        with open(path, 'w') as json_file:
+        with open(path, "w") as json_file:
             json.dump(save_dict, json_file)
 
-    def load_dos(self, dos, search_format='default'):
-        if search_format == 'default':
+    def load_dos(self, dos, search_format="default"):
+        if search_format == "default":
             return glob(f"{dos}*{self.format}")
         else:
             return glob(f"{dos}*{search_format}")
 
     def load_dos_sorted(self, dos, sort_component=-1):
         json_dos_name = dos[:-1]
-        json_path = f'{json_dos_name}{self.format}'
+        json_path = f"{json_dos_name}{self.format}"
         if os.path.isfile(json_path):
             sorted_path_json = self.load_json(json_path)
 
-            if len(sorted_path_json) == len(os.listdir(dos))//2:
+            if len(sorted_path_json) == len(os.listdir(dos)) // 2:
                 sorted_paths = [sorted_path_json[i] for i in sorted_path_json]
                 return sorted_paths
 
-        new_sorted_paths = self.sort_paths_by_component(
-            self.load_dos(dos), sort_component)
+        new_sorted_paths = self.sort_paths_by_component(self.load_dos(dos), sort_component)
         self.save_json_sorted(new_sorted_paths, json_path)
         return new_sorted_paths
 
-    def load_doss(self, base_dos: str, doss_name: str, search_format='default'):
-        doss = [base_dos+dos_name+"\\" for dos_name in doss_name]
+    def load_doss(self, base_dos: str, doss_name: str, search_format="default"):
+        doss = [base_dos + dos_name + "\\" for dos_name in doss_name]
         return [self.load_dos(dos, search_format=search_format) for dos in doss]
 
     def load_doss_sorted(self, base_dos: str, doss_name: str, sort_component=-1):
-        doss = [base_dos+dos_name+"\\" for dos_name in doss_name]
+        doss = [base_dos + dos_name + "\\" for dos_name in doss_name]
         return [self.load_dos_sorted(dos) for dos in doss]
 
     def load_dataset(self, doss: str, flat=False):
         doss_paths = []
-        for dos in glob(doss+"*"):
+        for dos in glob(doss + "*"):
             if os.path.isdir(dos):
-                paths = self.load_dos(dos+"\\")
+                paths = self.load_dos(dos + "\\")
                 if flat:
                     doss_paths += paths
                 else:
                     doss_paths.append(paths)
-                print('loaded dos', dos)
+                print("loaded dos", dos)
 
         return doss_paths
 
     def generator_load_dataset(self, doss: str):
-        for dos in glob(doss+"*"):
+        for dos in glob(doss + "*"):
             if os.path.isdir(dos):
-                yield self.load_dos(dos+"\\")
+                yield self.load_dos(dos + "\\")
 
     def load_dataset_sorted(self, doss: str, flat=False):
         doss_paths = []
-        for dos in glob(doss+"*"):
+        for dos in glob(doss + "*"):
             if os.path.isdir(dos):
-                paths = self.load_dos_sorted(dos+"\\")
+                paths = self.load_dos_sorted(dos + "\\")
                 if flat:
                     doss_paths += paths
                 else:
                     doss_paths.append(paths)
-                print('loaded dos', dos)
+                print("loaded dos", dos)
 
         return doss_paths
 
     def generator_load_dataset_sorted(self, doss: str):
-        for dos in glob(doss+"*"):
+        for dos in glob(doss + "*"):
             if os.path.isdir(dos):
-                yield self.load_dos_sorted(dos+"\\")
+                yield self.load_dos_sorted(dos + "\\")
 
     def load_dataset_sequence(self, doss: str, max_interval=0.2):
         doss_sequences = []
-        for dos in glob(doss+"*"):
+        for dos in glob(doss + "*"):
             if os.path.isdir(dos):
-                paths = self.load_dos_sorted(dos+"\\")
-                paths_sequence = self.split_sorted_paths(
-                    paths, time_interval=max_interval)
+                paths = self.load_dos_sorted(dos + "\\")
+                paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
                 doss_sequences.append(list(paths_sequence))
-                print('loaded dos', dos)
+                print("loaded dos", dos)
 
         return doss_sequences
 
     def generator_load_dataset_sequence(self, doss: str, max_interval=0.2):
-        for dos in glob(doss+"*"):
+        for dos in glob(doss + "*"):
             if os.path.isdir(dos):
-                paths = self.load_dos_sorted(dos+"\\")
-                yield self.generator_split_sorted_paths(
-                    paths, time_interval=max_interval)
+                paths = self.load_dos_sorted(dos + "\\")
+                yield self.generator_split_sorted_paths(paths, time_interval=max_interval)
 
     def imgstring2json(self, dataset_obj, dst_dos, path):
         img = dataset_obj.load_image(path)
@@ -455,6 +446,7 @@ class Dataset():
 
     def imgstring2json_dos(self, dataset_obj, imgstring2dos_function, src_dos, dst_dos):
         from tqdm import tqdm
+
         try:  # ugly way to create a dir if not exist
             os.mkdir(dst_dos)
         except OSError:
@@ -477,7 +469,7 @@ class Dataset():
         mapping = self.names_component_mapping()
         component = mapping.get(component_name)
         if component is None:
-            raise ValueError('please enter a valid component name')
+            raise ValueError("please enter a valid component name")
         return component()
 
     def components_names2indexes(self):
@@ -508,7 +500,7 @@ class direction_component:
         self.vis_func = vis_lab.direction
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, self.default)) + self.offset) * self.scale
 
     def add_item_to_dict(self, item, annotation_dict: dict):
         annotation_dict[self.name] = self.type(item)
@@ -518,7 +510,7 @@ class direction_component:
         return self.type(string)
 
     def flip_item(self, item):
-        return item*-1
+        return item * -1
 
 
 class cte_component:
@@ -536,7 +528,7 @@ class cte_component:
         self.vis_func = vis_lab.direction
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, self.default)) + self.offset) * self.scale
 
     def add_item_to_dict(self, item, annotation_dict: dict):
         annotation_dict[self.name] = self.type(item)
@@ -546,7 +538,7 @@ class cte_component:
         return self.type(string)
 
     def flip_item(self, item):
-        return item*-1
+        return item * -1
 
 
 class speed_component:
@@ -563,7 +555,7 @@ class speed_component:
         self.is_couple = False
 
     def get_item(self, json_data):
-        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, self.default)) + self.offset) * self.scale
 
     def add_item_to_dict(self, item, annotation_dict: dict):
         annotation_dict[self.name] = self.type(item)
@@ -588,7 +580,7 @@ class throttle_component:
         self.vis_func = vis_lab.throttle
 
     def get_item(self, json_data: dict):
-        return (self.type(json_data.get(self.name, self.default))+self.offset)*self.scale
+        return (self.type(json_data.get(self.name, self.default)) + self.offset) * self.scale
 
     def add_item_to_dict(self, item, annotation_dict: dict):
         annotation_dict[self.name] = self.type(item)
@@ -604,24 +596,22 @@ class right_lane_component:
         self.type = np.float32
         self.xnorm = 80
         self.ynorm = 60
-        self.normarray = np.array(
-            [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
-        self.fliparray = np.array(
-            [-1, 0, -1, 0])
+        self.normarray = np.array([self.xnorm, self.ynorm, self.xnorm, self.ynorm])
+        self.fliparray = np.array([-1, 0, -1, 0])
         self.default = [[0, 0], [0, 0]]
         self.default_flat = [0, 0, 0, 0]
 
         self.flip = True
         self.iterable = True
         self.weight_acc = 5
-        self.couple = 'left_lane'
+        self.couple = "left_lane"
         self.is_couple = True
         self.vis_func = vis_lab.lane
 
     def get_item(self, json_data: dict):
         pts_list = json_data.get(self.name)
         if pts_list is not None:
-            return (np.array(pts_list[0]+pts_list[1], dtype=self.type) / self.normarray) - 1
+            return (np.array(pts_list[0] + pts_list[1], dtype=self.type) / self.normarray) - 1
         else:
             return self.default
 
@@ -642,24 +632,22 @@ class left_lane_component:
         self.type = np.float32
         self.xnorm = 80
         self.ynorm = 60
-        self.normarray = np.array(
-            [self.xnorm, self.ynorm, self.xnorm, self.ynorm])
-        self.fliparray = np.array(
-            [-1, 0, -1, 0])
+        self.normarray = np.array([self.xnorm, self.ynorm, self.xnorm, self.ynorm])
+        self.fliparray = np.array([-1, 0, -1, 0])
         self.default = [[0, 0], [0, 0]]
         self.default_flat = [0, 0, 0, 0]
 
         self.flip = True
         self.iterable = True
         self.weight_acc = 5
-        self.couple = 'right_lane'
+        self.couple = "right_lane"
         self.is_couple = True
         self.vis_func = vis_lab.lane
 
     def get_item(self, json_data: dict):
         pts_list = json_data.get(self.name)
         if pts_list is not None:
-            return (np.array(pts_list[0]+pts_list[1], dtype=self.type) / self.normarray) - 1
+            return (np.array(pts_list[0] + pts_list[1], dtype=self.type) / self.normarray) - 1
         else:
             return self.default
 
@@ -685,9 +673,9 @@ class img_path_component:
         return self.type(json_data[self.name])
 
     def add_item_to_dict(self, annotation_dict: dict):
-        time_cmp = annotation_dict.get('time', time.time())
-        dos = annotation_dict.get('dos', "")
-        img_path = os.path.normpath(f'{dos}/{time_cmp}.png')
+        time_cmp = annotation_dict.get("time", time.time())
+        dos = annotation_dict.get("dos", "")
+        img_path = os.path.normpath(f"{dos}/{time_cmp}.png")
 
         annotation_dict[self.name] = img_path
         return annotation_dict
@@ -726,7 +714,7 @@ class imgbase64_component:
 
     def encode_img(self, imgpath: str):
         with open(imgpath, "rb") as img_file:
-            img_encoded = base64.b64encode(img_file.read()).decode('utf-8')
+            img_encoded = base64.b64encode(img_file.read()).decode("utf-8")
         return img_encoded
 
     def add_item_to_dict(self, img_path: str, annotation_dict: dict):

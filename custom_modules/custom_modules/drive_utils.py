@@ -9,8 +9,11 @@ def printusage():
     print("  Windows: COMx where x is a number")
     print("  Linux: /dev/ttyXYZ where XYZ can be S2 or USB0 or any valid tty type")
     print("         keep in mind you need root priviledges to acces serial ports in Linux")
-    print("         so execute the command in priviledge mode like: sudo python3 " +
-          os.path.basename(__file__) + " -c /dev/ttyS2")
+    print(
+        "         so execute the command in priviledge mode like: sudo python3 "
+        + os.path.basename(__file__)
+        + " -c /dev/ttyS2"
+    )
     print("  You can use as well environement variable COM_PORT. Arguments will prevent on environment variable")
     print("To install Xbox drivers on RPI: sudo apt-get install xboxdrv")
 
@@ -33,7 +36,7 @@ def get_port_name():
             printusage()
             sys.exit(2)
 
-    if (comPort == ""):
+    if comPort == "":
         try:
             comPort = os.environ["COM_PORT"]
         except KeyError:
@@ -52,7 +55,7 @@ def get_controller_buttons(joy):
 
 
 def direction2categorical(direction, dir_range=(2, 10)):
-    return round(dir_range[0]+direction*(dir_range[1] - dir_range[0]))
+    return round(dir_range[0] + direction * (dir_range[1] - dir_range[0]))
 
 
 def dict2list(dict):

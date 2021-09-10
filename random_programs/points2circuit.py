@@ -24,16 +24,16 @@ def plot_points(left_point, right_point):
     plt.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     point_path = "C:\\Users\\maxim\\GITHUB\\sim\\sdsandbox\\sdsim\\Assets\\Resources\\Track\\circuit_launch.txt"
     points = []
 
-    with open(point_path, 'r') as f:
+    with open(point_path, "r") as f:
         for line in f:
             try:
                 # considering: [x, y, z] : [width, height, depth]
-                x, y, z = line.split(',')
+                x, y, z = line.split(",")
                 points.append(np.array([float(x), float(y), float(z)]))
             except:
                 pass
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     left_bound = []
     right_bound = []
     for i in range(1, len(points)):
-        l, r = get_circuit_bound(points[i-1], points[i])
+        l, r = get_circuit_bound(points[i - 1], points[i])
         left_bound.append(l)
         right_bound.append(r)
 

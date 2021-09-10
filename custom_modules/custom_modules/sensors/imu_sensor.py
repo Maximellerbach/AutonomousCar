@@ -4,8 +4,7 @@ from threading import Thread
 from di_sensors.inertial_measurement_unit import InertialMeasurementUnit
 
 
-class sensor():
-
+class sensor:
     def __init__(self, lookback, calib_it):
 
         self.imu = InertialMeasurementUnit()
@@ -21,7 +20,7 @@ class sensor():
 
         eat = time.time()
 
-        self.dat = (eat-sat)/calib_it
+        self.dat = (eat - sat) / calib_it
         self.calib = np.average(calib, axis=0)
         print(self.calib)
 
@@ -39,11 +38,11 @@ class sensor():
         c = 0
         st = time.time()
 
-        while(True):
+        while True:
             try:
 
                 et = time.time()
-                dt = et-st
+                dt = et - st
 
                 st = time.time()
 
@@ -59,11 +58,10 @@ class sensor():
                     avacc = np.average(acc, axis=0)
                     avgy = np.average(gyro, axis=0)
 
-                    self.__v = 0.99*(self.__v + avacc[0]*dt)
+                    self.__v = 0.99 * (self.__v + avacc[0] * dt)
 
-                    if np.abs(avgy[2]-self.gyro_calib[2]) > 0.1:
-                        self.__v += 0.001 * avacc[1] / \
-                            (avgy[2]-self.gyro_calib[2])
+                    if np.abs(avgy[2] - self.gyro_calib[2]) > 0.1:
+                        self.__v += 0.001 * avacc[1] / (avgy[2] - self.gyro_calib[2])
 
                     # x = 1/2* avacc[0] * (dt*dt) + self.pos[0] + self.__v[0]
                     # y = 1/2* avacc[1] * (dt*dt) + self.pos[1] + self.__v[1]
@@ -91,6 +89,6 @@ if __name__ == "__main__":
     thread = Thread(target=vel_sensor.loop)
     thread.start()
 
-    while(True):
+    while True:
         time.sleep(0.1)
         print(vel_sensor.get_vel())

@@ -29,12 +29,12 @@ for opt, arg in opts:
         printusage()
         sys.exit(2)
 
-    if (comPort == ""):
+    if comPort == "":
         try:
             comPort = os.environ["COM_PORT"]
         except KeyError:
             pass
-    if (comPort != ""):
+    if comPort != "":
         ser = serial_command.control(comPort)
         try:
             print("Turns:" + str(ser.GetTurns()))
@@ -66,8 +66,9 @@ for opt, arg in opts:
                 time.sleep(5)
                 print("Turns:" + str(ser.GetTurns()))
 
-            ser.ChangeAll(serial_command.direction.DIR_STRAIGHT,
-                          serial_command.motor.MOTOR_STOP, serial_command.motor.MOTOR_STOP, 255)
+            ser.ChangeAll(
+                serial_command.direction.DIR_STRAIGHT, serial_command.motor.MOTOR_STOP, serial_command.motor.MOTOR_STOP, 255
+            )
             print("changed all")
 
             print("Turns:" + str(ser.GetTurns()))

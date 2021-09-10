@@ -3,30 +3,30 @@ import numpy as np
 import math
 
 
-class Car():
+class Car:
     WHEEL_BASE = 0.257
     REAR_DIAMETER = 0.105
     FRONT_DIAMETER = 0.082
-    REAR_PERIMETER = REAR_DIAMETER*math.pi
-    FRONT_PERIMETER = FRONT_DIAMETER*math.pi
+    REAR_PERIMETER = REAR_DIAMETER * math.pi
+    FRONT_PERIMETER = FRONT_DIAMETER * math.pi
 
 
 def transform_axes(axes, multiplier):
-    return axes*multiplier
+    return axes * multiplier
 
 
 def derivate_axes(axes, dt, axes_len=None):
     axes_len = axes_len if axes_len is not None else axes.shape
-    return axes/np.full(axes_len, dt)
+    return axes / np.full(axes_len, dt)
 
 
 def integrate_axes(integration, axes, dt, axes_len=None):
     axes_len = axes_len if axes_len is not None else axes.shape
-    return integration+axes*np.full(axes_len, dt)
+    return integration + axes * np.full(axes_len, dt)
 
 
-class CompteTour():
-    AXES_TRANSFORMER = np.array([(1/84)*Car.REAR_PERIMETER])
+class CompteTour:
+    AXES_TRANSFORMER = np.array([(1 / 84) * Car.REAR_PERIMETER])
     MEA_ERROR = np.array([0.05])
     INITIAL_STATE = np.array([0])
     DATA_LEVEL = 0  # (metric, speed, acc)
@@ -39,15 +39,14 @@ class CompteTour():
     @classmethod
     def update(cls, new_measurement, new_time=None):
         new_time = new_time if new_time is not None else time.time()
-        new_measurement = transform_axes(
-            np.array(new_measurement), cls.AXES_TRANSFORMER)
+        new_measurement = transform_axes(np.array(new_measurement), cls.AXES_TRANSFORMER)
 
-        dt = new_time-cls.time_last_received
+        dt = new_time - cls.time_last_received
 
-        new_speed = derivate_axes(new_measurement-cls.datas[0], dt)
-        new_acc = derivate_axes(new_speed-cls.datas[1], dt)
+        new_speed = derivate_axes(new_measurement - cls.datas[0], dt)
+        new_acc = derivate_axes(new_speed - cls.datas[1], dt)
 
-        cls.position = cls.position+new_measurement
+        cls.position = cls.position + new_measurement
         cls.speed = new_speed
         cls.acc = new_acc
 
@@ -56,7 +55,7 @@ class CompteTour():
         cls.measurement = new_measurement
 
 
-class Accelerometer():
+class Accelerometer:
     AXES_TRANSFORMER = np.array([1, 1, 1])
     MEA_ERROR = np.array([0.05, 0.05, 0.05])
     INITIAL_STATE = np.array([0, 0, 0])
@@ -70,10 +69,9 @@ class Accelerometer():
     @classmethod
     def update(cls, new_measurement, new_time=None):
         new_time = new_time if new_time is not None else time.time()
-        new_measurement = transform_axes(
-            np.array(new_measurement), cls.AXES_TRANSFORMER)
+        new_measurement = transform_axes(np.array(new_measurement), cls.AXES_TRANSFORMER)
 
-        dt = new_time-cls.time_last_received
+        dt = new_time - cls.time_last_received
 
         new_speed = integrate_axes(cls.speed, new_measurement, dt)
         new_position = integrate_axes(cls.position, new_speed, dt)
@@ -87,7 +85,7 @@ class Accelerometer():
         cls.measurement = new_measurement
 
 
-class Magnetometer():
+class Magnetometer:
     AXES_TRANSFORMER = np.array([1, 1, 1])
     MEA_ERROR = np.array([0.05, 0.05, 0.05])
     INITIAL_STATE = np.array([0, 0, 0])
@@ -101,15 +99,14 @@ class Magnetometer():
     @classmethod
     def update(cls, new_measurement, new_time=None):
         new_time = new_time if new_time is not None else time.time()
-        new_measurement = transform_axes(
-            np.array(new_measurement), cls.AXES_TRANSFORMER)
+        new_measurement = transform_axes(np.array(new_measurement), cls.AXES_TRANSFORMER)
 
-        dt = new_time-cls.time_last_received
+        dt = new_time - cls.time_last_received
 
-        new_speed = derivate_axes(new_measurement-cls.datas[0], dt)
-        new_acc = derivate_axes(new_speed-cls.datas[1], dt)
+        new_speed = derivate_axes(new_measurement - cls.datas[0], dt)
+        new_acc = derivate_axes(new_speed - cls.datas[1], dt)
 
-        cls.position = cls.position+new_measurement
+        cls.position = cls.position + new_measurement
         cls.speed = new_speed
         cls.acc = new_acc
 
@@ -118,7 +115,7 @@ class Magnetometer():
         cls.measurement = new_measurement
 
 
-class Fusion():
+class Fusion:
     sensors = []
 
     @classmethod

@@ -66,7 +66,7 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        time.sleep(1) 
+        time.sleep(1)
 
     def __enter__(self):
         return self
@@ -74,13 +74,13 @@ class control:
     def stop(self):
         self.__isRuning = False
         self.__thread.join()
-        if (self.__ser.is_open):
+        if self.__ser.is_open:
             with lock:
                 self.__ser.close()  # close port
 
     def __safeWrite__(self, command):
-        if (self.__ser.is_open):
-            while(self.__isOperation):
+        if self.__ser.is_open:
+            while self.__isOperation:
                 pass
             self.__isOperation = True
             self.__ser.write(command)
@@ -90,30 +90,27 @@ class control:
     def ChangeDirection(self, dir):
         """Change direction, use the direction enum."""
         # apply the mask for direction and send the command
-        self.__command[0] = (self.__command[0] & 0b11110000) | (
-            dir.to_bytes(1, byteorder='big')[0] & 0b00001111)
+        self.__command[0] = (self.__command[0] & 0b11110000) | (dir.to_bytes(1, byteorder="big")[0] & 0b00001111)
         self.__toSend.append(self.__command)
 
     def ChangeMotorA(self, mot):
         """Change motor A state, use the motor enum."""
-        self.__command[0] = (self.__command[0] & 0b11001111) | (
-            (mot.to_bytes(1, byteorder='big')[0] & 0b000011) << 4)
+        self.__command[0] = (self.__command[0] & 0b11001111) | ((mot.to_bytes(1, byteorder="big")[0] & 0b000011) << 4)
         self.__toSend.append(self.__command)
 
     def ChangeMotorB(self, mot):
         """Change motor A state, use the motor enum."""
-        self.__command[0] = (self.__command[0] & 0b00111111) | (
-            (mot.to_bytes(1, byteorder='big')[0] & 0b00000011) << 6)
+        self.__command[0] = (self.__command[0] & 0b00111111) | ((mot.to_bytes(1, byteorder="big")[0] & 0b00000011) << 6)
         self.__toSend.append(self.__command)
 
     def ChangePWM(self, pwm):
         """Change both motor speed, use byte from 0 to 255."""
-        if (pwm < 0):
+        if pwm < 0:
             pwm = 0
-        if (pwm > 255):
+        if pwm > 255:
             pwm = 255
         self.__command[1] = pwm
-        self.__dpwn = pwm-self.__pwm
+        self.__dpwn = pwm - self.__pwm
         self.__pwm = pwm
         self.__toSend.append(self.__command)
 
@@ -131,18 +128,15 @@ class control:
 
         PWM is a byte from 0 to 255.
         """
-        self.__command[0] = (self.__command[0] & 0b11110000) | (
-            dir.to_bytes(1, byteorder='big')[0] & 0b00001111)
-        self.__command[0] = (self.__command[0] & 0b11001111) | (
-            (motorA.to_bytes(1, byteorder='big')[0] & 0b00000011) << 4)
-        self.__command[0] = (self.__command[0] & 0b00111111) | (
-            (motorB.to_bytes(1, byteorder='big')[0] & 0b00000011) << 6)
-        if (pwm < 0):
+        self.__command[0] = (self.__command[0] & 0b11110000) | (dir.to_bytes(1, byteorder="big")[0] & 0b00001111)
+        self.__command[0] = (self.__command[0] & 0b11001111) | ((motorA.to_bytes(1, byteorder="big")[0] & 0b00000011) << 4)
+        self.__command[0] = (self.__command[0] & 0b00111111) | ((motorB.to_bytes(1, byteorder="big")[0] & 0b00000011) << 6)
+        if pwm < 0:
             pwm = 0
-        if (pwm > 255):
+        if pwm > 255:
             pwm = 255
         self.__command[1] = pwm
-        self.__dpwn = pwm-self.__pwm
+        self.__dpwn = pwm - self.__pwm
         self.__pwm = pwm
         self.__toSend.append(self.__command)
 
@@ -152,19 +146,17 @@ class control:
                 self.__safeWrite__(cmd)
                 self.__toSend.remove(cmd)
             if self.__ser.in_waiting > 0:
-                while(self.__isOperation):
+                while self.__isOperation:
                     pass
                 self.__isOperation = True
                 try:
                     out = self.__ser.readlines()[-1]
-                    if out != '' or out is not None:
+                    if out != "" or out is not None:
                         new_rounds = -int(out.decode())
                         self.__sensor_compteTour.update(new_rounds)
-                        print([
-                            self.__sensor_compteTour.position,
-                            self.__sensor_compteTour.speed,
-                            self.__sensor_compteTour.acc
-                            ])
+                        print(
+                            [self.__sensor_compteTour.position, self.__sensor_compteTour.speed, self.__sensor_compteTour.acc]
+                        )
 
                 except:  # do not use bare except
                     pass

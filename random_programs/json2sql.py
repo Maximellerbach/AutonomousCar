@@ -10,12 +10,12 @@ datasetSQL = dataset_sql.Dataset()
 
 src_dos = f"{base_path}\\json_dataset\\20 checkpoint patch"
 
-dataset_name = src_dos.split('\\')[-1]
-paths = datasetJson.load_dos_sorted(src_dos+"\\")
+dataset_name = src_dos.split("\\")[-1]
+paths = datasetJson.load_dos_sorted(src_dos + "\\")
 for path in paths:
     img, annotation = datasetJson.load_img_and_annotation(path, to_list=False)
     meta = datasetJson.load_meta(path, to_list=False)
-    annotation['img_path'] = meta['img_path']
+    annotation["img_path"] = meta["img_path"]
     datasetSQL.save_annotation_dict(annotation, dataset_name=dataset_name)
 
 paths = datasetSQL.load_dataset_sorted("20 checkpoint patch")

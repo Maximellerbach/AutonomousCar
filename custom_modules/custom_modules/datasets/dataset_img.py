@@ -3,12 +3,12 @@ from glob import glob
 import cv2
 
 
-class Dataset():
+class Dataset:
     """Deprecated dataset class."""
 
     def __init__(self, lab_structure):
         self.label_structure = [i(it) for it, i in enumerate(lab_structure)]
-        self.format = '.png'
+        self.format = ".png"
 
     def split_string(self, img_string, sep1="\\", sep2="_", img_format=".png"):
         return img_string.split("\\")[-1].split(img_format)[0].split("_")
@@ -48,13 +48,13 @@ class Dataset():
         n_split = 0
 
         for i in range(1, len(paths)):
-            prev = paths[i-1]
+            prev = paths[i - 1]
             actual = paths[i]
 
             prev_t = self.load_component_item(prev, -1)
             actual_t = self.load_component_item(actual, -1)
 
-            dt = actual_t-prev_t
+            dt = actual_t - prev_t
             if abs(dt) > time_interval:
                 n_split += 1
                 splitted.append([])
@@ -65,10 +65,9 @@ class Dataset():
 
     def load_dataset_sorted(self, doss, sort_component=-1):
         sorted_doss = []
-        for dos in glob(doss+f"*{self.format}"):
-            paths = self.load_dos(dos+"\\")
-            sorted_doss.append(self.sort_paths_by_component(
-                paths, sort_component))  # -1 is time component
+        for dos in glob(doss + f"*{self.format}"):
+            paths = self.load_dos(dos + "\\")
+            sorted_doss.append(self.sort_paths_by_component(paths, sort_component))  # -1 is time component
 
         return sorted_doss
 
@@ -78,22 +77,21 @@ class Dataset():
         return self.sort_paths_by_component(paths, sort_component)
 
     def load_dos(self, dos):
-        return glob(dos+f"*{self.format}")
+        return glob(dos + f"*{self.format}")
 
     def load_dataset(self, doss):
         doss_paths = []
-        for dos in glob(doss+f"*{self.format}"):
-            paths = self.load_dos(dos+"\\")
+        for dos in glob(doss + f"*{self.format}"):
+            paths = self.load_dos(dos + "\\")
             doss_paths.append(paths)
 
         return doss_paths
 
     def load_dataset_sequence(self, doss, max_interval=0.2):
         doss_sequences = []
-        for dos in glob(doss+f"*{self.format}"):
-            paths = self.load_dos_sorted(dos+"\\")
-            paths_sequence = self.split_sorted_paths(
-                paths, time_interval=max_interval)
+        for dos in glob(doss + f"*{self.format}"):
+            paths = self.load_dos_sorted(dos + "\\")
+            paths_sequence = self.split_sorted_paths(paths, time_interval=max_interval)
             doss_sequences.append(list(paths_sequence))
 
         return doss_sequences
@@ -148,7 +146,7 @@ def annotation_to_name(annotation):
     for it, component in enumerate(annotation):
         string += str(component)
 
-        if it != len(annotation)-1:
+        if it != len(annotation) - 1:
             string += "_"
         else:
             string += ".png"
@@ -169,20 +167,20 @@ def save(save_path, dts, annotation):
     for i in tqdm(range(len(dts))):
         time.sleep(0.0001)
         name = annotation_to_name(annotation[i])
-        shutil.copy(dts[i], save_path+name)
+        shutil.copy(dts[i], save_path + name)
 
 
 # to transform old data format into new ones
 def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0.45):
     # Function from my Virtual Racing repo
     def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed):
-        dt_throttle = max_throttle-min_throttle
+        dt_throttle = max_throttle - min_throttle
 
-        optimal_acc = ((target_speed-current_speed)/target_speed)
+        optimal_acc = (target_speed - current_speed) / target_speed
         if optimal_acc < 0:
             optimal_acc = 0
 
-        optimal_acc = min_throttle+((optimal_acc**0.1)*(1-abs(st)))*dt_throttle
+        optimal_acc = min_throttle + ((optimal_acc ** 0.1) * (1 - abs(st))) * dt_throttle
 
         if optimal_acc > max_throttle:
             optimal_acc = max_throttle
@@ -193,12 +191,11 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
 
     dataset = Dataset([direction_component, speed_component, time_component])
 
-    dts = glob(dos+"*.png")
+    dts = glob(dos + "*.png")
     Y = []
     for path in dts:
         annotation = dataset.load_annotation(path)
-        converted_throttle = opt_acc(
-            annotation[0], annotation[1], max_throttle, min_throttle, target_speed)
+        converted_throttle = opt_acc(annotation[0], annotation[1], max_throttle, min_throttle, target_speed)
         annotation.insert(2, converted_throttle)
 
         Y.append(annotation)
@@ -208,7 +205,7 @@ def angle_speed_to_throttle(dos, target_speed=18, max_throttle=1, min_throttle=0
 def add_dummy_speed(dos, dummy_speed=10):
     dataset = Dataset([direction_component, time_component])
 
-    dts = glob(dos+"*.png")
+    dts = glob(dos + "*.png")
     Y = []
     for path in dts:
         annotation = dataset.load_annotation(path)
@@ -221,7 +218,7 @@ def add_dummy_speed(dos, dummy_speed=10):
 def cat2linear_dataset(dos):
     dataset = Dataset([direction_component, time_component])
 
-    dts = glob(dos+"*.png")
+    dts = glob(dos + "*.png")
     Y = []
     for path in dts:
         annotation = dataset.load_annotation(path)
@@ -232,13 +229,13 @@ def cat2linear_dataset(dos):
 
 
 def cat2linear(ny):
-    return (ny-7)/4
+    return (ny - 7) / 4
 
 
 if __name__ == "__main__":
     import os
+
     base_path = os.path.expanduser("~") + "\\random_data"
 
-    dts, annotation = cat2linear_dataset(
-        f"{base_path}\\11 sim circuit 2\\")
+    dts, annotation = cat2linear_dataset(f"{base_path}\\11 sim circuit 2\\")
     save(f"{base_path}\\linear\\11 sim circuit 2\\", dts, annotation)

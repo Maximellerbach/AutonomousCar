@@ -15,7 +15,7 @@ def map_value(value, min, max, outmin, outmax):
     elif value > max:
         value = max
 
-    return ((outmax-outmin)*(value-min))/(max-min) + outmin
+    return ((outmax - outmin) * (value - min)) / (max - min) + outmin
 
 
 class control:
@@ -54,13 +54,13 @@ class control:
     def stop(self):
         self.__isRuning = False
         self.__thread.join()
-        if (self.__ser.is_open):
+        if self.__ser.is_open:
             with lock:
                 self.__ser.close()  # close port
 
     def __safeWrite__(self, command):
-        if (self.__ser.is_open):
-            while(self.__isOperation):
+        if self.__ser.is_open:
+            while self.__isOperation:
                 pass
             self.__isOperation = True
             self.__ser.write(command)

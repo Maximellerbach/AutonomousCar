@@ -9,9 +9,9 @@ from custom_modules.vis import vis_lab
 from matplotlib.animation import FuncAnimation
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f'{base_path}\\donkeycar\\'
+dos = f"{base_path}\\donkeycar\\"
 
-physical_devices = tensorflow.config.list_physical_devices('GPU')
+physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
@@ -19,11 +19,10 @@ for gpu_instance in physical_devices:
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
-model = architectures.safe_load_model(
-    'test_model\\models\\auto_label5.h5', compile=False)
+model = architectures.safe_load_model("test_model\\models\\auto_label5.h5", compile=False)
 architectures.apply_predict_decorator(model)
 
-model2 = architectures.TFLite('test_model\\models\\auto_label5.tflite', output_names=['direction'])
+model2 = architectures.TFLite("test_model\\models\\auto_label5.tflite", output_names=["direction"])
 
 gdos = Dataset.load_dataset_sorted(dos, flat=True)
 model_outputs = architectures.get_model_output_names(model)
@@ -50,9 +49,9 @@ ax3.set_ylim(-1.0, 1.0)
 ax3.set_xlim(0, 200)
 ax3.set_ylabel("pred2", color="purple")
 
-line1, = ax1.plot([], [], lw=1, color="blue")
-line2, = ax2.plot([], [], lw=1, color="red")
-line3, = ax3.plot([], [], lw=1, color="purple")
+(line1,) = ax1.plot([], [], lw=1, color="blue")
+(line2,) = ax2.plot([], [], lw=1, color="red")
+(line3,) = ax3.plot([], [], lw=1, color="purple")
 
 X = deque([0], maxlen=200)
 Y = deque([0], maxlen=200)
@@ -67,11 +66,9 @@ def init():
 
 
 def animate(i):
-    img, annotation = Dataset.load_img_and_annotation(
-        gdos[i], to_list=False)
+    img, annotation = Dataset.load_img_and_annotation(gdos[i], to_list=False)
 
-    to_pred = Dataset.make_to_pred_annotations(
-        [img], [annotation], input_components)
+    to_pred = Dataset.make_to_pred_annotations([img], [annotation], input_components)
     prediction_dict, elapsed_time = model.predict(to_pred)
     prediction_dict = prediction_dict[0]
 
@@ -82,10 +79,10 @@ def animate(i):
     vis_lab.vis_all_compare(Dataset, [1], img, annotation, prediction_dict)
 
     if len(X) < 200:  # fill the X list with numbers from 0 to 200
-        X.append(X[-1]+1)
-    Y.append(annotation['direction'])
-    Z.append(prediction_dict['direction'])
-    Z2.append(prediction_dict2['direction'])
+        X.append(X[-1] + 1)
+    Y.append(annotation["direction"])
+    Z.append(prediction_dict["direction"])
+    Z2.append(prediction_dict2["direction"])
 
     line1.set_data(X, Y)
     line2.set_data(X, Z)
@@ -94,6 +91,12 @@ def animate(i):
     return line1, line2
 
 
-ani = FuncAnimation(fig, animate, init_func=init, interval=1, frames=len(gdos), )
+ani = FuncAnimation(
+    fig,
+    animate,
+    init_func=init,
+    interval=1,
+    frames=len(gdos),
+)
 # plt.draw()
 plt.show()

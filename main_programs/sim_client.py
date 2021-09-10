@@ -16,26 +16,25 @@ from custom_modules.visual_interface import AutoInterface, windowInterface
 from gym_donkeycar.core.sim_client import SDClient
 from PIL import Image
 
-physical_devices = tensorflow.config.list_physical_devices('GPU')
+physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 
 def transform_st(st, sq, mult):
     if st >= 0:
-        return (st*mult)**sq
-    return -np.absolute(st*mult)**sq
+        return (st * mult) ** sq
+    return -np.absolute(st * mult) ** sq
 
 
 def opt_acc(st, current_speed, max_throttle, min_throttle, target_speed):
-    dt_throttle = max_throttle-min_throttle
+    dt_throttle = max_throttle - min_throttle
 
-    optimal_acc = ((target_speed-current_speed)/target_speed)
+    optimal_acc = (target_speed - current_speed) / target_speed
     if optimal_acc < 0:
         optimal_acc = 0
 
-    optimal_acc = min_throttle + \
-        ((optimal_acc**0.1)*(1-np.absolute(st)))*dt_throttle
+    optimal_acc = min_throttle + ((optimal_acc ** 0.1) * (1 - np.absolute(st))) * dt_throttle
 
     if optimal_acc > max_throttle:
         optimal_acc = max_throttle
@@ -56,19 +55,28 @@ def cat2linear(cat, coef=[-1, -0.5, 0, 0.5, 1], av=False):
 
         if count != 0:
             for ait, nyx in enumerate(cat[0]):
-                st += nyx*coef[ait]
+                st += nyx * coef[ait]
             st /= count
 
     else:
         st = 0
         for ait, nyx in enumerate(cat[0]):
-            st += nyx*coef[ait]
+            st += nyx * coef[ait]
     return st
 
 
 class SimpleClient(SDClient):
-    def __init__(self, address, model, dataset, input_components, name='0',
-                 PID_settings=(15, 0.5, 0.0, 1.0, 1.0), buffer_time=0.1, sleep_time=0.01):
+    def __init__(
+        self,
+        address,
+        model,
+        dataset,
+        input_components,
+        name="0",
+        PID_settings=(15, 0.5, 0.0, 1.0, 1.0),
+        buffer_time=0.1,
+        sleep_time=0.01,
+    ):
 
         super().__init__(*address, poll_socket_sleep_time=sleep_time)
         self.model = model
@@ -80,13 +88,12 @@ class SimpleClient(SDClient):
         self.buffer_time = buffer_time
 
         try:
-            self.input_names = dataset.indexes2components_names(
-                input_components)
+            self.input_names = dataset.indexes2components_names(input_components)
             self.output_names = architectures.get_model_output_names(model)
         except:
             pass
 
-        self.default_dos = f'C:\\Users\\maxim\\recorded_imgs\\{self.name}_{time.time()}\\'
+        self.default_dos = f"C:\\Users\\maxim\\recorded_imgs\\{self.name}_{time.time()}\\"
 
         # declare some variables
         self.car_loaded = False
@@ -103,7 +110,7 @@ class SimpleClient(SDClient):
 
     def on_msg_recv(self, json_packet):
         try:
-            msg_type = json_packet['msg_type']
+            msg_type = json_packet["msg_type"]
 
             if msg_type == "car_loaded":
                 self.car_loaded = True
@@ -113,8 +120,7 @@ class SimpleClient(SDClient):
 
             elif msg_type == "telemetry":
                 imgString = json_packet["image"]
-                tmp_img = np.asarray(Image.open(
-                    BytesIO(base64.b64decode(imgString))))
+                tmp_img = np.asarray(Image.open(BytesIO(base64.b64decode(imgString))))
                 tmp_img = cv2.cvtColor(tmp_img, cv2.COLOR_RGB2BGR)
 
                 # print(tmp_img.shape)
@@ -151,20 +157,19 @@ class SimpleClient(SDClient):
         self.send_now(json.dumps(msg))
 
     def move_car(self, x, y, z, qx=None, qy=None, qz=None, qw=None):
-        if (qx is not None and qy is not None and qz is not None and qw is not None):
-            msg = {"msg_type": "set_position",
-                   "pos_x": str(x),
-                   "pos_y": str(y),
-                   "pos_z": str(z),
-                   "Qx": str(qx),
-                   "Qy": str(qy),
-                   "Qz": str(qz),
-                   "Qw": str(qw)}
+        if qx is not None and qy is not None and qz is not None and qw is not None:
+            msg = {
+                "msg_type": "set_position",
+                "pos_x": str(x),
+                "pos_y": str(y),
+                "pos_z": str(z),
+                "Qx": str(qx),
+                "Qy": str(qy),
+                "Qz": str(qz),
+                "Qw": str(qw),
+            }
         else:
-            msg = {"msg_type": "set_position",
-                   "pos_x": str(x),
-                   "pos_y": str(y),
-                   "pos_z": str(z)}
+            msg = {"msg_type": "set_position", "pos_x": str(x), "pos_y": str(y), "pos_z": str(z)}
 
         self.send_now(json.dumps(msg))
 
@@ -174,7 +179,7 @@ class SimpleClient(SDClient):
         temp_img = None
         to_remove = []
         for it, imgt in enumerate(self.img_buffer):
-            if now-imgt[1] > self.buffer_time:
+            if now - imgt[1] > self.buffer_time:
                 temp_img = imgt[0]
                 temp_time = imgt[1]
                 to_remove.append(it)
@@ -204,17 +209,18 @@ class SimpleClient(SDClient):
         msg = {"msg_type": "exit_scene"}
         self.send_now(json.dumps(msg))
 
-    def start(self, custom_body=True, body_msg='', custom_cam=False, cam_msg='', color=[20, 20, 20]):
+    def start(self, custom_body=True, body_msg="", custom_cam=False, cam_msg="", color=[20, 20, 20]):
         if custom_body:  # send custom body info
-            if body_msg == '':
+            if body_msg == "":
                 msg = {
                     "msg_type": "car_config",
                     "body_style": "donkey",
                     "body_r": str(color[0]),
                     "body_g": str(color[1]),
                     "body_b": str(color[2]),
-                    "car_name": f'Maxime_{self.name}',
-                    "font_size": "50"}
+                    "car_name": f"Maxime_{self.name}",
+                    "font_size": "50",
+                }
             else:
                 msg = body_msg
             dumped_msg = json.dumps(msg)
@@ -222,7 +228,7 @@ class SimpleClient(SDClient):
             time.sleep(1.0)
 
         if custom_cam:  # send custom cam info
-            if cam_msg == '':
+            if cam_msg == "":
                 msg = {
                     "msg_type": "cam_config",
                     "fov": "90",
@@ -235,7 +241,7 @@ class SimpleClient(SDClient):
                     "offset_x": "0.0",
                     "offset_y": "1.120395",
                     "offset_z": "0.5528488",
-                    "rot_x": "15.0"
+                    "rot_x": "15.0",
                 }
             else:
                 msg = cam_msg
@@ -261,10 +267,7 @@ class SimpleClient(SDClient):
         #     time.sleep(0.2)
 
     def send_controls(self, steering, throttle, brake):
-        p = {"msg_type": "control",
-             "steering": steering.__str__(),
-             "throttle": throttle.__str__(),
-             "brake": brake.__str__()}
+        p = {"msg_type": "control", "steering": steering.__str__(), "throttle": throttle.__str__(), "brake": brake.__str__()}
         self.send(json.dumps(p))
 
         # this sleep lets the SDClient thread poll our message and send it out.
@@ -274,7 +277,7 @@ class SimpleClient(SDClient):
         self.send_controls(st, throttle, brake)
 
     def prepare_img(self, img):
-        img = img[self.crop:, :, :]
+        img = img[self.crop :, :, :]
         img = cv2.resize(img, (160, 120))
         return img
 
@@ -284,29 +287,27 @@ class SimpleClient(SDClient):
         img = self.prepare_img(img)
         # to_pred = [np.expand_dims(img, axis=0)/255]
 
-        to_pred = self.dataset.make_to_pred_annotations(
-            [img], [[0, self.current_speed]], self.input_components)
+        to_pred = self.dataset.make_to_pred_annotations([img], [[0, self.current_speed]], self.input_components)
         pred, dt = self.model.predict(to_pred)
         pred = pred[0]
 
         direction = None
         throttle = None
 
-        if 'direction' in pred:
-            direction = pred.get('direction', None)
+        if "direction" in pred:
+            direction = pred.get("direction", None)
             if isinstance(direction, Iterable):
                 direction = direction[0]
 
-        if 'throttle' in pred:
-            throttle = pred.get('throttle', None)
+        if "throttle" in pred:
+            throttle = pred.get("throttle", None)
             if isinstance(throttle, Iterable):
                 throttle = throttle[0]
 
         # assert direction is not None
 
         if throttle is None:
-            throttle = opt_acc(direction, self.current_speed,
-                               max_throttle, min_throttle, target_speed)
+            throttle = opt_acc(direction, self.current_speed, max_throttle, min_throttle, target_speed)
         else:
             throttle = 1 if throttle > 1 else throttle
             throttle = 0 if throttle < 0 else throttle
@@ -335,7 +336,7 @@ class SimpleClient(SDClient):
         if any(bpressed):
             bfactor = -1
 
-        if any(pressed+bpressed) and not any(dpressed):
+        if any(pressed + bpressed) and not any(dpressed):
             manual = True
 
         return manual, keys_st, bfactor
@@ -361,8 +362,7 @@ class SimpleClient(SDClient):
     def save_img(self, img, **to_save):
         # print("SAVING")
         tmp_img = self.prepare_img(img)
-        self.dataset.save_img_and_annotation(
-            tmp_img, to_save, dos=self.default_dos)
+        self.dataset.save_img_and_annotation(tmp_img, to_save, dos=self.default_dos)
 
     def get_latest(self):
         if len(self.to_process) > 0:
@@ -371,27 +371,35 @@ class SimpleClient(SDClient):
             return self.last_time, self.iter_image
 
     def wait_latest(self):
-        while(len(self.to_process) == 0):
+        while len(self.to_process) == 0:
             time.sleep(self.poll_socket_sleep_sec)
         return list(self.to_process.items())[-1]
 
 
 class universal_client(SimpleClient):
     def __init__(self, params_dict, load_map, name):
-        host = params_dict.get('host', '127.0.0.1')
-        port = params_dict.get('port', 9091)
-        window = params_dict['window']
-        sleep_time = params_dict['sleep_time']
-        PID_settings = params_dict['PID_settings']
-        self.loop_settings = params_dict['loop_settings']
-        buffer_time = params_dict['buffer_time']
-        track = params_dict['track']
-        model = params_dict['model']
-        dataset = params_dict['dataset']
-        input_components = params_dict['input_components']
+        host = params_dict.get("host", "127.0.0.1")
+        port = params_dict.get("port", 9091)
+        window = params_dict["window"]
+        sleep_time = params_dict["sleep_time"]
+        PID_settings = params_dict["PID_settings"]
+        self.loop_settings = params_dict["loop_settings"]
+        buffer_time = params_dict["buffer_time"]
+        track = params_dict["track"]
+        model = params_dict["model"]
+        dataset = params_dict["dataset"]
+        input_components = params_dict["input_components"]
 
-        super().__init__((host, port), model, dataset, input_components, sleep_time=sleep_time, name=name,
-                         PID_settings=PID_settings, buffer_time=buffer_time)
+        super().__init__(
+            (host, port),
+            model,
+            dataset,
+            input_components,
+            sleep_time=sleep_time,
+            name=name,
+            PID_settings=PID_settings,
+            buffer_time=buffer_time,
+        )
         # self.model._make_predict_function() # useless with tf2
 
         if load_map:
@@ -410,7 +418,7 @@ class universal_client(SimpleClient):
         self.predict(img, send=False)  # do an init pred
         self.update(0, throttle=0.0, brake=0.1)
 
-        while(True):
+        while True:
             try:
                 target_speed, max_throttle, min_throttle, sq, mult = self.PID_settings
                 transform, smooth, random, do_overide, record, stop = self.loop_settings
@@ -443,19 +451,18 @@ class universal_client(SimpleClient):
 
                     manual, throttle = self.get_throttle()
                     if manual is False:
-                        throttle = opt_acc(
-                            manual_st,
-                            self.current_speed,
-                            max_throttle,
-                            min_throttle,
-                            target_speed
-                        )
+                        throttle = opt_acc(manual_st, self.current_speed, max_throttle, min_throttle, target_speed)
 
                     if record and len(self.to_process) > 0:
-                        self.save_img(self.iter_image, direction=manual_st,
-                                      speed=self.current_speed, throttle=throttle*bk, time=time.time())
+                        self.save_img(
+                            self.iter_image,
+                            direction=manual_st,
+                            speed=self.current_speed,
+                            throttle=throttle * bk,
+                            time=time.time(),
+                        )
 
-                    self.update(manual_st, throttle=throttle*bk)
+                    self.update(manual_st, throttle=throttle * bk)
 
                 else:
                     # print(len(self.to_process)/(time.time() - self.last_time))
@@ -464,9 +471,7 @@ class universal_client(SimpleClient):
                     else:
                         self.last_time, self.iter_image = self.wait_latest()
 
-                    self.predict(self.iter_image,
-                                 transform=transform, smooth=smooth,
-                                 send=True)
+                    self.predict(self.iter_image, transform=transform, smooth=smooth, send=True)
 
                 # clean up the dict before the next iteration
                 # del self.to_process[self.last_time]
@@ -476,12 +481,12 @@ class universal_client(SimpleClient):
                         del self.to_process[img_time]
 
             except Exception as e:
-                print(f'{self.name}: loop failed to process iteration')
+                print(f"{self.name}: loop failed to process iteration")
                 print(e)
 
 
 class log_points(SimpleClient):
-    def __init__(self, host='127.0.0.1', port=9091, filename='log_points.txt'):
+    def __init__(self, host="127.0.0.1", port=9091, filename="log_points.txt"):
         self.filename = filename
         self.out_file = open(self.filename, "w")
         self.out_file.close()
@@ -498,28 +503,27 @@ class log_points(SimpleClient):
 
     def log(self, px, py, pz):
         # not really efficient way to do this, but it works
-        distance = (
-            (px-self.last_point[0])**2 + (py-self.last_point[1])**2 + (pz-self.last_point[2])**2)**0.5
+        distance = ((px - self.last_point[0]) ** 2 + (py - self.last_point[1]) ** 2 + (pz - self.last_point[2]) ** 2) ** 0.5
 
         if distance >= self.distance_interval:
             self.out_file = open(self.filename, "a")
-            self.out_file.write(f'{px},{py},{pz}\n')
+            self.out_file.write(f"{px},{py},{pz}\n")
             self.out_file.close()
             self.last_time = time.time()
             self.last_point = (px, py, pz)
 
     def loop(self):
         self.update(0, throttle=0.0, brake=0.1)
-        while(True):
+        while True:
             toogle_manual, manual_st, bk = self.get_keyboard()
 
             if toogle_manual:
                 manual, throttle = self.get_throttle()
-                self.update(manual_st, throttle=0.3*bk)
+                self.update(manual_st, throttle=0.3 * bk)
 
-            px = self.last_packet.get('pos_x')
-            py = self.last_packet.get('pos_y')
-            pz = self.last_packet.get('pos_z')
+            px = self.last_packet.get("pos_x")
+            py = self.last_packet.get("pos_y")
+            pz = self.last_packet.get("pos_z")
 
             if self.last_point is None:
                 self.last_point = (px, py, pz)
@@ -531,24 +535,24 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
     model = architectures.safe_load_model(model_path, compile=False)
     architectures.apply_predict_decorator(model)
 
-    host = '127.0.0.1'
+    host = "127.0.0.1"
     port = 9091
 
     window = windowInterface()  # create a window
 
     config = {
-        'host': host,
-        'port': port,
-        'window': window,
-        'use_speed': (True, True),
-        'sleep_time': 0.01,
-        'PID_settings': [17, 0.5, 0.3, 1.0, 1.0],
-        'loop_settings': [True, False, False, True, False, False],
-        'buffer_time': 11,
-        'track': 'warren',
-        'model': model,
-        'dataset': dataset,
-        'input_components': input_components
+        "host": host,
+        "port": port,
+        "window": window,
+        "use_speed": (True, True),
+        "sleep_time": 0.01,
+        "PID_settings": [17, 0.5, 0.3, 1.0, 1.0],
+        "loop_settings": [True, False, False, True, False, False],
+        "buffer_time": 11,
+        "track": "warren",
+        "model": model,
+        "dataset": dataset,
+        "input_components": input_components,
     }
 
     universal_client(config, True, "model_test")
@@ -561,29 +565,28 @@ if __name__ == "__main__":
     architectures.apply_predict_decorator(model)
     model.summary()
 
-    dataset = dataset_json.Dataset(
-        ['direction', 'speed', 'throttle', 'time'])
+    dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
     input_components = [1]
 
-    hosts = ['127.0.0.1', 'donkey-sim.roboticist.dev', 'sim.diyrobocars.fr']
+    hosts = ["127.0.0.1", "donkey-sim.roboticist.dev", "sim.diyrobocars.fr"]
     host = hosts[0]
     port = 9091
 
     window = windowInterface()  # create a window
 
     config = {
-        'host': host,
-        'port': port,
-        'window': window,
-        'use_speed': (True, True),
-        'sleep_time': 0.01,
-        'PID_settings': [17, 0.5, 0.3, 1.1, 1.0],
-        'loop_settings': [True, False, False, True, False, True],
-        'buffer_time': 0,
-        'track': 'circuit_launch',
-        'model': model,
-        'dataset': dataset,
-        'input_components': input_components
+        "host": host,
+        "port": port,
+        "window": window,
+        "use_speed": (True, True),
+        "sleep_time": 0.01,
+        "PID_settings": [17, 0.5, 0.3, 1.1, 1.0],
+        "loop_settings": [True, False, False, True, False, True],
+        "buffer_time": 0,
+        "track": "circuit_launch",
+        "model": model,
+        "dataset": dataset,
+        "input_components": input_components,
     }
 
     load_map = True

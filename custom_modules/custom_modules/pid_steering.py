@@ -1,10 +1,11 @@
 import time
 
 
-class SimpleSteering():
-    '''
+class SimpleSteering:
+    """
     PD controller to steer the car
-    '''
+    """
+
     def __init__(self, kp=1, kd=1, high_th=1, low_th=-1):
         self.controller_settings = (kp, kd)
         self.ser = None
@@ -28,7 +29,7 @@ class SimpleSteering():
             last_received = time.time()
 
         cte = lat_position
-        cte_rate = (cte - self.cte)/(last_received - self.last_received)
+        cte_rate = (cte - self.cte) / (last_received - self.last_received)
 
         self.lat_position = lat_position
         self.last_received = last_received

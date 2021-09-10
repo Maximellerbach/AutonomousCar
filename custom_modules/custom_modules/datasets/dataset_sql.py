@@ -8,7 +8,7 @@ from ..psql import db_utils
 from ..psql.queries import label
 
 
-class Dataset():
+class Dataset:
     """Dataset class that contains everything needed to load and save a sql dataset, not used for the moment."""
 
     def __init__(self):
@@ -18,7 +18,7 @@ class Dataset():
 
     def save_annotation_dict(self, annotation_dict, dataset_name=None):
         if dataset_name is not None:
-            annotation_dict['dataset_name'] = dataset_name
+            annotation_dict["dataset_name"] = dataset_name
         return label.add(self.conn, annotation_dict)
 
     def load_image(self, img_path):
@@ -29,12 +29,9 @@ class Dataset():
 
     def load_image_and_annotations_by_id(self, item_id):
         annotation = self.load_annotation(item_id)
-        img_path = annotation.get('image_path')
+        img_path = annotation.get("image_path")
 
-        return (
-            self.load_image(img_path),
-            annotation
-        )
+        return (self.load_image(img_path), annotation)
 
     def load_dataset_sorted(self, dataset_name):
         return list(label.generator_load_dataset(self.conn, dataset_name))
