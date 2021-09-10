@@ -37,7 +37,8 @@ def get_flops(load_path):
             opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
 
             # We use the Keras session graph in the call to the profiler.
-            flops = tf.compat.v1.profiler.profile(graph=graph, run_meta=run_meta, cmd="op", options=opts)
+            flops = tf.compat.v1.profiler.profile(
+                graph=graph, run_meta=run_meta, cmd="op", options=opts)
 
             return flops.total_float_ops
 
@@ -82,6 +83,7 @@ def apply_pruning_to_conv(layer):
 def apply_pruning_to_dense_and_conv(layer):
     if (
         isinstance(layer, tf.keras.layers.Conv2D)
+        or isinstance(layer, tf.keras.layers.SeparableConv2D)
         or isinstance(layer, tf.keras.layers.Dense)
     ):
         return tfmot.sparsity.keras.prune_low_magnitude(layer)
@@ -138,7 +140,8 @@ def prediction2dict(predictions, model_output_names):
         for pred_number, pred in enumerate(prediction):
             predictions_list[pred_number].append(pred)
 
-    output_dicts = [{output_name: [] for output_name in model_output_names} for _ in range(len(predictions_list))]
+    output_dicts = [{output_name: [] for output_name in model_output_names}
+                    for _ in range(len(predictions_list))]
     for prediction, output_dict in zip(predictions_list, output_dicts):
         for output_value, output_name in zip(prediction, output_dict):
             output_dict[output_name] = K.eval(output_value)
@@ -172,7 +175,8 @@ def keras_model_to_tflite(in_filename, out_filename):
 
 def keras_to_tflite(model, out_filename):
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
-    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+    converter.target_spec.supported_ops = [
+        tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
     converter.allow_custom_ops = True
     tflite_model = converter.convert()
     open(out_filename, "wb").write(tflite_model)
@@ -201,10 +205,12 @@ class TFLite:
         output_dict = {}
         if self.output_names != []:
             for tensor, name in zip(self.output_details, self.output_names):
-                output_dict[name] = self.interpreter.get_tensor(tensor["index"])[0][0]
+                output_dict[name] = self.interpreter.get_tensor(tensor["index"])[
+                    0][0]
         else:
             for tensor in self.output_details:
-                output_dict[tensor["name"]] = self.interpreter.get_tensor(tensor["index"])[0][0]
+                output_dict[tensor["name"]] = self.interpreter.get_tensor(tensor["index"])[
+                    0][0]
 
         elapsed_time = time.time() - st
         return output_dict, elapsed_time
@@ -247,8 +253,10 @@ class light_linear_CRNN:
                 strides=strides,
                 use_bias=self.use_bias,
                 padding=self.padding,
-                kernel_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
-                bias_regularizer=l1_l2(self.regularizer[0], self.regularizer[1]),
+                kernel_regularizer=l1_l2(
+                    self.regularizer[0], self.regularizer[1]),
+                bias_regularizer=l1_l2(
+                    self.regularizer[0], self.regularizer[1]),
             ),
             **kwargs
         )(x)
@@ -275,8 +283,10 @@ class light_linear_CRNN:
         inputs = []
         outputs = []
 
-        input_components_names = self.dataset.indexes2components_names(self.input_components)
-        output_components_names = self.dataset.indexes2components_names(self.output_components)
+        input_components_names = self.dataset.indexes2components_names(
+            self.input_components)
+        output_components_names = self.dataset.indexes2components_names(
+            self.output_components)
 
         inp = Input(shape=self.img_shape)
         inputs.append(inp)
@@ -286,9 +296,12 @@ class light_linear_CRNN:
         x = self.rnn_conv_block(32, 3, 2, x, drop=True)
         x = self.rnn_conv_block(48, 3, 2, x, drop=True, name="end_fe")
 
-        y1 = self.rnn_conv_block(64, (8, 10), (8, 10), x, flatten=True, drop=False)
-        y2 = self.rnn_conv_block(24, (8, 1), (8, 1), x, flatten=True, drop=False)
-        y3 = self.rnn_conv_block(24, (1, 10), (1, 10), x, flatten=True, drop=False)
+        y1 = self.rnn_conv_block(64, (8, 10), (8, 10),
+                                 x, flatten=True, drop=False)
+        y2 = self.rnn_conv_block(
+            24, (8, 1), (8, 1), x, flatten=True, drop=False)
+        y3 = self.rnn_conv_block(24, (1, 10), (1, 10),
+                                 x, flatten=True, drop=False)
         y = Concatenate()([y1, y2, y3])
         y = TD(Dropout(self.drop_rate))(y)
 
@@ -310,7 +323,8 @@ class light_linear_CRNN:
             y = Concatenate()([y, z])
 
         if "throttle" in output_components_names:
-            th = Dense(1, use_bias=self.use_bias, activation="sigmoid", name="throttle")(y)
+            th = Dense(1, use_bias=self.use_bias,
+                       activation="sigmoid", name="throttle")(y)
             outputs.append(th)
             y = Concatenate()([y, th])
 
@@ -399,8 +413,10 @@ class light_linear_CNN:
         inputs = []
         outputs = []
 
-        input_components_names = self.dataset.indexes2components_names(self.input_components)
-        output_components_names = self.dataset.indexes2components_names(self.output_components)
+        input_components_names = self.dataset.indexes2components_names(
+            self.input_components)
+        output_components_names = self.dataset.indexes2components_names(
+            self.output_components)
 
         inp = Input(shape=self.img_shape, name="image")
         inputs.append(inp)
@@ -414,7 +430,8 @@ class light_linear_CNN:
         # useless layer, just here to have a "end_fe" layer
         x = Activation("linear", name="end_fe")(x)
 
-        y1 = self.conv_block(64, (9, 14), 1, x, drop=True, conv_type=SeparableConv2D)
+        y1 = self.conv_block(64, (9, 14), 1, x, drop=True,
+                             conv_type=SeparableConv2D)
         y2 = MaxPooling2D()(x)
         y = Concatenate()([Flatten()(y1), Flatten()(y2)])
 
@@ -432,18 +449,21 @@ class light_linear_CNN:
         # y = self.dense_block(50, y, drop=False)
 
         if "left_lane" in output_components_names:
-            z = Dense(4, use_bias=self.use_bias, activation="tanh", name="left_lane")(y)
+            z = Dense(4, use_bias=self.use_bias,
+                      activation="tanh", name="left_lane")(y)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "right_lane" in output_components_names:
-            z = Dense(4, use_bias=self.use_bias, activation="tanh", name="right_lane")(y)
+            z = Dense(4, use_bias=self.use_bias,
+                      activation="tanh", name="right_lane")(y)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "cte" in output_components_names:
             z = self.dense_block(25, y, drop=False)
-            z = Dense(1, use_bias=self.use_bias, activation="tanh", name="cte")(z)
+            z = Dense(1, use_bias=self.use_bias,
+                      activation="tanh", name="cte")(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 
@@ -451,13 +471,15 @@ class light_linear_CNN:
             z = self.dense_block(50, y, drop=False)
             z = self.dense_block(25, z, drop=False)
             z = self.dense_block(9, z, drop=False, activation="softmax")
-            z = Dense(1, use_bias=self.use_bias, activation=self.last_act, name="direction")(z)
+            z = Dense(1, use_bias=self.use_bias,
+                      activation=self.last_act, name="direction")(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "throttle" in output_components_names:
             y = self.dense_block(50, y, drop=False)
-            z = Dense(1, use_bias=self.use_bias, activation=self.last_act, name="throttle")(y)
+            z = Dense(1, use_bias=self.use_bias,
+                      activation=self.last_act, name="throttle")(y)
             outputs.append(z)
 
         return Model(inputs, outputs)
@@ -546,8 +568,10 @@ class heavy_linear_CNN:
         inputs = []
         outputs = []
 
-        input_components_names = self.dataset.indexes2components_names(self.input_components)
-        output_components_names = self.dataset.indexes2components_names(self.output_components)
+        input_components_names = self.dataset.indexes2components_names(
+            self.input_components)
+        output_components_names = self.dataset.indexes2components_names(
+            self.output_components)
 
         inp = Input(shape=self.img_shape)
         inputs.append(inp)
@@ -579,31 +603,36 @@ class heavy_linear_CNN:
         y = self.dense_block(50, y, drop=False)
 
         if "left_lane" in output_components_names:
-            z = Dense(4, use_bias=self.use_bias, activation="tanh", name="left_lane")(y)
+            z = Dense(4, use_bias=self.use_bias,
+                      activation="tanh", name="left_lane")(y)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "right_lane" in output_components_names:
-            z = Dense(4, use_bias=self.use_bias, activation="tanh", name="right_lane")(y)
+            z = Dense(4, use_bias=self.use_bias,
+                      activation="tanh", name="right_lane")(y)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "cte" in output_components_names:
             z = self.dense_block(25, y, drop=False)
-            z = Dense(1, use_bias=self.use_bias, activation="tanh", name="cte")(z)
+            z = Dense(1, use_bias=self.use_bias,
+                      activation="tanh", name="cte")(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "direction" in output_components_names:
             z = self.dense_block(25, y, drop=False)
             z = self.dense_block(9, y, drop=False, activation="softmax")
-            z = Dense(1, use_bias=self.use_bias, activation=self.last_act, name="direction")(z)
+            z = Dense(1, use_bias=self.use_bias,
+                      activation=self.last_act, name="direction")(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "throttle" in output_components_names:
             y = self.dense_block(50, y, drop=False)
-            z = Dense(1, use_bias=self.use_bias, activation=self.last_act, name="throttle")(y)
+            z = Dense(1, use_bias=self.use_bias,
+                      activation=self.last_act, name="throttle")(y)
             outputs.append(z)
 
         return Model(inputs, outputs)

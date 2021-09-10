@@ -54,7 +54,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
+        epochs=5,
         batch_size=64,
         show_distr=False,
     )
