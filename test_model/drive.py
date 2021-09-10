@@ -39,11 +39,12 @@ print("Starting mainloop")
 
 while True:
     try:
+        st = time.time()
 
         _, cam = cap.read()
         img = cv2.resize(cam, (wi, he))
+        dt = time.time() - st
 
-        st = time.time()
         memory = {}
         memory["direction"] = 0
         memory["speed"] = 0
@@ -52,8 +53,6 @@ while True:
 
         to_pred = Dataset.make_to_pred_annotations(
             [img], [memory], input_components)
-
-        dt = time.time() - st
 
         # PREDICT
         prediction_dict, elapsed_time = model.predict(to_pred)
