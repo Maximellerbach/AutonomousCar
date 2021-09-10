@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from .. datasets.dataset_json import Dataset
+from ..datasets import dataset_json
 
 
 def lane(img, lane, color=(0, 0, 255), show=True, name="img", waitkey=None):
@@ -52,7 +52,7 @@ def throttle(img, throttle, color=(0, 0, 255), show=True, name="img", waitkey=No
     return img
 
 
-def vis_all(Dataset: Dataset, input_components, img, output_dict, show=True, waitkey=1):
+def vis_all(Dataset: dataset_json.Dataset, input_components, img, output_dict, show=True, waitkey=1):
     for output_name in output_dict:
         component = Dataset.get_component(output_name)
         img = component.vis_func(img, output_dict[component.name], show=False)
@@ -64,7 +64,7 @@ def vis_all(Dataset: Dataset, input_components, img, output_dict, show=True, wai
     return img
 
 
-def vis_all_compare(Dataset: Dataset, input_components, img, gt_dict, output_dict, show=True, waitkey=1):
+def vis_all_compare(Dataset: dataset_json.Dataset, input_components, img, gt_dict, output_dict, show=True, waitkey=1):
     for output_name in output_dict:
         component = Dataset.get_component(output_name)
         img = component.vis_func(img, output_dict[output_name], color=(0, 0, 255), show=False)
