@@ -34,6 +34,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 model = architectures.TFLite(f"{basedir}/models/auto_label7.tflite", ["direction"], num_threads=4)
 
 cap.start()
+cap.start()
 print("Starting mainloop")
 
 while True:
