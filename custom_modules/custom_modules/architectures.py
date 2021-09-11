@@ -188,9 +188,9 @@ def keras_to_tflite(model, out_filename):
 
 
 class TFLite:
-    def __init__(self, model_path, output_names=[]):
+    def __init__(self, model_path, output_names=[], num_threads=1):
         import tflite_runtime.interpreter as tflite
-        self.interpreter = tflite.Interpreter(model_path=model_path)
+        self.interpreter = tflite.Interpreter(model_path=model_path, num_threads=num_threads)
         self.interpreter.allocate_tensors()
 
         self.input_details = self.interpreter.get_input_details()
