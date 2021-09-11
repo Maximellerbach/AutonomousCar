@@ -2,7 +2,7 @@ import os
 import time
 
 import cv2
-from custom_modules import architectures, serial_command2
+from custom_modules import architectures, camera, serial_command2
 from custom_modules.datasets import dataset_json
 
 
@@ -24,15 +24,7 @@ he = 120
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, wi)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, he)
-
-cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('m','j','p','g'))
-
-ret, img = cap.read()  # read the camera once to make sure it works
-print(img.shape)
-assert ret is True
+cap = camera.usbWebcam()
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 # model = architectures.safe_load_model(
@@ -41,13 +33,14 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 
 model = architectures.TFLite(f"{basedir}/models/auto_label7.tflite", ["direction"])
 
+cap.start()
 print("Starting mainloop")
 
 while True:
     try:
         st = time.time()
 
-        _, cam = cap.read()
+        cam = cap.read()
         img = cv2.resize(cam, (wi, he))
 
         memory = {}
