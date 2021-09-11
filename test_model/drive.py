@@ -28,7 +28,10 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, wi)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, he)
 
+cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('m','j','p','g'))
+
 ret, img = cap.read()  # read the camera once to make sure it works
+print(img.shape)
 assert ret is True
 
 basedir = os.path.dirname(os.path.abspath(__file__))
