@@ -25,6 +25,9 @@ Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, wi)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, he)
+
 ret, img = cap.read()  # read the camera once to make sure it works
 assert ret is True
 
@@ -43,7 +46,6 @@ while True:
 
         _, cam = cap.read()
         img = cv2.resize(cam, (wi, he))
-        dt = time.time() - st
 
         memory = {}
         memory["direction"] = 0
@@ -63,6 +65,7 @@ while True:
 
         ser.ChangeAll(memory["direction"], MAXTHROTTLE * memory["throttle"])
 
+        dt = time.time() - st
         print(prediction_dict, 1 / elapsed_time, 1 / dt)
 
     except Exception as e:
