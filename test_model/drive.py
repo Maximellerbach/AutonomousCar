@@ -1,16 +1,17 @@
 import os
-
-os.environ["OMP_NUM_THREADS"] = "4"
-
 import time
 
 import cv2
-from custom_modules import architectures, serial_command2
+from custom_modules import architectures, camera, serial_command2
 from custom_modules.datasets import dataset_json
 
-core_count = 4
-architectures.tf.config.threading.set_inter_op_parallelism_threads(core_count)
-architectures.tf.config.threading.set_intra_op_parallelism_threads(core_count)
+
+def get_key_by_name(dict, name):
+    for k in dict.keys():
+        if name in k:
+            return dict[k]
+    return None
+
 
 serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
@@ -23,21 +24,23 @@ he = 120
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
-cap = cv2.VideoCapture(0)
-ret, img = cap.read()  # read the camera once to make sure it works
-assert ret is True
+cap = camera.usbWebcam()
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
-architectures.apply_predict_decorator(model)
+# model = architectures.safe_load_model(
+#     f"{basedir}/models/auto_label7.h5", compile=False)
+# architectures.apply_predict_decorator(model)
 
+model = architectures.TFLite(f"{basedir}/models/auto_label7.tflite", ["direction"])
+
+cap.start()
 print("Starting mainloop")
 
 while True:
     try:
         st = time.time()
 
-        _, cam = cap.read()
+        cam = cap.read()
         img = cv2.resize(cam, (wi, he))
 
         memory = {}
@@ -46,12 +49,15 @@ while True:
         memory["throttle"] = 0.1
         memory["time"] = time.time()
 
-        to_pred = Dataset.make_to_pred_annotations([img], [memory], input_components)
+        to_pred = Dataset.make_to_pred_annotations(
+            [img], [memory], input_components)
 
         # PREDICT
         prediction_dict, elapsed_time = model.predict(to_pred)
-        prediction_dict = prediction_dict[0]
-        memory["direction"] = prediction_dict["direction"]
+
+        if isinstance(prediction_dict, list):
+            prediction_dict = prediction_dict[0]
+        memory["direction"] = get_key_by_name(prediction_dict, "direction")
 
         ser.ChangeAll(memory["direction"], MAXTHROTTLE * memory["throttle"])
 

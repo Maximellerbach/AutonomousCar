@@ -8,8 +8,16 @@ from custom_modules.datasets import dataset_json
 from custom_modules.vis import vis_lab
 from matplotlib.animation import FuncAnimation
 
+
+def get_key_by_name(dict, name):
+    for k in dict.keys():
+        if name in k:
+            return dict[k]
+    return None
+
+
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f"{base_path}\\donkeycar\\"
+dos = f"{base_path}\\real_car\\"
 
 physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:
@@ -19,10 +27,12 @@ for gpu_instance in physical_devices:
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
-model = architectures.safe_load_model("test_model\\models\\auto_label5.h5", compile=False)
+model = architectures.safe_load_model(
+    "test_model\\models\\auto_label7.h5", compile=False)
 architectures.apply_predict_decorator(model)
 
-model2 = architectures.TFLite("test_model\\models\\auto_label5.tflite", output_names=["direction"])
+model2 = architectures.TFLite(
+    "test_model\\models\\auto_label7.tflite", output_names=["direction"])
 
 gdos = Dataset.load_dataset_sorted(dos, flat=True)
 model_outputs = architectures.get_model_output_names(model)
@@ -68,7 +78,8 @@ def init():
 def animate(i):
     img, annotation = Dataset.load_img_and_annotation(gdos[i], to_list=False)
 
-    to_pred = Dataset.make_to_pred_annotations([img], [annotation], input_components)
+    to_pred = Dataset.make_to_pred_annotations(
+        [img], [annotation], input_components)
     prediction_dict, elapsed_time = model.predict(to_pred)
     prediction_dict = prediction_dict[0]
 
@@ -80,9 +91,9 @@ def animate(i):
 
     if len(X) < 200:  # fill the X list with numbers from 0 to 200
         X.append(X[-1] + 1)
-    Y.append(annotation["direction"])
-    Z.append(prediction_dict["direction"])
-    Z2.append(prediction_dict2["direction"])
+    Y.append(get_key_by_name(annotation, "direction"))
+    Z.append(get_key_by_name(prediction_dict, "direction"))
+    Z2.append(get_key_by_name(prediction_dict2, "direction"))
 
     line1.set_data(X, Y)
     line2.set_data(X, Z)
