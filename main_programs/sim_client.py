@@ -560,13 +560,13 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 
 if __name__ == "__main__":
-    model_path = os.getcwd() + os.path.normpath("/test_model/models/speed_loss.h5")
+    model_path = os.getcwd() + os.path.normpath("/test_model/models/pretrained_1.h5")
     model = architectures.safe_load_model(model_path, compile=False)
     architectures.apply_predict_decorator(model)
     model.summary()
 
-    dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time", "zeros"])
-    input_components = [1, 4]
+    dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+    input_components = [1]
 
     hosts = ["127.0.0.1", "donkey-sim.roboticist.dev", "sim.diyrobocars.fr"]
     host = hosts[0]

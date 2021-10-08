@@ -8,8 +8,8 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\test_scene\\"
-    test_path = f"{base_path}\\test_scene\\"
+    train_path = f"{base_path}\\real_car\\"
+    test_path = f"{base_path}\\real_car\\"
     dosdir = True
     simTest = False
 
@@ -21,11 +21,11 @@ if __name__ == "__main__":
     # speed_comp.scale = 3.6
 
     # set input and output components (indexes)
-    input_components = [1, 0]
-    output_components = [0, 3]
+    input_components = []
+    output_components = [0]
 
-    load_path = "test_model\\models\\speed_loss.h5"
-    save_path = "test_model\\models\\speed_loss.h5"
+    load_path = "test_model\\models\\pretrained_1.h5"
+    save_path = "test_model\\models\\pretrained_1.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -42,10 +42,16 @@ if __name__ == "__main__":
     )
 
     e2e_trainer.build_classifier(
-        architectures.light_linear_CNN, load=True, use_bias=False, drop_rate=0.05, prune=0.0, regularizer=(0.0, 0.0)
+        architectures.light_CNN,
+        load=True,
+        use_bias=False,
+        drop_rate=0.05,
+        prune=0.0,
+        regularizer=(0.0, 0.0),
+        speed_loss=False,
     )
 
-    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.Huber(delta=1), lr=0.0005, metrics=[])
+    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.MeanSquaredError(), lr=0.0005, metrics=[], loss_weights=[1])
 
     e2e_trainer.train(
         flip=True,
@@ -54,7 +60,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
+        epochs=5,
         batch_size=64,
         show_distr=False,
     )

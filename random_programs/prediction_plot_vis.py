@@ -28,11 +28,11 @@ Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
 model = architectures.safe_load_model(
-    "test_model\\models\\auto_label7.h5", compile=False)
+    "test_model\\models\\pretrained_1.h5", compile=False)
 architectures.apply_predict_decorator(model)
 
 model2 = architectures.TFLite(
-    "test_model\\models\\auto_label7.tflite", output_names=["direction"])
+    "test_model\\models\\pretrained_1.tflite", output_names=["direction"])
 
 gdos = Dataset.load_dataset_sorted(dos, flat=True)
 model_outputs = architectures.get_model_output_names(model)
