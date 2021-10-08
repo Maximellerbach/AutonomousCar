@@ -59,7 +59,6 @@ class End2EndTrainer:
 
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
 
-        self.number_class = 5
         self.proportion = proportion
         self.smoothing = smoothing
         self.label_rdm = label_rdm
@@ -134,7 +133,11 @@ class End2EndTrainer:
 
         if use_earlystop:
             earlystop = EarlyStopping(
-                monitor="loss", min_delta=0, patience=(1000 // it_per_epochs) + 1, verbose=verbose, restore_best_weights=True
+                monitor="loss",
+                min_delta=0,
+                patience=(1000 // it_per_epochs) + 1,
+                verbose=verbose,
+                restore_best_weights=True
             )
             self.callbacks.append(earlystop)
 
@@ -144,7 +147,10 @@ class End2EndTrainer:
 
         if use_plateau_lr:
             plateau_lr = ReduceLROnPlateau(
-                monitor="loss", patience=(1000 // it_per_epochs) + 1, min_lr=0.0001, verbose=verbose
+                monitor="loss",
+                patience=(1000 // it_per_epochs) + 1,
+                min_lr=0.0001,
+                verbose=verbose
             )
             self.callbacks.append(plateau_lr)
 

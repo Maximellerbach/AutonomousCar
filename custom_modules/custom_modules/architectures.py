@@ -447,9 +447,9 @@ class light_linear_CNN:
         y = self.dense_block(75, y, drop=True)
 
         if "speed" in input_components_names:
-            inp = Input((1,), name="speed")
-            inputs.append(inp)
-            y = Concatenate()([y, inp])
+            speed = Input((1,), name="speed")
+            inputs.append(speed)
+            y = Concatenate()([y, speed])
             y = self.dense_block(50, y, drop=False)
 
         # y = self.dense_block(50, y, drop=False)
@@ -479,8 +479,15 @@ class light_linear_CNN:
             z = self.dense_block(9, z, drop=False, activation="softmax")
             z = Dense(1, use_bias=self.use_bias,
                       activation=self.last_act, name="direction")(z)
-            outputs.append(z)
-            y = Concatenate()([y, z])
+
+            # only for the loss calculated using the speed
+            y_true = Input((1,), name="ytrue")
+            inputs.append(y_true)
+            z1, z2 = loss_layer(z, y_true, speed)
+
+            outputs.append(z1)
+            outputs.append(z2)
+            y = Concatenate()([y, z1])
 
         if "throttle" in output_components_names:
             y = self.dense_block(50, y, drop=False)
@@ -642,3 +649,8 @@ class heavy_linear_CNN:
             outputs.append(z)
 
         return Model(inputs, outputs)
+
+
+def loss_layer(y_pred, true_y, speed):
+    pred_loss = tf.keras.losses.mse(true_y, y_pred) * tf.sqrt(speed)
+    return (y_pred, pred_loss)

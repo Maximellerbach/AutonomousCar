@@ -8,12 +8,12 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\real_car\\"
-    test_path = f"{base_path}\\real_car\\"
+    train_path = f"{base_path}\\test_scene\\"
+    test_path = f"{base_path}\\test_scene\\"
     dosdir = True
     simTest = False
 
-    Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
+    Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
 
     # Apply some transformations on the components
     # speed_comp = Dataset.get_component('speed')
@@ -21,11 +21,11 @@ if __name__ == "__main__":
     # speed_comp.scale = 3.6
 
     # set input and output components (indexes)
-    input_components = []
-    output_components = [0]
+    input_components = [1, 0]
+    output_components = [0, 3]
 
-    load_path = "test_model\\models\\auto_label6.h5"
-    save_path = "test_model\\models\\auto_label7.h5"
+    load_path = "test_model\\models\\speed_loss.h5"
+    save_path = "test_model\\models\\speed_loss.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
