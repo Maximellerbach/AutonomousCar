@@ -59,7 +59,6 @@ class End2EndTrainer:
 
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
 
-        self.number_class = 5
         self.proportion = proportion
         self.smoothing = smoothing
         self.label_rdm = label_rdm
@@ -69,10 +68,20 @@ class End2EndTrainer:
         self.callbacks = []
         self.model = None
 
-    def build_classifier(self, model_arch, load=False, use_bias=True, prune=0, drop_rate=0.15, regularizer=(0.0, 0.0)):
+    def build_classifier(
+        self,
+        model_arch,
+        load=False,
+        use_bias=True,
+        prune=0,
+        drop_rate=0.15,
+        regularizer=(0.0, 0.0),
+        speed_loss=False
+    ):
         """Load a model using a model architectures from architectures.py."""
         if load:
-            self.model = architectures.safe_load_model(self.load_path, custom_objects={"dir_loss": architectures.dir_loss})
+            self.model = architectures.safe_load_model(self.load_path, custom_objects={
+                                                       "dir_loss": architectures.dir_loss})
             print("loaded model")
 
         else:
@@ -86,6 +95,7 @@ class End2EndTrainer:
                 use_bias=use_bias,
                 input_components=self.input_components,
                 output_components=self.output_components,
+                speed_loss=speed_loss,
             ).build()
 
         self.add_pruning(prune)
@@ -96,8 +106,8 @@ class End2EndTrainer:
             self.model = architectures.create_pruning_model(self.model, prune)
             self.callbacks.append(tfmot.sparsity.keras.UpdatePruningStep())
 
-    def compile_model(self, loss="mse", optimizer=tensorflow.keras.optimizers.Adam, lr=0.001, metrics=["mse"]):
-        self.model.compile(loss=loss, optimizer=optimizer(lr=lr), metrics=metrics)
+    def compile_model(self, loss="mse", optimizer=tensorflow.keras.optimizers.Adam, lr=0.001, metrics=["mse"], loss_weights=None):
+        self.model.compile(loss=loss, loss_weights=loss_weights, optimizer=optimizer(lr=lr), metrics=metrics)
 
         # turn this off for the moment
         # assert len(self.model.outputs) == len(self.output_components)
@@ -134,7 +144,11 @@ class End2EndTrainer:
 
         if use_earlystop:
             earlystop = EarlyStopping(
-                monitor="loss", min_delta=0, patience=(1000 // it_per_epochs) + 1, verbose=verbose, restore_best_weights=True
+                monitor="loss",
+                min_delta=0,
+                patience=(1000 // it_per_epochs) + 1,
+                verbose=verbose,
+                restore_best_weights=True
             )
             self.callbacks.append(earlystop)
 
@@ -144,7 +158,10 @@ class End2EndTrainer:
 
         if use_plateau_lr:
             plateau_lr = ReduceLROnPlateau(
-                monitor="loss", patience=(1000 // it_per_epochs) + 1, min_lr=0.0001, verbose=verbose
+                monitor="loss",
+                patience=(1000 // it_per_epochs) + 1,
+                min_lr=0.0001,
+                verbose=verbose
             )
             self.callbacks.append(plateau_lr)
 
@@ -282,10 +299,12 @@ class End2EndTrainer:
 
                 d = collections.Counter(Y_component)
                 unique = np.unique(Y_component)
-                frc = class_weight.compute_class_weight("balanced", unique, Y_component)
+                frc = class_weight.compute_class_weight(
+                    "balanced", unique, Y_component)
                 frcs.append(dict(zip(unique, frc)))
 
                 if show:
-                    plot.plot_bars(d, component.weight_acc, title=component.name)
+                    plot.plot_bars(d, component.weight_acc,
+                                   title=component.name)
 
         return frcs

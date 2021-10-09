@@ -189,7 +189,11 @@ def keras_to_tflite(model, out_filename):
 
 class TFLite:
     def __init__(self, model_path, output_names=[], num_threads=None):
-        import tflite_runtime.interpreter as tflite
+        try:
+            import tflite_runtime.interpreter as tflite
+        except ImportError:
+            import tensorflow.lite as tflite
+
         self.interpreter = tflite.Interpreter(model_path=model_path, num_threads=num_threads)
         self.interpreter.allocate_tensors()
 
@@ -337,7 +341,7 @@ class light_linear_CRNN:
         return Model(inputs, outputs)
 
 
-class light_linear_CNN:
+class light_CNN:
     def __init__(
         self,
         dataset,
@@ -349,6 +353,8 @@ class light_linear_CNN:
         regularizer=(0, 0),
         input_components=[],
         output_components=[],
+        speed_loss=False,
+        **kwargs,
     ):
 
         self.dataset = dataset
@@ -360,6 +366,7 @@ class light_linear_CNN:
         self.regularizer = regularizer
         self.input_components = input_components
         self.output_components = output_components
+        self.speed_loss = speed_loss
 
     def conv_block(
         self,
@@ -428,16 +435,16 @@ class light_linear_CNN:
         inputs.append(inp)
 
         x = BatchNormalization(name="start_fe")(inp)
-        x = self.conv_block(12, 5, 2, x, drop=True, conv_type=SeparableConv2D)
-        x = self.conv_block(24, 5, 2, x, drop=True, conv_type=SeparableConv2D)
-        x = self.conv_block(32, 3, 2, x, drop=True, conv_type=SeparableConv2D)
-        x = self.conv_block(32, 3, 1, x, drop=True, conv_type=SeparableConv2D)
-        x = self.conv_block(8, 3, 1, x, drop=True, conv_type=SeparableConv2D)
+        x = self.conv_block(12, 5, 2, x, drop=True, conv_type=Conv2D)
+        x = self.conv_block(24, 5, 2, x, drop=True, conv_type=Conv2D)
+        x = self.conv_block(32, 3, 2, x, drop=True, conv_type=Conv2D)
+        x = self.conv_block(32, 3, 1, x, drop=True, conv_type=Conv2D)
+        x = self.conv_block(8, 3, 1, x, drop=True, conv_type=Conv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation("linear", name="end_fe")(x)
 
         y1 = self.conv_block(64, (9, 14), 1, x, drop=True,
-                             conv_type=SeparableConv2D)
+                             conv_type=Conv2D)
         y2 = MaxPooling2D()(x)
         y = Concatenate()([Flatten()(y1), Flatten()(y2)])
 
@@ -447,9 +454,9 @@ class light_linear_CNN:
         y = self.dense_block(75, y, drop=True)
 
         if "speed" in input_components_names:
-            inp = Input((1,), name="speed")
-            inputs.append(inp)
-            y = Concatenate()([y, inp])
+            speed = Input((1,), name="speed")
+            inputs.append(speed)
+            y = Concatenate()([y, speed])
             y = self.dense_block(50, y, drop=False)
 
         # y = self.dense_block(50, y, drop=False)
@@ -479,8 +486,18 @@ class light_linear_CNN:
             z = self.dense_block(9, z, drop=False, activation="softmax")
             z = Dense(1, use_bias=self.use_bias,
                       activation=self.last_act, name="direction")(z)
-            outputs.append(z)
-            y = Concatenate()([y, z])
+
+            if self.speed_loss:
+                y_true = Input((1,), name="ytrue")
+                inputs.append(y_true)
+                z1, z2 = loss_layer(z, y_true, speed)
+
+                outputs.append(z1)
+                outputs.append(z2)
+                y = Concatenate()([y, z1])
+            else:
+                outputs.append(z)
+                y = Concatenate()([y, z])
 
         if "throttle" in output_components_names:
             y = self.dense_block(50, y, drop=False)
@@ -503,6 +520,7 @@ class heavy_linear_CNN:
         regularizer=(0, 0),
         input_components=[],
         output_components=[],
+        **kwargs,
     ):
 
         self.dataset = dataset
@@ -642,3 +660,8 @@ class heavy_linear_CNN:
             outputs.append(z)
 
         return Model(inputs, outputs)
+
+
+def loss_layer(y_pred, true_y, speed):
+    pred_loss = tf.keras.losses.mse(true_y, y_pred) * tf.sqrt(speed)
+    return (y_pred, pred_loss)

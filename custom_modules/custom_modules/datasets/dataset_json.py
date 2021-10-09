@@ -167,10 +167,13 @@ class Dataset:
     def get_component(self, n_component):
         if isinstance(n_component, int):
             return self.__label_structure[n_component]
+
         elif isinstance(n_component, str):
             for n in self.components_name_mapping:
                 if n in n_component:
                     return self.components_name_mapping[n]
+            return zeros_component()  # if the output wasn't find, return the zeros component
+
         else:
             raise TypeError("n_component must be an integer or a string")
 
@@ -726,6 +729,22 @@ class imgbase64_component:
         return annotation_dict
 
 
+class zeros_component:
+    def __init__(self):
+        self.name = "zeros"
+        self.type = np.float32
+        self.flip = False
+        self.is_couple = False
+        self.iterable = False
+        self.weight_acc = 1
+        self.vis_func = vis_lab.none
+
+        self.value = np.float32(0.0)
+
+    def get_item(self, _):
+        return self.value
+
+
 class every_component(Enum):  # not used for the moment
     direction = direction_component
     cte = cte_component
@@ -734,3 +753,4 @@ class every_component(Enum):  # not used for the moment
     time = time_component
     right_lane = right_lane_component
     left_lane = left_lane_component
+    zeros = zeros_component

@@ -1,56 +1,84 @@
+import threading
+import time
+
+import numpy as np
+
+from .datasets.dataset_json import Dataset
+
+
 class Memory:
-    def __init__(self, queue_size=50):
-        self.memory = [{}]  # stored batch of memory
+    def __init__(self, dataset: Dataset, dos_save, queue_size=50, sleep_time=0.001):
+        """"Memory class to save images and annotations using a thread and a queue"
+
+        Args:
+            dataset (Dataset): Dataset class
+            dos_save ([type]): dos to save the data to
+            queue_size (int, optional): queue size. Defaults to 50.
+            sleep_time (float, optional): sleep time for the thread pool. Defaults to 0.001.
+        """
+        self.memory = []  # stored batch of memory
+        self.dataset = dataset
+        self.dos_save = dos_save
+
         self.queue_size = queue_size
+        self.sleep_time = sleep_time
 
-    def append(self, value):
-        if self.__len__() >= self.queue_size:
-            del self.memory[0]
-        self.memory.append(value)
+        self.thread = threading.Thread(target=self.loop)
 
-    def __call__(self):
-        return self.memory[-1]
+        self.running = True
+        self.saving = False
 
-    def __sizeof__(self):
-        return self.memory.__sizeof__()
+    def add(self, img: np.array, annotation_dict: dict):
+        """Add a given image and annotation to the queue.
 
-    def __setitem__(self, key, value):
-        return self.memory[-1].__setitem__(key, value)
+        Args:
+            img (np.array): The image
+            annotation_dict (dict): The annotations for the image
+        """
+        if len(self.memory) < self.queue_size:
+            self.memory.append((img, annotation_dict))
+        else:
+            self.remove(0)
+            self.memory.append((img, annotation_dict))
+        return
 
-    def __getslice__(self, i, j):
-        return self.memory.__getslice__(i, j)
+    def remove(self, index=0):
+        """Remove the tuple of image and annotation in the queue at a given index
 
-    def __getitem__(self, key):
-        return self.memory.__getitem__(key)
+        Args:
+            index (int, optional): index. Defaults to 0.
 
-    def __str__(self):
-        return self.memory.__str__()
+        Raises:
+            IndexError: [description]
+        """
+        if len(self.memory) < index:
+            raise IndexError
+        else:
+            del self.memory[index]
 
-    def __len__(self):
-        return len(self.memory)
+    def loop(self):
+        while(self.running):
+            if len(self.memory):
+                self.saving = True
+                img_to_save, annotation_dict = self.memory[-1]
 
-    def __iter__(self):
-        return iter(self.memory)
+                self.dataset.save_img_and_annotation(img_to_save, annotation_dict, dos=self.dos_save)
+                self.remove(-1)
+            else:
+                self.saving = False
+                time.sleep(self.sleep_time)
 
-    def __eq__(self, other):
-        return self.memory.__eq__(other)
+    def run(self):
+        self.running = True
+        self.thread.start()
+
+    def stop(self):
+        self.running = False
 
 
 if __name__ == "__main__":
     # just some tests
-    mem = Memory(2)
+    dataset = Dataset(["direction", "speed", "throttle", "time"])
+    mem = Memory(10)
 
-    mem["img_path"] = "/images.dzhaduaudz.png"
-    assert mem == [{"img_path": "/images.dzhaduaudz.png"}]
-
-    mem.append({})
-
-    mem[-1]["duzhadjzahdaz"] = 12
-    mem["blublu"] = 52
-    assert mem == [{"img_path": "/images.dzhaduaudz.png"}, {"duzhadjzahdaz": 12, "blublu": 52}]
-
-    mem.append({})
-    mem["img_path"] = "/images.dzhaduaudz.png"
-    assert mem == [{"duzhadjzahdaz": 12, "blublu": 52}, {"img_path": "/images.dzhaduaudz.png"}]
-
-    assert mem() == {"img_path": "/images.dzhaduaudz.png"}
+    mem.run()

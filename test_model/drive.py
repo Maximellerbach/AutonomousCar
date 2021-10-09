@@ -17,7 +17,7 @@ serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 1
+MAXTHROTTLE = 0.5
 wi = 160
 he = 120
 
@@ -27,12 +27,12 @@ input_components = []
 cap = camera.usbWebcam()
 
 basedir = os.path.dirname(os.path.abspath(__file__))
+
 # model = architectures.safe_load_model(
 #     f"{basedir}/models/auto_label7.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 
-model = architectures.TFLite(f"{basedir}/models/auto_label7.tflite", ["direction"])
-# just adding some stuff
+model = architectures.TFLite(f"{basedir}/models/pretrained_1.tflite", ["direction"])
 
 
 cap.start()
@@ -48,7 +48,7 @@ while True:
         memory = {}
         memory["direction"] = 0
         memory["speed"] = 0
-        memory["throttle"] = 0.1
+        memory["throttle"] = 0.2
         memory["time"] = time.time()
 
         to_pred = Dataset.make_to_pred_annotations(
