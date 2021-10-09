@@ -20,7 +20,6 @@ Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
 Memory = memory.Memory(Dataset, dos_save, queue_size=10)
-Memory.run()
 
 serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
@@ -62,6 +61,7 @@ while joy_leftX >= -0.9:
     time.sleep(0.01)
 
 print("Starting mainloop")
+Memory.run()
 ret = True
 
 while not joy.button_states["back"] and joy.connected and ret:
