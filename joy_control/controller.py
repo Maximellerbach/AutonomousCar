@@ -100,7 +100,7 @@ class Joystick(object):
 
         evbuf = None
 
-        while self.connected:
+        while True:
             if self.jsdev is None:
                 break
 
@@ -128,6 +128,8 @@ class Joystick(object):
                     if axis:
                         fvalue = value / 32767.0
                         self.axis_states[axis] = fvalue
+
+        print("Controller stopped")
 
 
 class XboxOneJoystick(Joystick):
