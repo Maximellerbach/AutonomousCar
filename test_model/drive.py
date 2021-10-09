@@ -32,6 +32,8 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 # architectures.apply_predict_decorator(model)
 
 model = architectures.TFLite(f"{basedir}/models/auto_label7.tflite", ["direction"])
+# just adding some stuff
+
 
 cap.start()
 print("Starting mainloop")
