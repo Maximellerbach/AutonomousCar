@@ -61,6 +61,7 @@ while joy_leftX >= -0.9:
     time.sleep(0.01)
 
 print("Starting mainloop")
+
 Memory.run()
 ret = True
 
