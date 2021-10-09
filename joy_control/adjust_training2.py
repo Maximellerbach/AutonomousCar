@@ -111,3 +111,5 @@ elif not ret:
     print("Camera isn't working properly")
 else:
     print("Terminated")
+
+joy.connected = False

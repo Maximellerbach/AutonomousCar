@@ -77,10 +77,11 @@ class Joystick(object):
             self.button_states[btn_name] = 0
             # print('btn', '0x%03x' % btn, 'name', btn_name)
 
+        self.connected = True
+
         th = threading.Thread(target=self.poll)
         th.start()
 
-        self.connected = True
         return True
 
     def show_map(self):
@@ -100,7 +101,7 @@ class Joystick(object):
 
         evbuf = None
 
-        while True:
+        while self.connected:
             if self.jsdev is None:
                 break
 
