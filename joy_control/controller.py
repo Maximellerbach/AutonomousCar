@@ -100,7 +100,7 @@ class Joystick(object):
 
         evbuf = None
 
-        while True:
+        while self.connected:
             if self.jsdev is None:
                 break
 

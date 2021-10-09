@@ -74,6 +74,7 @@ class Memory:
 
     def stop(self):
         self.running = False
+        self.thread.join()
 
 
 if __name__ == "__main__":
