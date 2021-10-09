@@ -34,6 +34,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 
 model = architectures.TFLite(f"{basedir}/models/pretrained_1.tflite", ["direction"])
 
+
 cap.start()
 print("Starting mainloop")
 
