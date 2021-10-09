@@ -1,10 +1,10 @@
 import os
 import time
 
-from custom_modules import serial_command2
+import cv2
+from custom_modules import serial_command2, memory
 from custom_modules.datasets import dataset_json
 
-import cv2
 import controller
 
 
@@ -12,11 +12,14 @@ def deadzone(value, th, default=0):
     return value if abs(value) > th else default
 
 
-Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-
 dos_save = os.path.expanduser("~") + "/recorded/"
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
+
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+
+Memory = memory.Memory(Dataset, dos_save, queue_size=10)
+Memory.run()
 
 MAXTHROTTLE = 0.5
 th_steering = 0.05  # 5% threshold
@@ -53,24 +56,25 @@ while not joy.button_states["back"] and joy.connected:
     joy_brake = joy.axis_states["z"]
     joy_button_a = joy.button_states["a"]
 
-    memory = {}
+    annotation = {}
 
-    memory["direction"] = deadzone(joy_steering, th_steering)
-    memory["throttle"] = deadzone(joy_throttle - joy_brake, th_throttle)
-    memory["speed"] = 0
-    memory["time"] = time.time()
+    annotation["direction"] = deadzone(joy_steering, th_steering)
+    annotation["throttle"] = deadzone(joy_throttle - joy_brake, th_throttle)
+    annotation["speed"] = 0
+    annotation["time"] = time.time()
 
-    ser.ChangeAll(memory["direction"], MAXTHROTTLE * memory["throttle"], min=[-1, -1], max=[1, 1])
+    ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"], min=[-1, -1], max=[1, 1])
 
     if joy_button_a:  # save the image
         _, img = cap.read()
         img = cv2.resize(img, (160, 120))
 
-        Dataset.save_img_and_annotation(img, annotation=memory, dos=dos_save)
+        Memory.add(img, annotation)
 
 
-# stop steering and throttle
-ser.ChangeAll(0, 0)
+Memory.stop()
+ser.ChangeAll(0, 0)  # stop steering and throttle
+cap.release()
 
 if not joy.connected:
     print("Lost connection with joystick")
