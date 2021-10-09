@@ -46,7 +46,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 # model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 # Load TFLite model
-model = architectures.TFLite(f"{basedir}/models/pretrained_1.tflite", ["direction"])
+model = architectures.TFLite(f"{basedir}/../test_model/models/pretrained_1.tflite", ["direction"])
 
 # checking if the controller is working properly
 joy_leftX = 0
