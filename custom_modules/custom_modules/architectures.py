@@ -192,6 +192,7 @@ class TFLite:
         try:
             import tflite_runtime.interpreter as tflite
         except ImportError:
+            print("failed to import tflite_runtime.interpreter")
             import tensorflow.lite as tflite
 
         self.interpreter = tflite.Interpreter(model_path=model_path, num_threads=num_threads)

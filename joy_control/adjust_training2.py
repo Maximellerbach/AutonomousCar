@@ -26,7 +26,7 @@ os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
 
 MAXTHROTTLE = 0.5
-th_steering = 0.05  # 5% thresholdx 
+th_steering = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 wi = 160
 he = 120
@@ -46,7 +46,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 # model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 # Load TFLite model
-model = architectures.TFLite(f"{basedir}/models/auto_label7.tflite", ["direction"])
+model = architectures.TFLite(f"{basedir}/models/pretrained_1.tflite", ["direction"])
 
 # checking if the controller is working properly
 joy_leftX = 0
