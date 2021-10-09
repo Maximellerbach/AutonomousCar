@@ -102,11 +102,11 @@ class image_generator(Sequence):
 
         X = [xbatch]
         for i in self.input_components:
-            X.append(np.float32([np.float32(tmp_array) for tmp_array in ybatch[i]]))
+            X.append(np.float32(ybatch[i]))
 
         Y = []
         for i in self.output_components:
-            Y.append(np.float32([np.float32(tmp_array) for tmp_array in ybatch[i]]))
+            Y.append(np.float32(ybatch[i]))
 
         # W = []
         # if 'speed' in self.names2index.keys():

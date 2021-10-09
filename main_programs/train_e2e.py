@@ -13,7 +13,7 @@ if __name__ == "__main__":
     dosdir = True
     simTest = False
 
-    Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
+    Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
 
     # Apply some transformations on the components
     # speed_comp = Dataset.get_component('speed')
@@ -24,8 +24,8 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\auto_label6.h5"
-    save_path = "test_model\\models\\auto_label7.h5"
+    load_path = "test_model\\models\\pretrained_1.h5"
+    save_path = "test_model\\models\\pretrained_1.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -42,10 +42,16 @@ if __name__ == "__main__":
     )
 
     e2e_trainer.build_classifier(
-        architectures.light_linear_CNN, load=True, use_bias=False, drop_rate=0.05, prune=0.0, regularizer=(0.0, 0.0)
+        architectures.light_CNN,
+        load=True,
+        use_bias=False,
+        drop_rate=0.05,
+        prune=0.0,
+        regularizer=(0.0, 0.0),
+        speed_loss=False,
     )
 
-    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.Huber(delta=1), lr=0.0005, metrics=[])
+    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.MeanSquaredError(), lr=0.0005, metrics=[], loss_weights=[1])
 
     e2e_trainer.train(
         flip=True,
@@ -54,7 +60,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
+        epochs=5,
         batch_size=64,
         show_distr=False,
     )

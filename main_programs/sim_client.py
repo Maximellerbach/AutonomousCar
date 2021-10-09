@@ -560,7 +560,7 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 
 if __name__ == "__main__":
-    model_path = os.getcwd() + os.path.normpath("/test_model/models/auto_label5.h5")
+    model_path = os.getcwd() + os.path.normpath("/test_model/models/pretrained_1.h5")
     model = architectures.safe_load_model(model_path, compile=False)
     architectures.apply_predict_decorator(model)
     model.summary()

@@ -49,6 +49,13 @@ def throttle(img, throttle, color=(0, 0, 255), show=True, name="img", waitkey=No
     return img
 
 
+def none(img, *args, **kwargs):
+    """
+    This is the None vis, if the output name isn't recognized, then it will be ignored
+    """
+    return img
+
+
 def vis_all(Dataset, input_components, img, output_dict, show=True, waitkey=1):
     for output_name in output_dict:
         component = Dataset.get_component(output_name)
