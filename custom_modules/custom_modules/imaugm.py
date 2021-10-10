@@ -104,11 +104,11 @@ def add_random_shadow(image, label):
     bot_x = shape[0] * np.random.uniform()
     bot_y = shape[1] * np.random.uniform()
 
-    image_hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
+    image_hls = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2HLS), dtype=np.uint16)
     shadow_mask = 0 * image_hls[:, :, 1]
 
-    X_m = np.mgrid[0 : image.shape[0], 0 : image.shape[1]][0]
-    Y_m = np.mgrid[0 : image.shape[0], 0 : image.shape[1]][1]
+    X_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][0]
+    Y_m = np.mgrid[0:image.shape[0], 0:image.shape[1]][1]
 
     shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
 
@@ -126,6 +126,8 @@ def add_random_shadow(image, label):
     else:
         image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
 
+    image_hls[image_hls[:, :, 1] >= 255] = 255
+    image_hls = np.array(image_hls, dtype=np.uint8)
     new_image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
     return new_image, label
 

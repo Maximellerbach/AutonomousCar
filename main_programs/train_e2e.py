@@ -8,10 +8,10 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\real_car\\"
-    test_path = f"{base_path}\\real_car\\"
+    train_path = f"{base_path}\\rbrl3\\"
+    test_path = f"{base_path}\\rbrl3\\"
     dosdir = True
-    simTest = False
+    simTest = True
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         dataset=Dataset,
         dospath=train_path,
         dosdir=dosdir,
-        proportion=0.1,
+        proportion=0.5,
         sequence=False,
         smoothing=0.0,
         label_rdm=0.0,
@@ -43,9 +43,9 @@ if __name__ == "__main__":
 
     e2e_trainer.build_classifier(
         architectures.light_CNN,
-        load=True,
+        load=False,
         use_bias=False,
-        drop_rate=0.05,
+        drop_rate=0.1,
         prune=0.0,
         regularizer=(0.0, 0.0),
         speed_loss=False,
@@ -60,8 +60,8 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=5,
-        batch_size=64,
+        epochs=25,
+        batch_size=32,
         show_distr=False,
     )
 
