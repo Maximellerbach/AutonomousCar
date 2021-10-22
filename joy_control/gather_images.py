@@ -21,7 +21,7 @@ Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 Memory = memory.Memory(Dataset, dos_save, queue_size=10)
 Memory.run()
 
-MAXTHROTTLE = 0.5
+MAXTHROTTLE = 0.25
 th_steering = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 

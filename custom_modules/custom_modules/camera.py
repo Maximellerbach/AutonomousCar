@@ -12,8 +12,9 @@ class usbWebcam():
         self.new_image = False
 
         img_shape = self.cap.read()[1].shape
-        self.topcrop = int(topcrop * img_shape[0])
-        self.botcrop = img_shape[0] - int(img_shape[0] * botcrop)
+        self.h = img_shape[0]
+        self.croptop = int(topcrop * img_shape[0])
+        self.cropbot = img_shape[0] - int(img_shape[0] * botcrop)
 
         self.running = True
 
@@ -27,7 +28,7 @@ class usbWebcam():
             if ret is False:
                 self.running = False
             else:
-                self.last_image = img[self.topcrop:self.botcrop]
+                self.last_image = self.crop_image(img)
                 self.new_image = True
 
     def read(self):
@@ -47,6 +48,9 @@ class usbWebcam():
     def release(self):
         self.running = False
         self.cap.release()
+
+    def crop_image(self, img):
+        return img[int(self.croptop*self.h): self.h-int(self.h*self.cropbot)].copy()
 
 
 if __name__ == "__main__":

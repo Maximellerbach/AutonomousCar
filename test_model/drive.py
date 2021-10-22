@@ -21,7 +21,6 @@ MAXTHROTTLE = 0.5
 wi = 160
 he = 120
 
-topcrop = 0.25
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
