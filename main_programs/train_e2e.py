@@ -8,10 +8,10 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\rbrl3\\"
-    test_path = f"{base_path}\\rbrl3\\"
+    train_path = f"{base_path}\\real_car\\"
+    test_path = f"{base_path}\\real_car\\"
     dosdir = True
-    simTest = True
+    simTest = False
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\auto_label7.h5"
+    load_path = "test_model\\models\\pretrained_1.h5"
     save_path = "test_model\\models\\pretrained_1.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         use_plateau_lr=False,
         verbose=True,
         epochs=10,
-        batch_size=32,
+        batch_size=256,
         show_distr=False,
     )
 
@@ -72,9 +72,10 @@ if __name__ == "__main__":
         sim_client.test_model(Dataset, input_components, save_path)
 
     else:
-        model = architectures.safe_load_model(save_path, compile=False)
         if dosdir:
             paths = Dataset.load_dataset_sorted(test_path, flat=True)
         else:
             paths = Dataset.load_dos_sorted(test_path)
-        pred_function.test_compare_paths(Dataset, input_components, model, paths, waitkey=1)
+
+        model = architectures.safe_load_model(save_path, compile=False)
+        pred_function.test_compare_paths(Dataset, input_components, model, paths, waitkey=1, apply_decorator=False)

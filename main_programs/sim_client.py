@@ -534,7 +534,7 @@ class log_points(SimpleClient):
 
 
 def test_model(dataset: dataset_json.Dataset, input_components, model_path):
-    model = architectures.safe_load_model(model_path, apply_decorator=True, compile=False)
+    model = architectures.safe_load_model(model_path, compile=False)
     # architectures.apply_predict_decorator(model)
 
     host = "127.0.0.1"

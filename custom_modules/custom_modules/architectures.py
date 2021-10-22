@@ -128,9 +128,8 @@ def safe_load_model(model_name, *args, apply_decorator=True, **kwargs):
                 model = load_model(model_name, *args, **kwargs)
 
         if apply_decorator:
-            return apply_predict_decorator(model)
-        else:
-            return model
+            apply_predict_decorator(model)
+        return model
 
     elif model_type == "tflite":
         return TFLite(model_name, *args, **kwargs)
