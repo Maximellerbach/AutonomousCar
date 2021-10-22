@@ -5,11 +5,15 @@ import time
 
 
 class usbWebcam():
-    def __init__(self, device=0):
+    def __init__(self, device=0, topcrop=0.20, botcrop=0.0):
         self.cap = cv2.VideoCapture(device)
 
         self.last_image = None
         self.new_image = False
+
+        img_shape = self.cap.read()[1].shape
+        self.topcrop = int(topcrop * img_shape[0])
+        self.botcrop = img_shape[0] - int(img_shape[0] * botcrop)
 
         self.running = True
 
@@ -23,7 +27,7 @@ class usbWebcam():
             if ret is False:
                 self.running = False
             else:
-                self.last_image = img
+                self.last_image = img[self.topcrop:self.botcrop]
                 self.new_image = True
 
     def read(self):
@@ -43,3 +47,14 @@ class usbWebcam():
     def release(self):
         self.running = False
         self.cap.release()
+
+
+if __name__ == "__main__":
+    cap = usbWebcam()
+    cap.start()
+    while(True):
+        cam = cap.read()
+        cam = cv2.resize(cam, (160, 120))
+
+        cv2.imshow('cam', cam)
+        cv2.waitKey(1)

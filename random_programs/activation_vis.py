@@ -22,7 +22,7 @@ gdos = Dataset.load_dataset(dos, flat=True)
 np.random.shuffle(gdos)
 
 model = architectures.safe_load_model("test_model\\models\\auto_label5.h5", compile=False)
-architectures.apply_predict_decorator(model)
+# architectures.apply_predict_decorator(model)
 
 fe = architectures.get_fe(model)
 fe.summary()

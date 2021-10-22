@@ -21,10 +21,13 @@ MAXTHROTTLE = 0.5
 wi = 160
 he = 120
 
+topcrop = 0.25
+
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
-cap = camera.usbWebcam()
+cap = camera.usbWebcam(topcrop=0.2, botcrop=0.0)
+cap.start()
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -32,12 +35,9 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 #     f"{basedir}/models/auto_label7.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 
-model = architectures.TFLite(f"{basedir}/models/pretrained_1.tflite", ["direction"])
+model = architectures.TFLite(f"{basedir}/models/pretrained_1.tflite", output_names=["direction"])
 
-
-cap.start()
 print("Starting mainloop")
-
 while True:
     try:
         st = time.time()

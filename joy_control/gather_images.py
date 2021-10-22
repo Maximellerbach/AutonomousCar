@@ -2,7 +2,7 @@ import os
 import time
 
 import cv2
-from custom_modules import serial_command2, memory
+from custom_modules import serial_command2, camera, memory
 from custom_modules.datasets import dataset_json
 
 import controller
@@ -32,9 +32,8 @@ joy = controller.XboxOneJoystick()
 joy.init()
 assert joy.connected is True
 
-cap = cv2.VideoCapture(0)
-ret, img = cap.read()  # read the camera once to make sure it works
-assert ret is True
+cap = camera.usbWebcam(topcrop=0.2, botcrop=0)
+cap.start()
 
 # checking if the controller is working properly
 joy_leftX = 0
@@ -50,7 +49,7 @@ while joy_leftX >= -0.9:
 
 print("Starting mainloop")
 
-while not joy.button_states["back"] and joy.connected:
+while not joy.button_states["back"] and joy.connected and cap.running:
     joy_steering = joy.axis_states["x"]
     joy_throttle = joy.axis_states["rz"]
     joy_brake = joy.axis_states["z"]
@@ -66,7 +65,7 @@ while not joy.button_states["back"] and joy.connected:
     ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"], min=[-1, -1], max=[1, 1])
 
     if joy_button_a:  # save the image
-        _, img = cap.read()
+        img = cap.read()
         img = cv2.resize(img, (160, 120))
 
         Memory.add(img, annotation)

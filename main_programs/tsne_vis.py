@@ -41,7 +41,7 @@ class data_visualization:
 
         batchs = []
         for i in range(len(paths) // max_img):
-            batchs.append(paths[i * max_img : (i + 1) * max_img])
+            batchs.append(paths[i * max_img: (i + 1) * max_img])
         return batchs
 
     def get_pred(self, X):
@@ -96,6 +96,6 @@ if __name__ == "__main__":
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 
-    vis = data_visualization(Dataset, "test_model\\models\\auto_label5.h5")
-    vis.computeTSNEProjectionOfLatentSpace(f"{base_path}\\test_scene\\", doss=True, display=True)
+    vis = data_visualization(Dataset, "test_model\\models\\pretrained_1.h5")
+    vis.computeTSNEProjectionOfLatentSpace(f"{base_path}\\rbrl3\\", doss=True, display=True)
     # vis.clustering(doss)

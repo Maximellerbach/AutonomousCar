@@ -2,7 +2,7 @@ import os
 import time
 
 import cv2
-from custom_modules import architectures, serial_command2, memory
+from custom_modules import architectures, serial_command2, camera, memory
 from custom_modules.datasets import dataset_json
 
 import controller
@@ -36,9 +36,9 @@ joy.init()
 assert joy.connected is True
 print("joy working")
 
-cap = cv2.VideoCapture(0)
-ret, img = cap.read()  # read the camera once to make sure it works
-assert ret is True
+
+cap = camera.usbWebcam(topcrop=0.2, botcrop=0.0)
+cap.start()
 print("cam working")
 
 basedir = os.path.dirname(os.path.abspath(__file__))
@@ -73,7 +73,7 @@ while not joy.button_states["back"] and joy.connected and ret:
     joy_button_x = joy.button_states["x"]
 
     st = time.time()
-    ret, cam = cap.read()
+    cam = cap.read()
     img = cv2.resize(cam, (wi, he))
 
     annotation = {}

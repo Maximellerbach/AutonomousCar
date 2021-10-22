@@ -24,7 +24,7 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\pretrained_1.h5"
+    load_path = "test_model\\models\\auto_label7.h5"
     save_path = "test_model\\models\\pretrained_1.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     e2e_trainer.build_classifier(
         architectures.light_CNN,
-        load=False,
+        load=True,
         use_bias=False,
         drop_rate=0.1,
         prune=0.0,
@@ -60,20 +60,19 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=25,
+        epochs=10,
         batch_size=32,
         show_distr=False,
     )
 
     # print(architectures.get_flops(save_path))
-    model = architectures.safe_load_model(save_path, compile=False)
-
     if simTest:
         import sim_client
 
         sim_client.test_model(Dataset, input_components, save_path)
 
     else:
+        model = architectures.safe_load_model(save_path, compile=False)
         if dosdir:
             paths = Dataset.load_dataset_sorted(test_path, flat=True)
         else:

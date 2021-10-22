@@ -8,7 +8,7 @@ import sim_client
 
 model_path = "test_model\\models\\test_scene.h5"
 model = architectures.safe_load_model(model_path, compile=False)
-architectures.apply_predict_decorator(model)
+# architectures.apply_predict_decorator(model)
 dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = [1]
 

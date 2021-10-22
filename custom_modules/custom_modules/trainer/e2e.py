@@ -80,7 +80,7 @@ class End2EndTrainer:
     ):
         """Load a model using a model architectures from architectures.py."""
         if load:
-            self.model = architectures.safe_load_model(self.load_path, custom_objects={
+            self.model = architectures.safe_load_model(self.load_path, apply_decorator=False, custom_objects={
                                                        "dir_loss": architectures.dir_loss})
             print("loaded model")
 
@@ -107,6 +107,7 @@ class End2EndTrainer:
             self.callbacks.append(tfmot.sparsity.keras.UpdatePruningStep())
 
     def compile_model(self, loss="mse", optimizer=tensorflow.keras.optimizers.Adam, lr=0.001, metrics=["mse"], loss_weights=None):
+        print(self.model)
         self.model.compile(loss=loss, loss_weights=loss_weights, optimizer=optimizer(lr=lr), metrics=metrics)
 
         # turn this off for the moment

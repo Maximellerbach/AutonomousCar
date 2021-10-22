@@ -277,7 +277,7 @@ class SimpleClient(SDClient):
         self.send_controls(st, throttle, brake)
 
     def prepare_img(self, img):
-        img = img[self.crop :, :, :]
+        img = img[self.crop:, :, :]
         img = cv2.resize(img, (160, 120))
         return img
 
@@ -289,7 +289,9 @@ class SimpleClient(SDClient):
 
         to_pred = self.dataset.make_to_pred_annotations([img], [[0, self.current_speed]], self.input_components)
         pred, dt = self.model.predict(to_pred)
-        pred = pred[0]
+
+        if isinstance(pred, list):
+            pred = pred[0]
 
         direction = None
         throttle = None
@@ -532,8 +534,8 @@ class log_points(SimpleClient):
 
 
 def test_model(dataset: dataset_json.Dataset, input_components, model_path):
-    model = architectures.safe_load_model(model_path, compile=False)
-    architectures.apply_predict_decorator(model)
+    model = architectures.safe_load_model(model_path, apply_decorator=True, compile=False)
+    # architectures.apply_predict_decorator(model)
 
     host = "127.0.0.1"
     port = 9091
@@ -560,13 +562,12 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 
 if __name__ == "__main__":
-    model_path = os.getcwd() + os.path.normpath("/test_model/models/pretrained_1.h5")
-    model = architectures.safe_load_model(model_path, compile=False)
-    architectures.apply_predict_decorator(model)
-    model.summary()
+    model_path = os.getcwd() + os.path.normpath("/test_model/models/pretrained_1.tflite")
+    model = architectures.safe_load_model(model_path, output_names=["direction"])
+    # model.summary()
 
     dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-    input_components = [1]
+    input_components = []
 
     hosts = ["127.0.0.1", "donkey-sim.roboticist.dev", "sim.diyrobocars.fr"]
     host = hosts[0]

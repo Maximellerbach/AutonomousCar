@@ -118,12 +118,25 @@ def get_flat_fe(model):
         return Model(inp, x)
 
 
-def safe_load_model(*args, **kwargs):
-    try:
-        return load_model(*args, **kwargs)
-    except ValueError:
-        with tfmot.sparsity.keras.prune_scope():
-            return load_model(*args, **kwargs)
+def safe_load_model(model_name, *args, apply_decorator=True, **kwargs):
+    model_type = model_name.split('.')[-1]
+    if model_type == "h5":
+        try:
+            model = load_model(model_name, *args, **kwargs)
+        except ValueError:
+            with tfmot.sparsity.keras.prune_scope():
+                model = load_model(model_name, *args, **kwargs)
+
+        if apply_decorator:
+            return apply_predict_decorator(model)
+        else:
+            return model
+
+    elif model_type == "tflite":
+        return TFLite(model_name, *args, **kwargs)
+
+    else:
+        raise ValueError()("specified model isn't in the right format: .h5 | .tflite")
 
 
 def get_model_output_names(model):

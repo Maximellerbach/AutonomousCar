@@ -29,7 +29,7 @@ input_components = []
 
 model = architectures.safe_load_model(
     "test_model\\models\\pretrained_1.h5", compile=False)
-architectures.apply_predict_decorator(model)
+# architectures.apply_predict_decorator(model)
 
 model2 = architectures.TFLite(
     "test_model\\models\\pretrained_1.tflite", output_names=["direction"])
