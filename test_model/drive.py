@@ -25,8 +25,8 @@ he = 120
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
 input_components = []
 
-cap = camera.usbWebcam(topcrop=0.2, botcrop=0.0)
-cap.start()
+# cap = camera.usbWebcam(topcrop=0.2, botcrop=0.0)
+cap = cv2.VideoCapture(0)
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,7 +41,7 @@ while True:
     try:
         st = time.time()
 
-        cam = cap.read()
+        _, cam = cap.read()
         img = cv2.resize(cam, (wi, he))
 
         memory = {}

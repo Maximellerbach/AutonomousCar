@@ -37,8 +37,8 @@ assert joy.connected is True
 print("joy working")
 
 
-cap = camera.usbWebcam(topcrop=0.2, botcrop=0.0)
-cap.start()
+# cap = camera.usbWebcam(topcrop=0.2, botcrop=0.0)
+cap = cv2.VideoCapture(0)
 print("cam working")
 
 basedir = os.path.dirname(os.path.abspath(__file__))
@@ -59,7 +59,7 @@ while joy_leftX >= -0.9:
     joy_leftX = joy.axis_states["x"]
     print(joy_leftX, end="\r")
     time.sleep(0.01)
-
+    
 print("Starting mainloop")
 
 Memory.run()
@@ -73,7 +73,7 @@ while not joy.button_states["back"] and joy.connected and ret:
     joy_button_x = joy.button_states["x"]
 
     st = time.time()
-    cam = cap.read()
+    _, cam = cap.read()
     img = cv2.resize(cam, (wi, he))
 
     annotation = {}
