@@ -8,10 +8,10 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\auto_labels\\"
-    test_path = f"{base_path}\\auto_labels\\"
+    train_path = f"{base_path}\\donkey\\"
+    test_path = f"{base_path}\\donkey\\"
     dosdir = True
-    simTest = True
+    simTest = False
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         speed_loss=False,
     )
 
-    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.MeanSquaredError(), lr=0.0005, metrics=[], loss_weights=[1])
+    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.Huber(delta=1), lr=0.0005, metrics=[], loss_weights=[1])
 
     e2e_trainer.train(
         flip=True,
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
+        epochs=5,
         batch_size=128,
         show_distr=False,
     )
