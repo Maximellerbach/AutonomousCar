@@ -562,7 +562,7 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 
 if __name__ == "__main__":
-    model_path = os.getcwd() + os.path.normpath("/test_model/models/pretrained_1.tflite")
+    model_path = os.getcwd() + os.path.normpath("/test_model/models/testpretrained.tflite")
     model = architectures.safe_load_model(model_path, output_names=["direction"])
     # model.summary()
 

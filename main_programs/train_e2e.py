@@ -8,10 +8,10 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\real_car\\"
-    test_path = f"{base_path}\\real_car\\"
+    train_path = f"{base_path}\\auto_labels\\"
+    test_path = f"{base_path}\\auto_labels\\"
     dosdir = True
-    simTest = False
+    simTest = True
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     output_components = [0]
 
     load_path = "test_model\\models\\pretrained_1.h5"
-    save_path = "test_model\\models\\pretrained_1.h5"
+    save_path = "test_model\\models\\testpretrained.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         dataset=Dataset,
         dospath=train_path,
         dosdir=dosdir,
-        proportion=0.5,
+        proportion=0.3,
         sequence=False,
         smoothing=0.0,
         label_rdm=0.0,
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         use_plateau_lr=False,
         verbose=True,
         epochs=10,
-        batch_size=256,
+        batch_size=128,
         show_distr=False,
     )
 
