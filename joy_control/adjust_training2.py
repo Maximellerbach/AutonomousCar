@@ -25,7 +25,7 @@ serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 0.5
+MAXTHROTTLE = 1.0
 th_steering = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 wi = 160
@@ -98,7 +98,7 @@ while not joy.button_states["back"] and joy.connected and ret:
         print(prediction_dict, 1 / elapsed_time, 1 / dt)
 
     # apply direction and throttle
-    ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"])
+    ser.ChangeAll(annotation["direction"]*0.8, MAXTHROTTLE * annotation["throttle"])
 
 
 Memory.stop()
