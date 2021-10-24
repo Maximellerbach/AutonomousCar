@@ -8,9 +8,9 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\donkey\\"
-    test_path = f"{base_path}\\donkey\\"
-    dosdir = True
+    train_path = f"{base_path}\\donkey\\1\\"
+    test_path = f"{base_path}\\donkey\\2\\"
+    dosdir = False
     simTest = False
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
@@ -24,8 +24,8 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\pretrained_1.h5"
-    save_path = "test_model\\models\\testpretrained.h5"
+    load_path = "test_model\\models\\working_epita.h5"
+    save_path = "test_model\\models\\working_epita2.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
