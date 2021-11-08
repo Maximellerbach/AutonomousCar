@@ -14,6 +14,7 @@ from tensorflow.keras.layers import (
     Flatten,
     MaxPooling2D,
     SeparableConv2D,
+    Cropping2D,
 )
 from tensorflow.keras.layers import TimeDistributed as TD
 from tensorflow.keras.losses import mae, mse
@@ -447,19 +448,21 @@ class light_CNN:
         inp = Input(shape=self.img_shape, name="image")
         inputs.append(inp)
 
-        x = BatchNormalization(name="start_fe")(inp)
+        x = Cropping2D(cropping=((20, 20), (0, 0)))(inp)
+        x = BatchNormalization(name="start_fe")(x)
         x = self.conv_block(12, 5, 2, x, drop=True, conv_type=Conv2D)
         x = self.conv_block(24, 5, 2, x, drop=True, conv_type=Conv2D)
         x = self.conv_block(32, 3, 2, x, drop=True, conv_type=Conv2D)
         x = self.conv_block(32, 3, 1, x, drop=True, conv_type=Conv2D)
-        x = self.conv_block(8, 3, 1, x, drop=True, conv_type=Conv2D)
+        x = self.conv_block(32, 3, 1, x, drop=True, conv_type=Conv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation("linear", name="end_fe")(x)
+        y = Flatten()(x)
 
-        y1 = self.conv_block(64, (9, 14), 1, x, drop=True,
-                             conv_type=Conv2D)
-        y2 = MaxPooling2D()(x)
-        y = Concatenate()([Flatten()(y1), Flatten()(y2)])
+        # y1 = self.conv_block(64, (6, 14), 1, x, drop=True,
+        #                      conv_type=Conv2D)
+        # y2 = MaxPooling2D()(x)
+        # y = Concatenate()([Flatten()(y1), Flatten()(y2)])
 
         y = Dropout(self.drop_rate)(y)
 
@@ -496,7 +499,8 @@ class light_CNN:
         if "direction" in output_components_names:
             z = self.dense_block(50, y, drop=False)
             z = self.dense_block(25, z, drop=False)
-            z = self.dense_block(9, z, drop=False, activation="softmax")
+            z = self.dense_block(25, z, drop=False)
+            # z = self.dense_block(9, z, drop=False, activation="softmax")
             z = Dense(1, use_bias=self.use_bias,
                       activation=self.last_act, name="direction")(z)
 

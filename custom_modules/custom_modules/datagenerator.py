@@ -83,7 +83,7 @@ class image_generator(Sequence):
                     imaugm.add_rdm_noise,
                     imaugm.rescut,
                     imaugm.inverse_color,
-                    imaugm.night_effect,
+                    # imaugm.night_effect,
                 ),
             )
 

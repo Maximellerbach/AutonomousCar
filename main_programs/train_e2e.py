@@ -24,8 +24,8 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\working_epita.h5"
-    save_path = "test_model\\models\\working_epita2.h5"
+    load_path = "test_model\\models\\working_epita2.h5"
+    save_path = "test_model\\models\\working_epita3.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         dataset=Dataset,
         dospath=train_path,
         dosdir=dosdir,
-        proportion=0.3,
+        proportion=0.1,
         sequence=False,
         smoothing=0.0,
         label_rdm=0.0,
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     e2e_trainer.build_classifier(
         architectures.light_CNN,
-        load=True,
+        load=False,
         use_bias=False,
         drop_rate=0.1,
         prune=0.0,
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         speed_loss=False,
     )
 
-    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.Huber(delta=1), lr=0.0005, metrics=[], loss_weights=[1])
+    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.MeanSquaredError(), lr=0.0005, metrics=[], loss_weights=[1])
 
     e2e_trainer.train(
         flip=True,
@@ -60,8 +60,8 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=5,
-        batch_size=128,
+        epochs=10,
+        batch_size=32,
         show_distr=False,
     )
 

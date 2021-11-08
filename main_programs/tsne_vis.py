@@ -96,6 +96,6 @@ if __name__ == "__main__":
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 
-    vis = data_visualization(Dataset, "test_model\\models\\pretrained_1.h5")
-    vis.computeTSNEProjectionOfLatentSpace(f"{base_path}\\rbrl3\\", doss=True, display=True)
+    vis = data_visualization(Dataset, "test_model\\models\\working_epita.h5")
+    vis.computeTSNEProjectionOfLatentSpace(f"{base_path}\\donkey\\", doss=True, display=True)
     # vis.clustering(doss)

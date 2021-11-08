@@ -12,14 +12,14 @@ for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f"{base_path}\\test_scene\\"
+dos = f"{base_path}\\donkey\\1\\"
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
-gdos = Dataset.load_dataset_sorted(dos, flat=True)
+gdos = Dataset.load_dos_sorted(dos)
 np.random.shuffle(gdos)
 
-model = architectures.safe_load_model("test_model\\models\\auto_label5.h5", compile=False)
+model = architectures.safe_load_model("test_model\\models\\working_epita.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 model.summary()
 
@@ -33,7 +33,7 @@ for labpath in gdos:
     img = img / 255
 
     for class_idx in range(vis_model.output.shape[1]):
-        vis_img = vis_fe.get_gradcam(vis_model, to_pred, class_idx, penultimate_layer=2)
+        vis_img = vis_fe.get_gradcam(vis_model, to_pred, class_idx, penultimate_layer=8)
         vis_img = np.transpose(vis_img[0], (1, 2, 0))
 
         # cv2.imshow(f'img_{class_idx}', vis_img * img)

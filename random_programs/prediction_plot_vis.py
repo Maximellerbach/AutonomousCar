@@ -17,7 +17,7 @@ def get_key_by_name(dict, name):
 
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f"{base_path}\\real_car\\"
+dos = f"{base_path}\\donkey\\1\\"
 
 physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:
@@ -27,15 +27,17 @@ for gpu_instance in physical_devices:
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
-model = architectures.safe_load_model(
-    "test_model\\models\\pretrained_1.h5", compile=False)
+# model = architectures.safe_load_model(
+#     "test_model\\models\\pretrained_1.h5", compile=False)
 # architectures.apply_predict_decorator(model)
+# model_outputs = architectures.get_model_output_names(model)
 
-model2 = architectures.TFLite(
-    "test_model\\models\\pretrained_1.tflite", output_names=["direction"])
+model1 = architectures.safe_load_model(
+    "test_model\\models\\working_epita2.tflite", output_names=["direction"])
+model2 = architectures.safe_load_model(
+    "test_model\\models\\working_epita3.tflite", output_names=["direction"])
 
-gdos = Dataset.load_dataset_sorted(dos, flat=True)
-model_outputs = architectures.get_model_output_names(model)
+gdos = Dataset.load_dos_sorted(dos)
 
 fig = plt.figure()
 # plt.style.use("classic")
@@ -65,7 +67,7 @@ ax3.set_ylabel("pred2", color="purple")
 
 X = deque([0], maxlen=200)
 Y = deque([0], maxlen=200)
-Z = deque([0], maxlen=200)
+Z1 = deque([0], maxlen=200)
 Z2 = deque([0], maxlen=200)
 
 
@@ -80,26 +82,24 @@ def animate(i):
 
     to_pred = Dataset.make_to_pred_annotations(
         [img], [annotation], input_components)
-    prediction_dict, elapsed_time = model.predict(to_pred)
-    prediction_dict = prediction_dict[0]
 
+    prediction_dict, elapsed_time = model1.predict(to_pred)
     prediction_dict2, elapsed_time2 = model2.predict(to_pred)
 
     print(elapsed_time, elapsed_time2)
-
-    vis_lab.vis_all_compare(Dataset, [1], img, annotation, prediction_dict)
+    vis_lab.vis_all_compare(Dataset, [], img, annotation, prediction_dict)
 
     if len(X) < 200:  # fill the X list with numbers from 0 to 200
         X.append(X[-1] + 1)
     Y.append(get_key_by_name(annotation, "direction"))
-    Z.append(get_key_by_name(prediction_dict, "direction"))
+    Z1.append(get_key_by_name(prediction_dict, "direction"))
     Z2.append(get_key_by_name(prediction_dict2, "direction"))
 
     line1.set_data(X, Y)
-    line2.set_data(X, Z)
+    line2.set_data(X, Z1)
     line3.set_data(X, Z2)
 
-    return line1, line2
+    return line1, line2, line3
 
 
 ani = FuncAnimation(

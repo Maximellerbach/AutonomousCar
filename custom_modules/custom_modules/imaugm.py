@@ -164,12 +164,11 @@ def inverse_color(img, label):
     g = img[:, :, 1]
     r = img[:, :, 2]
 
-    rdm_c = np.random.uniform(0.6, 1.4, 3)
-    order = [b * rdm_c[0], g * rdm_c[1], r * rdm_c[2]]
+    # rdm_c = np.random.uniform(0.6, 1.4, 3)
+    # order = [b * rdm_c[0], g * rdm_c[1], r * rdm_c[2]]
+    order = [b, g, r]
     random.shuffle(order)
     img = cv2.merge(order)
-    img = img * (1 / max(rdm_c))
-
     return img, label
 
 

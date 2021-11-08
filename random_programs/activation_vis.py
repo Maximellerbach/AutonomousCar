@@ -8,7 +8,7 @@ from custom_modules.datasets import dataset_json
 from custom_modules.vis import vis_fe, vis_lab
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f"{base_path}\\donkeycar\\"
+dos = f"{base_path}\\donkey\\"
 
 physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:
@@ -21,7 +21,7 @@ input_components = []
 gdos = Dataset.load_dataset(dos, flat=True)
 np.random.shuffle(gdos)
 
-model = architectures.safe_load_model("test_model\\models\\auto_label5.h5", compile=False)
+model = architectures.safe_load_model("test_model\\models\\working_epita.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 
 fe = architectures.get_fe(model)
