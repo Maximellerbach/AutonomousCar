@@ -52,10 +52,11 @@ class control:
 
     def __runThreaded__(self):
         while(True):
-            cmd = self.__toSend[-1]
-            print(cmd)
-            self.__safeWrite__(cmd)
-            self.__toSend = []
+            if len(self.__toSend) > 0:
+                cmd = self.__toSend[-1]
+                print(cmd)
+                self.__safeWrite__(cmd)
+                self.__toSend = []
             self.__readRPM__()
 
     def stop(self):
