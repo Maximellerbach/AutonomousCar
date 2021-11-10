@@ -104,7 +104,8 @@ class control:
 
         self.__command[1] = steering
         self.__command[2] = pwm
-        self.__ser.write(self.__command)
+        # self.__ser.write(self.__command)
+        self.__toSend.append(self.__command)
 
     def GetRPM(self):
         return self.__sensor_rpm
