@@ -45,8 +45,8 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        self.__thread = threading.Thread(target=self.__runThreaded__)
-        self.__thread.start()
+        # self.__thread = threading.Thread(target=self.__runThreaded__)
+        # self.__thread.start()
 
         time.sleep(1)
 
