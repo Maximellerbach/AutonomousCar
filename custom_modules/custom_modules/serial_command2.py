@@ -71,7 +71,7 @@ class control:
         self.__isOperation = True
         print("writing")
         self.__ser.write(command)
-        self.__ser.flush()
+        # self.__ser.flush()
         self.__isOperation = False
 
     def __readRPM__(self):
