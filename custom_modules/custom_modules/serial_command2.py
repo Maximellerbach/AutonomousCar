@@ -77,7 +77,7 @@ class control:
     def __readRPM__(self):
         while self.__isOperation:  # this shouldn't interfere
             pass
-        if self.__ser.in_waiting() >= 2:
+        if self.__ser.in_waiting >= 2:
             self.__isOperation = True
             print("trying reading")
             out = self.__ser.readline()
