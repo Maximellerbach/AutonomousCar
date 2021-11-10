@@ -29,7 +29,7 @@ class control:
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
-        self.__ser.timeout = 0  # no timeout
+        self.__ser.timeout = 0  # 0 = no timeout
 
         self.__sensor_rpm = 0  # init rpm of the sensor to 0
         self.__command = bytearray([255, 127, 127, 0])
@@ -45,19 +45,10 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        # self.__thread = threading.Thread(target=self.__runThreaded__)
-        # self.__thread.start()
+        self.__thread = threading.Thread(target=self.__runThreaded__)
+        self.__thread.start()
 
         time.sleep(1)
-
-    def __runThreaded__(self):
-        while(True):
-            if len(self.__toSend) > 0:
-                cmd = self.__toSend[-1]
-                print(cmd)
-                self.__safeWrite__(cmd)
-                self.__toSend = []
-            self.__readRPM__()
 
     def stop(self):
         self.__isRuning = False
@@ -66,28 +57,32 @@ class control:
             with lock:
                 self.__ser.close()  # close port
 
+    def __runThreaded__(self):
+        while(True):
+            if len(self.__toSend) > 0:
+                cmd = self.__toSend[-1]
+                self.__toSend = []
+                self.__safeWrite__(cmd)
+            self.__readRPM__()
+
     def __safeWrite__(self, command):
-        while self.__isOperation:
+        while self.__isOperation:  # this shouldn't interfere
             pass
         self.__isOperation = True
+        print("writing")
         self.__ser.write(command)
-        # self.__ser.flush()
+        self.__ser.flush()
         self.__isOperation = False
 
     def __readRPM__(self):
-        pass
-        # print(self.__ser.in_waiting)
-
-        # while self.__isOperation:
-        #     pass
-        # self.__isOperation = True
-        # try:
-        #     out = self.__ser.readlines()[-1]
-        #     print(out)
-        # except:
-        #     pass
-        # finally:
-        #     self.__isOperation = False
+        while self.__isOperation:  # this shouldn't interfere
+            pass
+        if self.__ser.in_waiting() >= 2:
+            self.__isOperation = True
+            print("trying reading")
+            out = self.__ser.readline()
+            print(out)
+            self.__isOperation = False
 
         # if self.__ser.in_waiting > 0:
         #     out = self.__ser.readlines()[-1]
