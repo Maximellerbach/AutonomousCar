@@ -154,9 +154,9 @@ class control:
                     if out != "" or out is not None:
                         new_rounds = -int(out.decode())
                         self.__sensor_compteTour.update(new_rounds)
-                        print(
-                            [self.__sensor_compteTour.position, self.__sensor_compteTour.speed, self.__sensor_compteTour.acc]
-                        )
+                        # print(
+                        #     [self.__sensor_compteTour.position, self.__sensor_compteTour.speed, self.__sensor_compteTour.acc]
+                        # )
 
                 except:  # do not use bare except
                     pass

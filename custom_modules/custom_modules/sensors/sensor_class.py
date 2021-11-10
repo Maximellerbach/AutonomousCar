@@ -125,7 +125,7 @@ class Fusion:
 
 if __name__ == "__main__":
     # some tests
-    sensor = sensor_compteTour()
+    sensor = CompteTour()
     time.sleep(0.1)
     sensor.update([100])
     print(sensor.datas)

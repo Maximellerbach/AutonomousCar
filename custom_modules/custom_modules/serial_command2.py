@@ -1,10 +1,7 @@
 import threading
 import time
-from enum import IntEnum
 
 import serial
-
-from .sensors import sensor_class
 
 lock = threading.RLock()
 
@@ -33,6 +30,8 @@ class control:
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
         self.__ser.timeout = 0  # no timeout
+
+        self.__sensor_rpm = 0  # init rpm of the sensor to 0
         self.__command = bytearray([255, 127, 127, 0])
         self.__isRuning = True
         self.__isOperation = False
@@ -46,10 +45,14 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
+        self.__thread = threading.Thread(target=self.__readThreaded__)
+        self.__thread.start()
+
         time.sleep(1)
 
-    def __enter__(self):
-        return self
+    def __readThreaded__(self):
+        while(self.__isRuning and self.__ser.is_open):
+            self.__readRPM__()
 
     def stop(self):
         self.__isRuning = False
@@ -58,14 +61,14 @@ class control:
             with lock:
                 self.__ser.close()  # close port
 
-    def __safeWrite__(self, command):
-        if self.__ser.is_open:
-            while self.__isOperation:
-                pass
-            self.__isOperation = True
-            self.__ser.write(command)
-            self.__ser.flush()
-            self.__isOperation = False
+    def __readRPM__(self):
+        if self.__ser.in_waiting > 0:
+            out = self.__ser.readlines()[-1]
+            if out != "" or out is not None:
+                print(out)
+                # __sensor_rpm = int(out)
+            else:
+                print("out is empty")
 
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
@@ -93,7 +96,24 @@ class control:
         self.__command[2] = pwm
         self.__ser.write(self.__command)
 
+    def GetRPM(self):
+        return self.__sensor_rpm
+
 
 def start_serial(port="/dev/ttyUSB0"):
     ser = control(port)
     return ser
+
+
+if __name__ == "__main__":
+    # motor test, servo test and rpm test
+    ser = start_serial()
+    for i in range(-30, 30):
+        ser.ChangePWM(i, -127, 127)
+        time.sleep(0.1)
+
+    ser.ChangeAll(0, 0)
+
+    for i in range(-30, 30):
+        ser.ChangeDirection(i, -127, 127)
+        time.sleep(0.1)

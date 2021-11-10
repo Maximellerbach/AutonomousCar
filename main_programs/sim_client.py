@@ -562,7 +562,7 @@ def test_model(dataset: dataset_json.Dataset, input_components, model_path):
 
 
 if __name__ == "__main__":
-    model_path = os.getcwd() + os.path.normpath("/test_model/models/working_epita3.tflite")
+    model_path = os.getcwd() + os.path.normpath("/test_model/models/working_epita2.tflite")
     model = architectures.safe_load_model(model_path, output_names=["direction"])
     # model.summary()
 
@@ -582,7 +582,7 @@ if __name__ == "__main__":
         "use_speed": (True, True),
         "sleep_time": 0.01,
         "PID_settings": [17, 0.5, 0.3, 1.1, 1.0],
-        "loop_settings": [True, False, False, True, False, False],
+        "loop_settings": [True, False, False, True, False, True],
         "buffer_time": 0,
         "track": "circuit_launch",
         "model": model,
