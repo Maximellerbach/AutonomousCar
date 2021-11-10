@@ -51,7 +51,7 @@ class control:
         time.sleep(1)
 
     def __runThreaded__(self):
-        while(self.__isRuning and self.__ser.is_open):
+        while(self.__isRuning):
             for cmd in self.__toSend:
                 self.__safeWrite__(cmd)
                 self.__toSend.remove(cmd)
@@ -65,13 +65,12 @@ class control:
                 self.__ser.close()  # close port
 
     def __safeWrite__(self, command):
-        if self.__ser.is_open:
-            while self.__isOperation:
-                pass
-            self.__isOperation = True
-            self.__ser.write(command)
-            self.__ser.flush()
-            self.__isOperation = False
+        while self.__isOperation:
+            pass
+        self.__isOperation = True
+        self.__ser.write(command)
+        self.__ser.flush()
+        self.__isOperation = False
 
     def __readRPM__(self):
         print(self.__ser.in_waiting)
@@ -86,7 +85,6 @@ class control:
         #     pass
         # finally:
         #     self.__isOperation = False
-
 
         # if self.__ser.in_waiting > 0:
         #     out = self.__ser.readlines()[-1]
