@@ -53,7 +53,7 @@ void setup()
 
   // sensor init
   pinMode(SENSOR_PIN, INPUT);
-  attachInterrupt(SENSOR_PIN, signalChange, CHANGE);
+  // attachInterrupt(SENSOR_PIN, signalChange, CHANGE);
 
   // if the button is pressed within a second, enter calibration process
   for (int i = 0; i < 20; i++)
