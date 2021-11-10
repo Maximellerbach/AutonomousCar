@@ -3,8 +3,6 @@ import time
 
 import serial
 
-lock = threading.RLock()
-
 
 def map_value(value, min, max, outmin, outmax):
     if value < min:
@@ -54,8 +52,7 @@ class control:
         self.__isRuning = False
         self.__thread.join()
         if self.__ser.is_open:
-            with lock:
-                self.__ser.close()  # close port
+            self.__ser.close()  # close port
 
     def __runThreaded__(self):
         while(True):
@@ -71,26 +68,18 @@ class control:
         self.__isOperation = True
         print("writing")
         self.__ser.write(command)
-        # self.__ser.flush()
+        self.__ser.flush()
         self.__isOperation = False
 
     def __readRPM__(self):
         while self.__isOperation:  # this shouldn't interfere
             pass
-        if self.__ser.in_waiting >= 2:
+        if self.__ser.in_waiting >= 0:
             self.__isOperation = True
             print("trying reading")
             out = self.__ser.readline()
             print(out)
             self.__isOperation = False
-
-        # if self.__ser.in_waiting > 0:
-        #     out = self.__ser.readlines()[-1]
-        #     if out != "" or out is not None:
-        #         print(out)
-        #         # __sensor_rpm = int(out)
-        #     else:
-        #         print("out is empty")
 
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""

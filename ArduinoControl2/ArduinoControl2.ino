@@ -78,8 +78,8 @@ void loop()
     // write rpm sensor data to the serial
     //if (motor_speed != prev_motor_speed) 
     //{
-    //  Serial.println(motor_speed);
-    //  prev_motor_speed = motor_speed;
+    Serial.println(motor_speed);
+    //prev_motor_speed = motor_speed;
     //}
 
     // read the data from the serial
