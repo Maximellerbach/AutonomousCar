@@ -52,6 +52,9 @@ class control:
 
     def __readThreaded__(self):
         while(self.__isRuning and self.__ser.is_open):
+            for cmd in self.__toSend:
+                self.__safeWrite__(cmd)
+                self.__toSend.remove(cmd)
             self.__readRPM__()
 
     def stop(self):
@@ -66,7 +69,7 @@ class control:
             out = self.__ser.readlines()[-1]
             print(out)
         except:
-            print("trying to read")
+            pass
         # if self.__ser.in_waiting > 0:
         #     out = self.__ser.readlines()[-1]
         #     if out != "" or out is not None:
@@ -79,13 +82,15 @@ class control:
         """Change steering."""
         steering = int(map_value(steering, min_v, max_v, 0, 255))
         self.__command[1] = steering
-        self.__ser.write(self.__command)
+        # self.__ser.write(self.__command)
+        self.__toSend.append(self.__command)
 
     def ChangePWM(self, pwm, min_v=-1, max_v=1):
         """Change motor speed."""
         pwm = int(map_value(pwm, min_v, max_v, 0, 255))
         self.__command[2] = pwm
-        self.__ser.write(self.__command)
+        # self.__ser.write(self.__command)
+        self.__toSend.append(self.__command)
 
     def ChangeAll(self, steering, pwm, min_v=[-1, -1], max_v=[1, 1]):
         """
