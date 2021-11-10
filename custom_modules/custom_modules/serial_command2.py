@@ -66,7 +66,7 @@ class control:
         while self.__isOperation:  # this shouldn't interfere
             pass
         self.__isOperation = True
-        print("writing")
+        print("writing", command)
         self.__ser.write(command)
         self.__ser.flush()
         self.__isOperation = False
@@ -76,8 +76,8 @@ class control:
             pass
         if self.__ser.in_waiting >= 0:
             self.__isOperation = True
-            print("trying reading")
             out = self.__ser.readline()
+            out = int(out.decode())
             print(out)
             self.__isOperation = False
 
