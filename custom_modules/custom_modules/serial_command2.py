@@ -74,11 +74,12 @@ class control:
     def __readRPM__(self):
         while self.__isOperation:  # this shouldn't interfere
             pass
-        if self.__ser.in_waiting >= 0:
+        if self.__ser.in_waiting >= 1:
             self.__isOperation = True
             out = self.__ser.readline()
-            out = int(out.decode())
-            print(out)
+            if out != "":
+                out = int(out.decode())
+                print(out)
             self.__isOperation = False
 
     def ChangeDirection(self, steering, min=-1, max=1):
