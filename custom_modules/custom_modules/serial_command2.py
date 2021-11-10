@@ -52,6 +52,7 @@ class control:
 
     def __runThreaded__(self):
         while(self.__isRuning):
+            print(self.__toSend)
             for cmd in self.__toSend:
                 self.__safeWrite__(cmd)
                 self.__toSend.remove(cmd)
