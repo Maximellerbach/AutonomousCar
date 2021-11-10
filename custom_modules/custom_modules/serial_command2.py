@@ -62,35 +62,40 @@ class control:
                 self.__ser.close()  # close port
 
     def __readRPM__(self):
-        if self.__ser.in_waiting > 0:
+        try:
             out = self.__ser.readlines()[-1]
-            if out != "" or out is not None:
-                print(out)
-                # __sensor_rpm = int(out)
-            else:
-                print("out is empty")
+            print(out)
+        except:
+            print("trying to read")
+        # if self.__ser.in_waiting > 0:
+        #     out = self.__ser.readlines()[-1]
+        #     if out != "" or out is not None:
+        #         print(out)
+        #         # __sensor_rpm = int(out)
+        #     else:
+        #         print("out is empty")
 
-    def ChangeDirection(self, steering, min=-1, max=1):
+    def ChangeDirection(self, steering, min_v=-1, max_v=1):
         """Change steering."""
-        steering = int(map_value(steering, min, max, 0, 255))
+        steering = int(map_value(steering, min_v, max_v, 0, 255))
         self.__command[1] = steering
         self.__ser.write(self.__command)
 
-    def ChangePWM(self, pwm, min=-1, max=1):
+    def ChangePWM(self, pwm, min_v=-1, max_v=1):
         """Change motor speed."""
-        pwm = int(map_value(pwm, min, max, 0, 255))
+        pwm = int(map_value(pwm, min_v, max_v, 0, 255))
         self.__command[2] = pwm
         self.__ser.write(self.__command)
 
-    def ChangeAll(self, steering, pwm, min=[-1, -1], max=[1, 1]):
+    def ChangeAll(self, steering, pwm, min_v=[-1, -1], max_v=[1, 1]):
         """
         Change all the elements at the same time.
 
         steering is a byte from 0 to 255.
         PWM is a byte from 0 to 255.
         """
-        steering = int(map_value(steering, min[0], max[0], 0, 255))
-        pwm = int(map_value(pwm, min[1], max[1], 0, 255))
+        steering = int(map_value(steering, min_v[0], max_v[0], 0, 255))
+        pwm = int(map_value(pwm, min_v[1], max_v[1], 0, 255))
 
         self.__command[1] = steering
         self.__command[2] = pwm
@@ -108,12 +113,4 @@ def start_serial(port="/dev/ttyUSB0"):
 if __name__ == "__main__":
     # motor test, servo test and rpm test
     ser = start_serial()
-    for i in range(-30, 30):
-        ser.ChangePWM(i, -127, 127)
-        time.sleep(0.1)
-
-    ser.ChangeAll(0, 0)
-
-    for i in range(-30, 30):
-        ser.ChangeDirection(i, -127, 127)
-        time.sleep(0.1)
+    # ChangeAll()
