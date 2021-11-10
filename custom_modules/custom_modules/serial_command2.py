@@ -45,12 +45,12 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        self.__thread = threading.Thread(target=self.__readThreaded__)
+        self.__thread = threading.Thread(target=self.__runThreaded__)
         self.__thread.start()
 
         time.sleep(1)
 
-    def __readThreaded__(self):
+    def __runThreaded__(self):
         while(self.__isRuning and self.__ser.is_open):
             for cmd in self.__toSend:
                 self.__safeWrite__(cmd)
@@ -64,12 +64,30 @@ class control:
             with lock:
                 self.__ser.close()  # close port
 
+    def __safeWrite__(self, command):
+        if self.__ser.is_open:
+            while self.__isOperation:
+                pass
+            self.__isOperation = True
+            self.__ser.write(command)
+            self.__ser.flush()
+            self.__isOperation = False
+
     def __readRPM__(self):
-        try:
-            out = self.__ser.readlines()[-1]
-            print(out)
-        except:
-            pass
+        print(self.__ser.in_waiting)
+
+        # while self.__isOperation:
+        #     pass
+        # self.__isOperation = True
+        # try:
+        #     out = self.__ser.readlines()[-1]
+        #     print(out)
+        # except:
+        #     pass
+        # finally:
+        #     self.__isOperation = False
+
+
         # if self.__ser.in_waiting > 0:
         #     out = self.__ser.readlines()[-1]
         #     if out != "" or out is not None:
