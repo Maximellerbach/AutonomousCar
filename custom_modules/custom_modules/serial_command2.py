@@ -43,8 +43,8 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        self.__thread = threading.Thread(target=self.__runThreaded__)
-        self.__thread.start()
+        # self.__thread = threading.Thread(target=self.__runThreaded__)
+        # self.__thread.start()
 
         time.sleep(1)
 
@@ -122,4 +122,6 @@ def start_serial(port="/dev/ttyUSB0"):
 if __name__ == "__main__":
     # motor test, servo test and rpm test
     ser = start_serial()
+    while True:
+        ser.__readRPM__()
     # ChangeAll()
