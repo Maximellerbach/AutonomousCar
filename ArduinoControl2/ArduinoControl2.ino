@@ -72,17 +72,16 @@ void setup()
 
 void loop()
 {
-  if (Serial.available())
+  
+  // write rpm sensor data to the serial
+  if (Serial) // && motor_speed != prev_motor_speed) 
   {
-
-    // write rpm sensor data to the serial
-    //if (motor_speed != prev_motor_speed) 
-    //{
-    motor_speed = 10;
+    prev_motor_speed = motor_speed;
     Serial.println(motor_speed);
-    //prev_motor_speed = motor_speed;
-    //}
-
+  }
+  
+  else if (Serial.available())
+  {
     // read the data from the serial
     Serial.readBytes(buffData, 4);
 
@@ -99,7 +98,7 @@ void loop()
   }
 
   // if the arduino isn't receiving anything for a given amount of time, stop the motor and servo
-  else if (!Serial.available() || millis() - last_received > maxTimout)
+  else if (millis() - last_received > maxTimout)
   {
     servoSteering.writeMicroseconds(SERVO_NEUTRAL);
     motorESC.writeMicroseconds(ESC_NEUTRAL);
