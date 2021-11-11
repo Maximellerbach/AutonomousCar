@@ -47,8 +47,9 @@ class control:
         self.__gear_ratio = 7  # 7 motor turn = 1 wheel turn
 
         self.__ignore_next = False
-        self.steering = 127
-        self.pwm = 127
+        self.__steering = 127
+        self.__pwm = 127
+        self.__last_received = time.time()
 
         self.__thread = threading.Thread(target=self.__runThreaded__)
         self.__thread.start()
@@ -92,10 +93,11 @@ class control:
                     # make sure that both end of lines are present
                     if out != "" and b'\r' in out and b'\n' in out:
                         res = int(out.decode())
-                        if self.pwm < 134 and self.pwm > 120 and res > 25000 and res < 29000:  # no speed
+                        if self.__pwm < 134 and self.__pwm > 120:  # and res > 25000 and res < 29000 # no speed
                             self.__sensor_rpm = 0
                         else:
                             self.__sensor_rpm = (30000000 / res)
+                        self.__last_received = time.time()
                     else:
                         self.__ignore_next = True
 
@@ -107,15 +109,15 @@ class control:
 
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
-        self.steering = int(map_value(steering, min, max, 0, 255))
-        self.__command[1] = self.steering
+        self.__steering = int(map_value(steering, min, max, 0, 255))
+        self.__command[1] = self.__steering
         self.__ser.write(self.__command)
         # self.__toSend.append(self.__command)
 
     def ChangePWM(self, pwm, min=-1, max=1):
         """Change motor speed."""
-        self.pwm = int(map_value(pwm, min, max, 0, 255))
-        self.__command[2] = self.pwm
+        self.__pwm = int(map_value(pwm, min, max, 0, 255))
+        self.__command[2] = self.__pwm
         self.__ser.write(self.__command)
         # self.__toSend.append(self.__command)
 
@@ -126,11 +128,11 @@ class control:
         steering is a byte from 0 to 255.
         PWM is a byte from 0 to 255.
         """
-        self.steering = int(map_value(steering, min[0], max[0], 0, 255))
-        self.pwm = int(map_value(pwm, min[1], max[1], 0, 255))
+        self.__steering = int(map_value(steering, min[0], max[0], 0, 255))
+        self.__pwm = int(map_value(pwm, min[1], max[1], 0, 255))
 
-        self.__command[1] = self.steering
-        self.__command[2] = self.pwm
+        self.__command[1] = self.__steering
+        self.__command[2] = self.__pwm
         self.__ser.write(self.__command)
         # self.__toSend.append(self.__command)
 
@@ -143,6 +145,8 @@ class control:
     def GetSpeed(self):
         return (self.__sensor_rpm / (self.__gear_ratio * 60)) * self.__wheel_to_meters
 
+    def GetSensorLastReceived(self):
+        return self.__last_received
 
 def start_serial(port="/dev/ttyUSB0"):
     ser = control(port)

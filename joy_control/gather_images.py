@@ -2,13 +2,15 @@ import os
 import time
 
 import cv2
-from custom_modules import serial_command2, camera, memory
+from custom_modules import serial_command2, camera, memory, pid_controller
 from custom_modules.datasets import dataset_json
 
 import controller
 
+
 def crop_image(img):
     return img[20: 120].copy()
+
 
 def deadzone(value, th, default=0):
     return value if abs(value) > th else default
@@ -33,6 +35,9 @@ ser = serial_command2.start_serial(comPort)
 joy = controller.XboxOneJoystick()
 joy.init()
 assert joy.connected is True
+
+throttle_controller = pid_controller.PIDController()
+throttle_controller.update_target(1)
 
 # cap = camera.usbWebcam(topcrop=0.2, botcrop=0)
 cap = cv2.VideoCapture(0)
@@ -60,14 +65,19 @@ while not joy.button_states["back"] and joy.connected:
 
     annotation = {}
 
+    speed, last_received = (ser.GetSpeed(), ser.GetSensorLastReceived())
+    new_throttle = throttle_controller.update(speed, last_received)
+
     annotation["direction"] = deadzone(joy_steering, th_steering)
-    annotation["throttle"] = deadzone(joy_throttle - joy_brake, th_throttle)
+    # annotation["throttle"] = deadzone(joy_throttle - joy_brake, th_throttle)
+    annotation["throttle"] = new_throttle
     annotation["speed"] = ser.GetSpeed()
     annotation["time"] = time.time()
 
-    ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"], min=[-1, -1], max=[1, 1])
+    ser.ChangeAll(annotation["direction"], MAXTHROTTLE *
+                  annotation["throttle"], min=[-1, 0], max=[1, 255])
 
-    print("speed", annotation["speed"])
+    # print("speed", annotation["speed"])
 
     if joy_button_a:  # save the image
         _, img = cap.read()
