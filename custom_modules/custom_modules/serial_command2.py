@@ -27,7 +27,7 @@ class control:
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
-        self.__ser.timeout = 0.05  # 0 = no timeout
+        self.__ser.timeout = 0  # 0 = no timeout
 
         self.__sensor_rpm = 0  # init rpm of the sensor to 0
         self.__command = bytearray([255, 127, 127, 0])
@@ -79,18 +79,18 @@ class control:
             while self.__isOperation:
                 pass
             self.__isOperation = True
-            print("IM HERE")
             try:
                 out = self.__ser.readlines()[-1]
                 print("received", str(out))
                 if out != "":
                     res = int(out.decode())
-                    print(res, 60000000 / res, self.__pwm)
 
-                    # if self.__pwm < 134 and self.__pwm > 120 and res > 25000 and res < 29000:  # no speed
-                    #     self.__sensor_rpm = 0
-                    # else:
-                    #     self.__sensor_rpm = 60000000 / res
+                    if self.__pwm < 134 and self.__pwm > 120 and res > 25000 and res < 29000:  # no speed
+                        self.__sensor_rpm = 0
+                    else:
+                        self.__sensor_rpm = 60000000 / res
+
+                    print(self.__sensor_rpm,)
 
             except:
                 pass
