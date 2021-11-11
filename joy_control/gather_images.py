@@ -75,6 +75,7 @@ while not joy.button_states["back"] and joy.connected:
 
         Memory.add(img, annotation)
 
+    time.sleep(0.01)
 
 Memory.stop()
 ser.ChangeAll(0, 0)  # stop steering and throttle
