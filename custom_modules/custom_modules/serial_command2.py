@@ -84,7 +84,7 @@ class control:
                         # print(out)
                         res = int(out.decode())
                         print(res)
-                self.__ser.flush()
+                    self.__ser.flush()
 
             except:
                 pass

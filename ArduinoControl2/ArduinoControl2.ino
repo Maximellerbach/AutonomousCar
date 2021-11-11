@@ -74,9 +74,9 @@ void loop()
 {
   
   // write rpm sensor data to the serial
-  Serial.println(motor_speed);
   // if (Serial) // && motor_speed != prev_motor_speed)
   // {
+  // Serial.println(motor_speed);
   // prev_motor_speed = motor_speed;
   // }
   
@@ -135,6 +135,7 @@ void signalChange() // this function will be called on state change of SENSOR_PI
       int p_time = last_interrupt_time - timer_start;
       timer_start = 0;
       motor_speed = p_time;
+      Serial.println(p_time);
     }
   }
 }
