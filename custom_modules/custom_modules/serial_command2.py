@@ -86,14 +86,10 @@ class control:
                     res = int(out.decode())
                     print(res, 60000000 / res, self.__pwm)
 
-                    if res < 0:  # probably an overflow
-                        pass
-
-                    if self.__pwm < 134 and self.__pwm > 120 and res > 25000 and res < 29000:  # no speed
-                        self.__sensor_rpm = 0
-                    else:
-                        self.__sensor_rpm = 60000000 / res
-                
+                    # if self.__pwm < 134 and self.__pwm > 120 and res > 25000 and res < 29000:  # no speed
+                    #     self.__sensor_rpm = 0
+                    # else:
+                    #     self.__sensor_rpm = 60000000 / res
 
             except:
                 pass
