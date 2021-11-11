@@ -124,7 +124,7 @@ void changeThrottle()
 void signalChange() // this function will be called on state change of SENSOR_PIN
 {
   last_interrupt_time = micros();
-  if (digitalRead(SENSOR_PIN) == HIGH)
+  if (digitalRead(3) == HIGH)
   {
     timer_start = last_interrupt_time;
   }
@@ -135,7 +135,7 @@ void signalChange() // this function will be called on state change of SENSOR_PI
       int p_time = last_interrupt_time - timer_start;
       timer_start = 0;
       motor_speed = p_time;
-      Serial.println(p_time);
+      Serial.println(motor_speed);
     }
   }
 }
