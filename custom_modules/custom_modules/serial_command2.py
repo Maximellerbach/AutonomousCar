@@ -66,7 +66,7 @@ class control:
         while self.__isOperation:
             pass
         self.__isOperation = True
-        print("writing", command)
+        # print("writing", command)
         self.__ser.write(command)
         self.__isOperation = False
 
