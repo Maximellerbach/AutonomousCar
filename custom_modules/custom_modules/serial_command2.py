@@ -71,7 +71,7 @@ class control:
         self.__isOperation = False
 
     def __readRPM__(self):
-        if self.__ser.in_waiting >= 2:
+        if self.__ser.in_waiting >= 0:
             while self.__isOperation:
                 pass
             self.__isOperation = True
