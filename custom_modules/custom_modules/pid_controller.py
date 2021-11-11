@@ -8,11 +8,11 @@ from . import PID
 class PIDController:
     def __init__(self, kp=1, ki=1, kd=1):
         self.pid = PID.PID(kp, ki, kd)
-        self.pid.SetPoint = 127  # neutral point
+        self.pid.SetPoint = 0  # neutral point
 
         self.last_received = time.time()
         self.current_speed = 0
-        self.pwm = 127
+        self.pwm = 0
 
         self.update_target(0)
 
@@ -30,7 +30,7 @@ class PIDController:
             # else:
             #     self.pwm = self.high_th
 
-            self.pwm = max(min(self.pwm, 170), 127)
+            self.pwm = max(min(self.pwm, 0), 127)
 
             self.last_received = time_received
         return self.pwm
