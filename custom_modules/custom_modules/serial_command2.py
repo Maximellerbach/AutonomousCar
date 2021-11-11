@@ -78,7 +78,7 @@ class control:
         self.__isOperation = False
 
     def __readRPM__(self):
-        if not self.__ignore_next and self.__ser.in_waiting >= 1:
+        if self.__ser.in_waiting >= 1:
             while self.__isOperation:
                 pass
             self.__isOperation = True
@@ -86,7 +86,7 @@ class control:
                 out = bytes(self.__ser.readlines()[-1])
                 print(out)
                 # make sure that both end of lines are present
-                if out != "" and b'\r' in out and b'\n' in out:
+                if out != "" and b'\r' in out and b'\n' in out and not self.__ignore_next:
                     res = int(out.decode())
                     if self.pwm < 134 and self.pwm > 120 and res > 25000 and res < 29000:  # no speed
                         self.__sensor_rpm = 0
@@ -94,6 +94,9 @@ class control:
                     else:
                         print("speed", self.pwm, res)
                         self.__sensor_rpm = (30000000 / res)
+
+                    if self.__ignore_next:
+                        self.__ignore_next = False
 
                 else:
                     self.__ignore_next = True
@@ -103,9 +106,6 @@ class control:
 
             finally:
                 self.__isOperation = False
-
-        else:
-            self.__ignore_next = False
 
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
