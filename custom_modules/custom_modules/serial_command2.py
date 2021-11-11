@@ -94,6 +94,8 @@ class control:
                     else:
                         self.__sensor_rpm = (30000000 / res)
 
+                    print(self.__sensor_rpm)
+
                 else:
                     self.__ignore_next = True
 
