@@ -86,7 +86,7 @@ class control:
                 out = self.__ser.readlines()[-1]
                 str_out = str(out)
 
-                print("\r" in str_out and "\n" in str_out)
+                print(str_out)
                 # make sure that both end of lines are present
                 if out != "" and "\r" in str_out and "\n" in str_out:
                     res = int(out.decode())
