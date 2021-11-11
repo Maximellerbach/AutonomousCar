@@ -37,7 +37,7 @@ joy.init()
 assert joy.connected is True
 
 throttle_controller = pid_controller.PIDController()
-throttle_controller.update_target(1.5)
+throttle_controller.update_target(0.5)
 
 # cap = camera.usbWebcam(topcrop=0.2, botcrop=0)
 cap = cv2.VideoCapture(0)
