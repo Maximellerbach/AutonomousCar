@@ -77,7 +77,7 @@ class control:
                 pass
             self.__isOperation = True
             try:
-                out = self.__ser.readline()
+                out = self.__ser.readlines()[-1]
                 print("received", out)
                 if out != "":
                     # print(out)

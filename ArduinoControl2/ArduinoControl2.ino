@@ -16,7 +16,7 @@ Servo servoSteering;
 Servo motorESC;
 
 // Sensor
-#define SENSOR_PIN 3
+#define SENSOR_PIN 1
 
 // debugging board
 #define BUTTON_PIN 16
@@ -74,11 +74,11 @@ void loop()
 {
   
   // write rpm sensor data to the serial
-  if (Serial) // && motor_speed != prev_motor_speed)
-  {
-    // prev_motor_speed = motor_speed;
-    // Serial.println(motor_speed);
-  }
+  Serial.println(motor_speed);
+  // if (Serial) // && motor_speed != prev_motor_speed)
+  // {
+  // prev_motor_speed = motor_speed;
+  // }
   
   if (Serial.available())
   {
@@ -127,11 +127,9 @@ void signalChange() // this function will be called on state change of SENSOR_PI
   if (digitalRead(SENSOR_PIN) == HIGH)
   {
     timer_start = last_interrupt_time;
-    Serial.println(1);
   }
   else
   {
-    Serial.println(0);
     if (timer_start != 0)
     {
       int p_time = last_interrupt_time - timer_start;
