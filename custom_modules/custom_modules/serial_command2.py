@@ -71,16 +71,16 @@ class control:
         self.__isOperation = False
 
     def __readRPM__(self):
-        if self.__ser.in_waiting >= 0:
+        if self.__ser.in_waiting >= 1:
             while self.__isOperation:
                 pass
             self.__isOperation = True
             try:
-                out = self.__ser.read(2)
+                out = self.__ser.readlines()[-1]
                 print("received", out)
                 if out != "":
                     # print(out)
-                    res = int.from_bytes(out, "big")
+                    res = int(out.decode())
                     print(res)
 
             except:
