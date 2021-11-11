@@ -84,7 +84,7 @@ class control:
             self.__isOperation = True
             try:
                 out = self.__ser.readlines()[-1]
-                print(b'\r' in out and b'\n' in out)
+                print(out)
 
                 if self.__ignore_next:
                     self.__ignore_next = False
