@@ -89,7 +89,9 @@ class control:
                     res = int(out.decode())
                     if self.pwm < 134 and self.pwm > 120 and res > 25000 and res < 29000:  # no speed
                         self.__sensor_rpm = 0
+                        print("no speed")
                     else:
+                        print("speed", self.pwm, res)
                         self.__sensor_rpm = (30000000 / res)
 
                 else:
