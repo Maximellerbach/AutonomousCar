@@ -80,7 +80,7 @@ class control:
                 print("received", out)
                 if out != "":
                     # print(out)
-                    res = int(out.decode())
+                    res = int.from_bytes(out, "big")
                     print(res)
 
             except:
