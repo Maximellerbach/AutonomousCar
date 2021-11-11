@@ -6,7 +6,7 @@ from . import PID
 
 
 class PIDController:
-    def __init__(self, kp=1, ki=1, kd=1):
+    def __init__(self, kp=0.1, ki=0.1, kd=0.1):
         self.pid = PID.PID(kp, ki, kd)
         self.pid.SetPoint = 0  # neutral point
 
