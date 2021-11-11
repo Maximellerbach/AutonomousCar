@@ -46,6 +46,9 @@ class control:
         self.__thread = threading.Thread(target=self.__runThreaded__)
         self.__thread.start()
 
+        self.__wheel_to_meters = 0.20  # 1 wheel turn = 0.20 m
+        self.__gear_ratio = 7  # 7 motor turn = 1 wheel turn
+
         self.__ignore_next = False
         self.__steering = 0
         self.__pwm = 0
@@ -75,28 +78,33 @@ class control:
         self.__isOperation = False
 
     def __readRPM__(self):
-        if self.__ser.in_waiting >= 1:
+        if not self.__ignore_next and self.__ser.in_waiting >= 1:
             while self.__isOperation:
                 pass
             self.__isOperation = True
             try:
                 out = self.__ser.readlines()[-1]
-                print("received", str(out))
-                if out != "":
+                str_out = str(out)
+                # make sure that both end of lines are present
+                if out != "" and "\r" in str_out and "\n" in str_out:
                     res = int(out.decode())
 
                     if self.__pwm < 134 and self.__pwm > 120 and res > 25000 and res < 29000:  # no speed
                         self.__sensor_rpm = 0
                     else:
-                        self.__sensor_rpm = 30000000 / res
+                        self.__sensor_rpm = (30000000 / res)
 
-                    print(self.__sensor_rpm,)
+                else:
+                    self.__ignore_next = True
 
             except:
                 pass
 
             finally:
                 self.__isOperation = False
+
+        else:
+            self.__ignore_next = False
 
     def ChangeDirection(self, steering, min=-1, max=1):
         """Change steering."""
@@ -129,6 +137,12 @@ class control:
 
     def GetRPM(self):
         return self.__sensor_rpm
+
+    def GetWheelRPM(self):
+        return self.__sensor_rpm / self.__gear_ratio
+
+    def GetSpeed(self):
+        return (self.__sensor_rpm / self.__gear_ratio) * self.__wheel_to_meters
 
 
 def start_serial(port="/dev/ttyUSB0"):
