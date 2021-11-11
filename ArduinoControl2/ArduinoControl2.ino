@@ -36,8 +36,8 @@ int maxTimout = 500;
 // variables to read PWM pulses
 unsigned long timer_start = 0;
 unsigned long last_interrupt_time = 0;
-int motor_speed = 0;
-int prev_motor_speed = 0;
+long motor_speed = 0;
+long prev_motor_speed = 0;
 
 void setup()
 {
@@ -53,7 +53,7 @@ void setup()
   motorESC.writeMicroseconds(ESC_NEUTRAL);
 
   // sensor init
-  pinMode(SENSOR_INT_PIN, INPUT);
+  pinMode(SENSOR_DIGITAL_PIN, INPUT);
   attachInterrupt(SENSOR_INT_PIN, signalChange, CHANGE);
 
   // if the button is pressed within a second, enter calibration process
@@ -75,7 +75,7 @@ void loop()
 {
   
   // write rpm sensor data to the serial
-  if (motor_speed != prev_motor_speed)
+  if (Serial && motor_speed != prev_motor_speed)
   {
     Serial.println(motor_speed);
     prev_motor_speed = motor_speed;
@@ -133,7 +133,7 @@ void signalChange() // this function will be called on state change of SENSOR_PI
   {
     if (timer_start != 0)
     {
-      int p_time = last_interrupt_time - timer_start;
+      long p_time = last_interrupt_time - timer_start;
       timer_start = 0;
       motor_speed = p_time;
     }

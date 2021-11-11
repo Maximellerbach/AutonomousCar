@@ -46,6 +46,8 @@ class control:
         self.__thread = threading.Thread(target=self.__runThreaded__)
         self.__thread.start()
 
+        self.__ignore_next = False
+
         time.sleep(1)
 
     def stop(self):
@@ -66,7 +68,7 @@ class control:
         while self.__isOperation:
             pass
         self.__isOperation = True
-        # print("writing", command)
+        print("writing", command)
         self.__ser.write(command)
         self.__isOperation = False
 
@@ -77,7 +79,7 @@ class control:
             self.__isOperation = True
             try:
                 out = self.__ser.readlines()[-1]
-                print("received", out)
+                print("received", str(out))
                 if out != "":
                     # print(out)
                     res = int(out.decode())
