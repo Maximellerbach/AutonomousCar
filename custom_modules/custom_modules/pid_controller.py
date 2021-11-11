@@ -33,10 +33,7 @@ class PIDController:
             self.pwm = max(min(self.pwm, 170), 127)
 
             self.last_received = time_received
-            return self.pwm
-
-        else:
-            return None
+        return self.pwm
 
     def update_target(self, new_target):
         self.pid.SetPoint = new_target
