@@ -79,6 +79,7 @@ class control:
             while self.__isOperation:
                 pass
             self.__isOperation = True
+            print("IM HERE")
             try:
                 out = self.__ser.readlines()[-1]
                 print("received", str(out))
