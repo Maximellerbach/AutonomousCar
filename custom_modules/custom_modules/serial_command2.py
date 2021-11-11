@@ -85,6 +85,8 @@ class control:
             try:
                 out = self.__ser.readlines()[-1]
                 str_out = str(out)
+
+                print("\r" in str_out and "\n" in str_out)
                 # make sure that both end of lines are present
                 if out != "" and "\r" in str_out and "\n" in str_out:
                     res = int(out.decode())
@@ -94,7 +96,6 @@ class control:
                     else:
                         self.__sensor_rpm = (30000000 / res)
 
-                    print(self.__sensor_rpm)
 
                 else:
                     self.__ignore_next = True
