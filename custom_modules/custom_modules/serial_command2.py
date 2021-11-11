@@ -92,7 +92,7 @@ class control:
                     # make sure that both end of lines are present
                     if out != "" and b'\r' in out and b'\n' in out:
                         res = int(out.decode())
-                        if self.pwm < 134 and self.pwm > 120 and res > 25000 and res < 29000:  # no speed
+                        if self.pwm < 134 and self.pwm > 120:  # no speed
                             self.__sensor_rpm = 0
                             print("no speed")
                         else:
