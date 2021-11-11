@@ -27,7 +27,7 @@ class control:
         self.__ser.bytesize = serial.EIGHTBITS  # number of bits per bytes
         self.__ser.parity = serial.PARITY_NONE  # set parity check: no parity
         self.__ser.stopbits = serial.STOPBITS_ONE  # number of stop bits
-        self.__ser.timeout = 50  # 0 = no timeout
+        self.__ser.timeout = 0.05  # 0 = no timeout
 
         self.__sensor_rpm = 0  # init rpm of the sensor to 0
         self.__command = bytearray([255, 127, 127, 0])
