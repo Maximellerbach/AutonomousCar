@@ -56,11 +56,11 @@ class control:
 
     def __runThreaded__(self):
         while(True):
-            if len(self.__toSend) > 0:
-                cmd = self.__toSend[-1]
-                self.__toSend = []
-                self.__safeWrite__(cmd)
             self.__readRPM__()
+            # if len(self.__toSend) > 0:
+            #     cmd = self.__toSend[-1]
+            #     self.__toSend = []
+            #     self.__safeWrite__(cmd)
 
     def __safeWrite__(self, command):
         while self.__isOperation:  # this shouldn't interfere
@@ -68,7 +68,6 @@ class control:
         self.__isOperation = True
         print("writing", command)
         self.__ser.write(command)
-        # self.__ser.flush()
         self.__isOperation = False
 
     def __readRPM__(self):
@@ -85,8 +84,6 @@ class control:
                         res = int(out.decode())
                         print(res)
 
-                # self.__ser.flush()
-
             except:
                 pass
 
@@ -97,15 +94,15 @@ class control:
         """Change steering."""
         steering = int(map_value(steering, min, max, 0, 255))
         self.__command[1] = steering
-        # self.__ser.write(self.__command)
-        self.__toSend.append(self.__command)
+        self.__ser.__safeWrite__(self.__command)
+        # self.__toSend.append(self.__command)
 
     def ChangePWM(self, pwm, min=-1, max=1):
         """Change motor speed."""
         pwm = int(map_value(pwm, min, max, 0, 255))
         self.__command[2] = pwm
-        # self.__ser.write(self.__command)
-        self.__toSend.append(self.__command)
+        self.__ser.__safeWrite__(self.__command)
+        # self.__toSend.append(self.__command)
 
     def ChangeAll(self, steering, pwm, min=[-1, -1], max=[1, 1]):
         """
@@ -119,8 +116,8 @@ class control:
 
         self.__command[1] = steering
         self.__command[2] = pwm
-        # self.__ser.write(self.__command)
-        self.__toSend.append(self.__command)
+        self.__ser.__safeWrite__(self.__command)
+        # self.__toSend.append(self.__command)
 
     def GetRPM(self):
         return self.__sensor_rpm
