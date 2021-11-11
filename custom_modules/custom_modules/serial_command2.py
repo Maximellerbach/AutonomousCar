@@ -83,14 +83,14 @@ class control:
                 pass
             self.__isOperation = True
             try:
-                out = bytes(self.__ser.readlines()[-1])
+                out = self.__ser.readlines()[-1]
 
                 if self.__ignore_next:
                     self.__ignore_next = False
 
                 else:
                     # make sure that both end of lines are present
-                    if out != "" and b'\r' in out and b'\n' in out:
+                    if out != "":  # and b'\r' in out and b'\n' in out:
                         res = int(out.decode())
                         if self.pwm < 134 and self.pwm > 120:  # no speed
                             self.__sensor_rpm = 0
