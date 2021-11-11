@@ -81,9 +81,11 @@ class control:
             self.__isOperation = True
             try:
                 out = self.__ser.readlines()[-1]
-                # print("received", str(out))
+                print("received", str(out))
                 if out != "":
                     res = int(out.decode())
+                    print(res, 60000000 / res, self.__pwm)
+
                     if res < 0:  # probably an overflow
                         pass
 
@@ -92,7 +94,6 @@ class control:
                     else:
                         self.__sensor_rpm = 60000000 / res
                 
-                    print(self.__sensor_rpm)
 
             except:
                 pass
