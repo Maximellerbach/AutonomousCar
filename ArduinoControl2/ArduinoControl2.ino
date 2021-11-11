@@ -53,7 +53,7 @@ void setup()
 
   // sensor init
   pinMode(SENSOR_PIN, INPUT);
-  // attachInterrupt(SENSOR_PIN, signalChange, CHANGE);
+  attachInterrupt(SENSOR_PIN, signalChange, CHANGE);
 
   // if the button is pressed within a second, enter calibration process
   for (int i = 0; i < 20; i++)
@@ -74,13 +74,13 @@ void loop()
 {
   
   // write rpm sensor data to the serial
-  if (Serial) // && motor_speed != prev_motor_speed) 
+  if (Serial) // && motor_speed != prev_motor_speed)
   {
-    prev_motor_speed = motor_speed;
-    Serial.println(motor_speed);
+    // prev_motor_speed = motor_speed;
+    // Serial.println(motor_speed);
   }
   
-  else if (Serial.available())
+  if (Serial.available())
   {
     // read the data from the serial
     Serial.readBytes(buffData, 4);
@@ -127,16 +127,16 @@ void signalChange() // this function will be called on state change of SENSOR_PI
   if (digitalRead(SENSOR_PIN) == HIGH)
   {
     timer_start = last_interrupt_time;
+    Serial.println(1);
   }
   else
   {
+    Serial.println(0);
     if (timer_start != 0)
     {
       int p_time = last_interrupt_time - timer_start;
       timer_start = 0;
-      
-      // check that there is no overflow 
-      if (p_time > 0) {motor_speed = p_time;}
+      motor_speed = p_time;
     }
   }
 }
