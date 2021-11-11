@@ -20,7 +20,7 @@ class PIDController:
         if time_received != self.last_received:
             self.pid.update(current_speed, current_time=time_received)
             self.last_received = time_received
-            self.pwm = int(self.pid.output)
+            self.pwm = self.pid.output
 
             # # basic filter
             # if new_pwm < self.high_th and new_pwm > -self.low_th:

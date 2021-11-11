@@ -75,7 +75,7 @@ while not joy.button_states["back"] and joy.connected:
     annotation["time"] = time.time()
 
     ser.ChangeAll(annotation["direction"], MAXTHROTTLE *
-                  annotation["throttle"], min=[-1, 0], max=[1, 127])
+                  annotation["throttle"], min=[-1, -127], max=[1, 127])
 
     print("speed", annotation["speed"])
     print("throttle", annotation["throttle"])
