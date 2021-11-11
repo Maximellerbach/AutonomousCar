@@ -87,8 +87,6 @@ class control:
                 # make sure that both end of lines are present
                 if out != "" and b'\r' in out and b'\n' in out:
                     res = int(out.decode())
-                    print(res)
-
                     if self.__pwm < 134 and self.__pwm > 120 and res > 25000 and res < 29000:  # no speed
                         self.__sensor_rpm = 0
                     else:
@@ -142,7 +140,7 @@ class control:
         return self.__sensor_rpm / self.__gear_ratio
 
     def GetSpeed(self):
-        return (self.__sensor_rpm / self.__gear_ratio) * self.__wheel_to_meters
+        return (self.__sensor_rpm / (self.__gear_ratio * 60)) * self.__wheel_to_meters
 
 
 def start_serial(port="/dev/ttyUSB0"):
