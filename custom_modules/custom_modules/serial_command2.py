@@ -84,22 +84,22 @@ class control:
             self.__isOperation = True
             try:
                 out = bytes(self.__ser.readlines()[-1])
-                print(out)
-                # make sure that both end of lines are present
-                if out != "" and b'\r' in out and b'\n' in out and not self.__ignore_next:
-                    res = int(out.decode())
-                    if self.pwm < 134 and self.pwm > 120 and res > 25000 and res < 29000:  # no speed
-                        self.__sensor_rpm = 0
-                        print("no speed")
-                    else:
-                        print("speed", self.pwm, res)
-                        self.__sensor_rpm = (30000000 / res)
 
-                    if self.__ignore_next:
-                        self.__ignore_next = False
+                if self.__ignore_next:
+                    self.__ignore_next = False
 
                 else:
-                    self.__ignore_next = True
+                    # make sure that both end of lines are present
+                    if out != "" and b'\r' in out and b'\n' in out:
+                        res = int(out.decode())
+                        if self.pwm < 134 and self.pwm > 120 and res > 25000 and res < 29000:  # no speed
+                            self.__sensor_rpm = 0
+                            print("no speed")
+                        else:
+                            print("speed", self.pwm, res)
+                            self.__sensor_rpm = (30000000 / res)
+                    else:
+                        self.__ignore_next = True
 
             except:
                 pass
