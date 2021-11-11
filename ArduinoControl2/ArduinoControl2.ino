@@ -53,7 +53,7 @@ void setup()
   motorESC.writeMicroseconds(ESC_NEUTRAL);
 
   // sensor init
-  pinMode(SENSOR_INT_PIN, INPUT);
+  // pinMode(SENSOR_INT_PIN, INPUT);
   attachInterrupt(SENSOR_INT_PIN, signalChange, CHANGE);
 
   // if the button is pressed within a second, enter calibration process
