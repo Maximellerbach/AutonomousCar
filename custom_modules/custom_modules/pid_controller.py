@@ -6,7 +6,7 @@ from . import PID
 
 
 class PIDController:
-    def __init__(self, kp=0.1, ki=0.1, kd=0.1):
+    def __init__(self, kp=0.2, ki=0.5, kd=0):
         self.pid = PID.PID(kp, ki, kd)
         self.pid.SetPoint = 0  # neutral point
 
@@ -31,7 +31,7 @@ class PIDController:
             # else:
             #     self.pwm = self.high_th
 
-            self.pwm = max(min(self.pwm, 10), 2)
+            self.pwm = max(min(self.pwm, 10), 0)
 
             self.last_received = time_received
         return self.pwm
