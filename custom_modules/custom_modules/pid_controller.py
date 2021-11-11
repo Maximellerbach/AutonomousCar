@@ -21,6 +21,7 @@ class PIDController:
             self.pid.update(current_speed, current_time=time_received)
             self.last_received = time_received
             self.pwm = self.pid.output
+            print("throttle", annotation["throttle"])
 
             # # basic filter
             # if new_pwm < self.high_th and new_pwm > -self.low_th:

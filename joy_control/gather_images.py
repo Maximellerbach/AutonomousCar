@@ -78,7 +78,7 @@ while not joy.button_states["back"] and joy.connected:
                   annotation["throttle"], min=[-1, -127], max=[1, 127])
 
     print("speed", annotation["speed"])
-    print("throttle", annotation["throttle"])
+    # print("throttle", annotation["throttle"])
 
     if joy_button_a:  # save the image
         _, img = cap.read()
