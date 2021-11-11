@@ -43,15 +43,15 @@ class control:
         except Exception as e:
             print("Error opening port: " + str(e))
 
-        self.__thread = threading.Thread(target=self.__runThreaded__)
-        self.__thread.start()
-
         self.__wheel_to_meters = 0.20  # 1 wheel turn = 0.20 m
         self.__gear_ratio = 7  # 7 motor turn = 1 wheel turn
 
         self.__ignore_next = False
         self.__steering = 0
         self.__pwm = 0
+
+        self.__thread = threading.Thread(target=self.__runThreaded__)
+        self.__thread.start()
 
         time.sleep(1)
 
