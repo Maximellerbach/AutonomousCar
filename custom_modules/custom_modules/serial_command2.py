@@ -77,12 +77,13 @@ class control:
                 pass
             self.__isOperation = True
             try:
-                out = self.__ser.readlines()[-1]
-                print("received", out)
-                if out != "":
-                    # print(out)
-                    res = int(out.decode())
-                    print(res)
+                if self.__ser.in_waiting >= 2:
+                    out = self.__ser.readlines()[-1]
+                    print("received", out)
+                    if out != "":
+                        # print(out)
+                        res = int(out.decode())
+                        print(res)
 
             except:
                 pass
