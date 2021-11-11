@@ -77,7 +77,7 @@ while not joy.button_states["back"] and joy.connected:
     ser.ChangeAll(annotation["direction"], MAXTHROTTLE *
                   annotation["throttle"], min=[-1, 0], max=[1, 255])
 
-    # print("speed", annotation["speed"])
+    print("speed", annotation["speed"])
 
     if joy_button_a:  # save the image
         _, img = cap.read()
