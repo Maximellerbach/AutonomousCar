@@ -84,9 +84,8 @@ class control:
             self.__isOperation = True
             try:
                 out = self.__ser.readlines()[-1]
-                str_out = str(out)
                 # make sure that both end of lines are present
-                if out != "" and b'\r' in str_out and b'\n' in str_out:
+                if out != "" and b'\r' in out and b'\n' in out:
                     res = int(out.decode())
 
                     if self.__pwm < 134 and self.__pwm > 120 and res > 25000 and res < 29000:  # no speed
