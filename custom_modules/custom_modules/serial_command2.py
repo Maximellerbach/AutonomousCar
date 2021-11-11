@@ -83,7 +83,7 @@ class control:
                 pass
             self.__isOperation = True
             try:
-                out = self.__ser.readlines()[-1]
+                out = bytes(self.__ser.readlines()[-1])
                 # make sure that both end of lines are present
                 if out != "" and b'\r' in out and b'\n' in out:
                     res = int(out.decode())
