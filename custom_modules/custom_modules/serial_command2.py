@@ -63,7 +63,7 @@ class control:
             #     self.__safeWrite__(cmd)
 
     def __safeWrite__(self, command):
-        while self.__isOperation:  # this shouldn't interfere
+        while self.__isOperation:
             pass
         self.__isOperation = True
         print("writing", command)
@@ -72,17 +72,16 @@ class control:
 
     def __readRPM__(self):
         if self.__ser.in_waiting >= 2:
-            while self.__isOperation:  # this shouldn't interfere
+            while self.__isOperation:
                 pass
             self.__isOperation = True
             try:
-                if self.__ser.in_waiting > 0:
-                    out = self.__ser.readlines()[-1]
-                    print("received", out)
-                    if out != "":
-                        # print(out)
-                        res = int(out.decode())
-                        print(res)
+                out = self.__ser.read(2)
+                print("received", out)
+                if out != "":
+                    # print(out)
+                    res = int(out.decode())
+                    print(res)
 
             except:
                 pass

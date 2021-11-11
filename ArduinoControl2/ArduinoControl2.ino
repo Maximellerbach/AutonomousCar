@@ -16,7 +16,8 @@ Servo servoSteering;
 Servo motorESC;
 
 // Sensor
-#define SENSOR_PIN 1
+#define SENSOR_INT_PIN 1
+#define SENSOR_DIGITAL_PIN 3
 
 // debugging board
 #define BUTTON_PIN 16
@@ -52,8 +53,8 @@ void setup()
   motorESC.writeMicroseconds(ESC_NEUTRAL);
 
   // sensor init
-  pinMode(SENSOR_PIN, INPUT);
-  attachInterrupt(SENSOR_PIN, signalChange, CHANGE);
+  pinMode(SENSOR_INT_PIN, INPUT);
+  attachInterrupt(SENSOR_INT_PIN, signalChange, CHANGE);
 
   // if the button is pressed within a second, enter calibration process
   for (int i = 0; i < 20; i++)
@@ -76,7 +77,7 @@ void loop()
   // write rpm sensor data to the serial
   if (motor_speed != prev_motor_speed)
   {
-    Serial.println(motor_speed);
+    Serial.write(motor_speed);
     prev_motor_speed = motor_speed;
   }
   
@@ -124,7 +125,7 @@ void changeThrottle()
 void signalChange() // this function will be called on state change of SENSOR_PIN
 {
   last_interrupt_time = micros();
-  if (digitalRead(3) == HIGH)
+  if (digitalRead(SENSOR_DIGITAL_PIN) == HIGH)
   {
     timer_start = last_interrupt_time;
   }
