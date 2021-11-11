@@ -31,7 +31,7 @@ class PIDController:
             # else:
             #     self.pwm = self.high_th
 
-            self.pwm = max(min(self.pwm, 1), 0)
+            self.pwm = max(min(self.pwm, 10), 0)
 
             self.last_received = time_received
         return self.pwm
