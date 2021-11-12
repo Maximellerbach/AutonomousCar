@@ -346,22 +346,22 @@ if __name__ == "__main__":
     base_path = os.path.expanduser("~") + "\\random_data"
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-    direction_comp = Dataset.get_component("speed")
-    direction_comp.offset = 0
-    direction_comp.scale = 3.6
+    # direction_comp = Dataset.get_component("speed")
+    # direction_comp.offset = 0
+    # direction_comp.scale = 3.6
 
-    paths = Dataset.load_dos_sorted(f"{base_path}\\forza2\\recorded_1\\")
-    sequence_to_study = (0, 3000)
-    paths = paths[sequence_to_study[0] : sequence_to_study[1]]
+    paths = Dataset.load_dos_sorted(f"{base_path}\\donkey\\1\\")
+    sequence_to_study = (2000, 5000)
+    paths = paths[sequence_to_study[0]: sequence_to_study[1]]
 
     annotations = np.array([Dataset.load_annotation(path) for path in paths])
 
     directions = annotations[:, 0][:-1]
-    speeds = annotations[:, 1]
+    speeds = len(annotations[:, 1]) * [1]
     dates = annotations[:, -1]
     delta_times = dates[1:] - dates[:-1]
 
-    Estimator = TrackEstimation(steer_coef=1)
+    Estimator = TrackEstimation(steer_coef=72)
 
     pos_list, lightpos_list, vect_list, deg_list = Estimator.get_pos(directions, time_series=delta_times, speed_series=speeds)
 
@@ -371,7 +371,7 @@ if __name__ == "__main__":
     diner = [1 for i in range(len(iner_bound_list))]
     douter = [-1 for i in range(len(outer_bound_list))]
 
-    turns_segments, average = Estimator.segment_track(pos_list, directions, th=0.5, look_back=10)
+    turns_segments, average = Estimator.segment_track(pos_list, directions, th=0.3, look_back=30)
 
     matchs, n_turns, accuracy = Estimator.match_segments(turns_segments)
     print(matchs, "| number of turns in a lap: ", n_turns, "| accuracy: ", accuracy)

@@ -1,6 +1,7 @@
 import collections
 import time
 
+import math
 import numpy as np
 import tensorflow
 import tensorflow_model_optimization as tfmot
@@ -302,6 +303,7 @@ class End2EndTrainer:
                 unique = np.unique(Y_component)
                 frc = class_weight.compute_class_weight(
                     "balanced", unique, Y_component)
+                frc = [math.sqrt(x) for x in frc]
                 frcs.append(dict(zip(unique, frc)))
 
                 if show:

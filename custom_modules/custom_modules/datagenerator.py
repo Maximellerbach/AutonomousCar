@@ -37,6 +37,7 @@ class image_generator(Sequence):
         self.datalen = datalen
         self.sequence = sequence
         self.frc = frc
+        self.weight_acc = self.Dataset.get_component(0).weight_acc
         self.shape = shape
 
         # components information
@@ -98,8 +99,6 @@ class image_generator(Sequence):
         xbatch = (np.array(xbatch) / 255).astype(np.float32)
         ybatch = np.array(ybatch)
 
-        # removed the weight, useless ; weight = imaugm.get_weight(ybatch, self.frc, False, acc=self.weight_acc)
-
         X = [xbatch]
         for i in self.input_components:
             X.append(np.float32(ybatch[i]))
@@ -108,16 +107,13 @@ class image_generator(Sequence):
         for i in self.output_components:
             Y.append(np.float32(ybatch[i]))
 
-        # W = []
-        # if 'speed' in self.names2index.keys():
-        #     index = self.names2index['speed']
-        #     W.append(ybatch[index])
-
         if self.use_tensorboard:
             with self.file_writer.as_default():
                 tf.summary.image("Training data", X[0], step=0, max_outputs=self.batch_size)
 
-        return X, Y
+        weight = imaugm.get_weight(Y[0], self.frc[0], acc=self.weight_acc)
+
+        return X, Y, weight
 
     def __len__(self):
         return int(self.datalen // self.batch_size)

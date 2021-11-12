@@ -558,6 +558,7 @@ class speed_component:
         self.offset = 0.0
         self.weight_acc = 0.1
         self.is_couple = False
+        self.vis_func = vis_lab.none
 
     def get_item(self, json_data):
         return (self.type(json_data.get(self.name, self.default)) + self.offset) * self.scale
@@ -673,6 +674,7 @@ class img_path_component:
         self.type = str
         self.flip = False
         self.is_couple = False
+        self.vis_func = vis_lab.none
 
     def get_item(self, json_data: dict):
         return self.type(json_data[self.name])
@@ -695,6 +697,7 @@ class time_component:
 
         self.flip = False
         self.is_couple = False
+        self.vis_func = vis_lab.none
 
     def get_item(self, json_data: dict):
         return self.type(json_data.get(self.name, self.default()))
@@ -710,6 +713,7 @@ class imgbase64_component:
         self.type = str
         self.flip = False
         self.is_couple = False
+        self.vis_func = vis_lab.none
 
     def get_item(self, json_data: dict):
         # getting the image from string and convert it to BGR

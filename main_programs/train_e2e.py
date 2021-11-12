@@ -24,7 +24,7 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\working_epita2.h5"
+    load_path = "test_model\\models\\working_epita3.h5"
     save_path = "test_model\\models\\working_epita3.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         dataset=Dataset,
         dospath=train_path,
         dosdir=dosdir,
-        proportion=0.1,
+        proportion=0.2,
         sequence=False,
         smoothing=0.0,
         label_rdm=0.0,
@@ -45,7 +45,7 @@ if __name__ == "__main__":
         architectures.light_CNN,
         load=False,
         use_bias=False,
-        drop_rate=0.1,
+        drop_rate=0.2,
         prune=0.0,
         regularizer=(0.0, 0.0),
         speed_loss=False,
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=10,
+        epochs=8,
         batch_size=32,
         show_distr=False,
     )
