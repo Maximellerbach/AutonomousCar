@@ -8,9 +8,10 @@ if __name__ == "__main__":
 
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
-    train_path = f"{base_path}\\donkey\\1\\"
-    test_path = f"{base_path}\\donkey\\2\\"
-    dosdir = False
+    train_path = f"{base_path}\\donkeycar\\**\\"
+    test_path = f"{base_path}\\donkeycar\\10-04-21\\1\\"
+    dosdir = True
+    testdosdir = False
     simTest = False
 
     Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "zeros"])
@@ -24,8 +25,8 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\working_epita3.h5"
-    save_path = "test_model\\models\\working_epita3.h5"
+    load_path = "test_model\\models\\working_renault.h5"
+    save_path = "test_model\\models\\working_renault.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -43,9 +44,9 @@ if __name__ == "__main__":
 
     e2e_trainer.build_classifier(
         architectures.light_CNN,
-        load=False,
+        load=True,
         use_bias=False,
-        drop_rate=0.2,
+        drop_rate=0.1,
         prune=0.0,
         regularizer=(0.0, 0.0),
         speed_loss=False,
@@ -60,7 +61,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=8,
+        epochs=0,
         batch_size=32,
         show_distr=False,
     )
@@ -72,7 +73,7 @@ if __name__ == "__main__":
         sim_client.test_model(Dataset, input_components, save_path)
 
     else:
-        if dosdir:
+        if testdosdir:
             paths = Dataset.load_dataset_sorted(test_path, flat=True)
         else:
             paths = Dataset.load_dos_sorted(test_path)
