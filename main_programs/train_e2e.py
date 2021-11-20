@@ -22,11 +22,11 @@ if __name__ == "__main__":
     # speed_comp.scale = 3.6
 
     # set input and output components (indexes)
-    input_components = [1]
-    output_components = [0, 2]
+    input_components = []
+    output_components = [0]
 
-    load_path = "test_model\\models\\working_renault3.h5"
-    save_path = "test_model\\models\\working_renault3.h5"
+    load_path = "test_model\\models\\working_renault2.h5"
+    save_path = "test_model\\models\\working_renault4.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         dataset=Dataset,
         dospath=train_path,
         dosdir=dosdir,
-        proportion=0.2,
+        proportion=0.3,
         sequence=False,
         smoothing=0.0,
         label_rdm=0.0,
