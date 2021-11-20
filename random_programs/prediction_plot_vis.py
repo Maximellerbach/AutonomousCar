@@ -17,7 +17,7 @@ def get_key_by_name(dict, name):
 
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f"{base_path}\\donkeycar\\donkeycar\\"
+dos = f"{base_path}\\donkeycar\\20-11-21\\1\\"
 
 physical_devices = tensorflow.config.list_physical_devices("GPU")
 for gpu_instance in physical_devices:
@@ -33,9 +33,9 @@ input_components = []
 # model_outputs = architectures.get_model_output_names(model)
 
 model1 = architectures.safe_load_model(
-    "test_model\\models\\working_epita3.tflite", output_names=["direction"])
+    "test_model\\models\\working_renault.tflite", output_names=["direction"])
 model2 = architectures.safe_load_model(
-    "test_model\\models\\working_epita2.tflite", output_names=["direction"])
+    "test_model\\models\\working_epita3.tflite", output_names=["direction"])
 
 gdos = Dataset.load_dos_sorted(dos)
 
