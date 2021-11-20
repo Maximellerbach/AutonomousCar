@@ -99,7 +99,7 @@ while not joy.button_states["back"] and joy.connected and ret:
         print(prediction_dict, 1 / elapsed_time, 1 / dt)
 
     # apply direction and throttle
-    ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"])
+    ser.ChangeAll(annotation["direction"] * 0.9, MAXTHROTTLE * annotation["throttle"])
 
 
 Memory.stop()
