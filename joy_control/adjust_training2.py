@@ -17,7 +17,7 @@ if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-input_components = []
+input_components = [1]
 
 Memory = memory.Memory(Dataset, dos_save, queue_size=10)
 
@@ -46,7 +46,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 # model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
 
 # Load TFLite model
-model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault2.tflite", ["direction", "throttle"])
+model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault3.tflite", ["direction", "throttle"])
 
 # checking if the controller is working properly
 joy_leftX = 0
