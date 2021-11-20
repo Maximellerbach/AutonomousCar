@@ -8,6 +8,13 @@ from custom_modules.datasets import dataset_json
 import controller
 
 
+def get_key_by_name(dict, name):
+    for k in dict.keys():
+        if name in k:
+            return dict[k]
+    return None
+
+
 def deadzone(value, th, default=0):
     return value if abs(value) > th else default
 
@@ -25,7 +32,7 @@ serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 1.0
+MAXTHROTTLE = 0.5
 th_steering = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 wi = 160
@@ -78,8 +85,8 @@ while not joy.button_states["back"] and joy.connected and ret:
 
     annotation = {}
     annotation["direction"] = 0
-    annotation["speed"] = 0
-    annotation["throttle"] = 0.2
+    annotation["speed"] = ser.GetSpeed()
+    annotation["throttle"] = 0.4
     annotation["time"] = st
 
     if joy_button_x or joy_button_a:  # Manual steering
@@ -88,17 +95,19 @@ while not joy.button_states["back"] and joy.connected and ret:
         if not joy_button_x:  # Record
             Memory.add(img, annotation)
 
-    else:  # Do the prediction 
+    else:  # Do the prediction
         to_pred = Dataset.make_to_pred_annotations([img], [annotation], input_components)
 
         prediction_dict, elapsed_time = model.predict(to_pred)
-        annotation["direction"] = prediction_dict["direction"]
+        if isinstance(prediction_dict, list):
+            prediction_dict = prediction_dict[0]
+        annotation["direction"] = get_key_by_name(prediction_dict, "direction")
 
         dt = time.time() - st
         print(prediction_dict, 1 / elapsed_time, 1 / dt)
 
     # apply direction and throttle
-    ser.ChangeAll(annotation["direction"]*0.8, MAXTHROTTLE * annotation["throttle"])
+    ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"])
 
 
 Memory.stop()
