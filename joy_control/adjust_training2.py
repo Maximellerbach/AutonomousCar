@@ -25,7 +25,7 @@ serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 0.3
+MAXTHROTTLE = 1.0
 th_steering = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 wi = 160
@@ -46,7 +46,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 # model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
 
 # Load TFLite model
-model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault2.tflite", ["direction", "throttle"])
+model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault2.tflite", ["direction"])
 
 # checking if the controller is working properly
 joy_leftX = 0
@@ -78,7 +78,7 @@ while not joy.button_states["back"] and joy.connected and ret:
 
     annotation = {}
     annotation["direction"] = 0
-    annotation["speed"] = 0
+    annotation["speed"] = ser.GetSpeed()
     annotation["throttle"] = 0.2
     annotation["time"] = st
 
@@ -93,7 +93,7 @@ while not joy.button_states["back"] and joy.connected and ret:
 
         prediction_dict, elapsed_time = model.predict(to_pred)
         annotation["direction"] = prediction_dict["direction"]
-        annotation["throttle"] = prediction_dict["throttle"]
+        # annotation["throttle"] = prediction_dict["throttle"]
 
         dt = time.time() - st
         print(prediction_dict, 1 / elapsed_time, 1 / dt)
