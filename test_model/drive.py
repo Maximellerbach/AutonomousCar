@@ -46,7 +46,7 @@ while True:
 
         memory = {}
         memory["direction"] = 0
-        memory["speed"] = 0
+        memory["speed"] = ser.GetSpeed()
         memory["throttle"] = 0.2
         memory["time"] = time.time()
 

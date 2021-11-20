@@ -93,7 +93,7 @@ class control:
                     # make sure that both end of lines are present
                     if out != "" and b'\r' in out and b'\n' in out:
                         res = int(out.decode())
-                        if self.__pwm < 134 and self.__pwm > 120:  # and res > 25000 and res < 29000 # no speed
+                        if self.__pwm < 134 and self.__pwm > 120 and res > 27000:  # and res > 25000 and res < 29000 # no speed
                             self.__sensor_rpm = 0
                         else:
                             self.__sensor_rpm = (30000000 / res)
@@ -147,6 +147,7 @@ class control:
 
     def GetSensorLastReceived(self):
         return self.__last_received
+
 
 def start_serial(port="/dev/ttyUSB0"):
     ser = control(port)
