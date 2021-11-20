@@ -46,7 +46,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 # model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
 
 # Load TFLite model
-model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault3.tflite", ["direction"])
+model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault3.tflite", ["direction", "throttle"])
 
 # checking if the controller is working properly
 joy_leftX = 0
