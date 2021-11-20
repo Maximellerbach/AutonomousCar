@@ -17,7 +17,7 @@ if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-input_components = []
+input_components = [1]
 
 Memory = memory.Memory(Dataset, dos_save, queue_size=10)
 
@@ -25,7 +25,7 @@ serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
 ser = serial_command2.control(serialport)
 
-MAXTHROTTLE = 0.25
+MAXTHROTTLE = 0.3
 th_steering = 0.05  # 5% threshold
 th_throttle = 0.06  # 6% threshold
 wi = 160
@@ -93,7 +93,7 @@ while not joy.button_states["back"] and joy.connected and ret:
 
         prediction_dict, elapsed_time = model.predict(to_pred)
         annotation["direction"] = prediction_dict["direction"]
-        # annotation["throttle"] = prediction_dict["throttle"]
+        annotation["throttle"] = prediction_dict["throttle"]
 
         dt = time.time() - st
         print(prediction_dict, 1 / elapsed_time, 1 / dt)
