@@ -17,7 +17,7 @@ if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-input_components = [1]
+input_components = []
 
 Memory = memory.Memory(Dataset, dos_save, queue_size=10)
 
