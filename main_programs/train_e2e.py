@@ -22,11 +22,11 @@ if __name__ == "__main__":
     # speed_comp.scale = 3.6
 
     # set input and output components (indexes)
-    input_components = []
-    output_components = [0]
+    input_components = [1]
+    output_components = [0, 2]
 
-    load_path = "test_model\\models\\working_renault.h5"
-    save_path = "test_model\\models\\working_renault2.h5"
+    load_path = "test_model\\models\\working_renault3.h5"
+    save_path = "test_model\\models\\working_renault3.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         speed_loss=False,
     )
 
-    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.MeanSquaredError(), lr=0.0005, metrics=[], loss_weights=[1])
+    e2e_trainer.compile_model(loss=architectures.tf.keras.losses.MeanSquaredError(), lr=0.0005, metrics=[], loss_weights=[1, 0.75])
 
     e2e_trainer.train(
         flip=True,
@@ -61,8 +61,8 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=5,
-        batch_size=32,
+        epochs=2,
+        batch_size=64,
         show_distr=False,
     )
 
