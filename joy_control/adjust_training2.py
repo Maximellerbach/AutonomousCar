@@ -79,7 +79,7 @@ while not joy.button_states["back"] and joy.connected and ret:
     annotation = {}
     annotation["direction"] = 0
     annotation["speed"] = ser.GetSpeed()
-    annotation["throttle"] = 0.2
+    annotation["throttle"] = 0.66
     annotation["time"] = st
 
     if joy_button_x or joy_button_a:  # Manual steering
@@ -93,7 +93,7 @@ while not joy.button_states["back"] and joy.connected and ret:
 
         prediction_dict, elapsed_time = model.predict(to_pred)
         annotation["direction"] = prediction_dict["direction"]
-        annotation["throttle"] = prediction_dict["throttle"]
+        # annotation["throttle"] = prediction_dict["throttle"]
 
         dt = time.time() - st
         print(prediction_dict, 1 / elapsed_time, 1 / dt)
