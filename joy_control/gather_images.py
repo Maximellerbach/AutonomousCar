@@ -36,7 +36,6 @@ joy = controller.XboxOneJoystick()
 joy.init()
 assert joy.connected is True
 
-# cap = camera.usbWebcam(topcrop=0.2, botcrop=0)
 cap = cv2.VideoCapture(0)
 # cap.start()
 

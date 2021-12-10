@@ -53,7 +53,7 @@ basedir = os.path.dirname(os.path.abspath(__file__))
 # model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
 
 # Load TFLite model
-model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault4.tflite", ["direction"])
+model = architectures.safe_load_model(f"{basedir}/../test_model/models/test3_renault.tflite", ["direction"])
 
 # checking if the controller is working properly
 joy_leftX = 0
@@ -103,7 +103,7 @@ while not joy.button_states["back"] and joy.connected and ret:
         # annotation["throttle"] = prediction_dict["throttle"]
 
         dt = time.time() - st
-        print(prediction_dict, 1 / elapsed_time, 1 / dt)
+        # print(prediction_dict, 1 / elapsed_time, 1 / dt) # avoid printing
 
     # apply direction and throttle
     ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"])

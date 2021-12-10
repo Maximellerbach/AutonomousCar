@@ -19,7 +19,7 @@ input_components = []
 gdos = Dataset.load_dataset_sorted(dos, flat=True)
 np.random.shuffle(gdos)
 
-model = architectures.safe_load_model("test_model\\models\\renault2_pretrained.h5", compile=False)
+model = architectures.safe_load_model("test_model\\models\\maxpool_renault.h5", compile=True)
 # architectures.apply_predict_decorator(model)
 model.summary()
 
@@ -33,11 +33,12 @@ for labpath in gdos:
     img = img / 255
 
     for class_idx in range(vis_model.output.shape[1]):
-        vis_img = vis_fe.get_gradcam(vis_model, to_pred, class_idx, penultimate_layer=13)
+        vis_img = vis_fe.get_gradcam(vis_model, to_pred, class_idx, penultimate_layer=11)
         vis_img = np.transpose(vis_img[0], (1, 2, 0))
 
         # cv2.imshow(f'img_{class_idx}', vis_img * img)
         cv2.imshow(f"{class_idx}", vis_img)
 
     vis_lab.vis_all_compare(Dataset, input_components, img, annotation, prediction_dict[0], waitkey=None)
+    cv2.imshow("img_crop", cv2.resize(img[20:100, :, :], (160, 120)))
     cv2.waitKey(0)

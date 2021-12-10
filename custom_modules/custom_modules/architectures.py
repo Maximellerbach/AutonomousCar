@@ -391,7 +391,7 @@ class light_CNN:
         drop=False,
         conv_type=Conv2D,
         flatten=False,
-        batchnorm=True,
+        batchnorm=False,
         maxpool=False,
         **kwargs
     ):
@@ -449,13 +449,15 @@ class light_CNN:
         inputs.append(inp)
 
         x = Cropping2D(cropping=((20, 20), (0, 0)))(inp)
-        # x = BatchNormalization(name="start_fe")(x)
-        x = Activation("linear", name="start_fe")(x)
-        x = self.conv_block(12, 5, 2, x, conv_type=Conv2D)
-        x = self.conv_block(24, 5, 2, x, conv_type=Conv2D)
-        x = self.conv_block(32, 5, 2, x, conv_type=Conv2D)
-        x = self.conv_block(48, 3, 2, x, conv_type=Conv2D)
-        x = self.conv_block(64, 3, 2, x, conv_type=Conv2D)
+        x = BatchNormalization(name="start_fe")(x)
+        x = self.conv_block(12, 5, 1, x, conv_type=Conv2D)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(24, 5, 1, x, conv_type=Conv2D)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(32, 5, 1, x, conv_type=Conv2D)
+        x = MaxPooling2D()(x)
+        x = self.conv_block(48, 3, 1, x, conv_type=Conv2D)
+        x = self.conv_block(64, 3, 1, x, conv_type=Conv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation("linear", name="end_fe")(x)
 

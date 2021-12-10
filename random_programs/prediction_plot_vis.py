@@ -33,7 +33,7 @@ input_components = []
 # model_outputs = architectures.get_model_output_names(model)
 
 model1 = architectures.safe_load_model(
-    "test_model\\models\\test_renault.tflite", output_names=["direction", "throttle"])
+    "test_model\\models\\maxpool_renault.tflite", output_names=["direction", "throttle"])
 model2 = architectures.safe_load_model(
     "test_model\\models\\working_epita.tflite", output_names=["direction", "throttle"])
 
@@ -86,7 +86,7 @@ def animate(i):
     prediction_dict, elapsed_time = model1.predict(to_pred)
     prediction_dict2, elapsed_time2 = model2.predict(to_pred)
 
-    print(elapsed_time, elapsed_time2)
+    # print(elapsed_time, elapsed_time2)
     vis_lab.vis_all_compare(Dataset, [], img, annotation, prediction_dict)
 
     if len(X) < 200:  # fill the X list with numbers from 0 to 200

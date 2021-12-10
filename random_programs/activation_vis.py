@@ -21,7 +21,7 @@ input_components = []
 gdos = Dataset.load_dataset(dos, flat=True)
 np.random.shuffle(gdos)
 
-model = architectures.safe_load_model("test_model\\models\\working_epita.h5", compile=False)
+model = architectures.safe_load_model("test_model\\models\\test_renault.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 
 fe = architectures.get_fe(model)
