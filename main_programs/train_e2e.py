@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     e2e_trainer.build_classifier(
         architectures.light_CNN,
-        load=False,
+        load=True,
         use_bias=False,
         drop_rate=0.2,
         prune=0.0,

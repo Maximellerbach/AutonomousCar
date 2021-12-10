@@ -450,12 +450,9 @@ class light_CNN:
 
         x = Cropping2D(cropping=((20, 20), (0, 0)))(inp)
         x = BatchNormalization(name="start_fe")(x)
-        x = self.conv_block(12, 5, 1, x, conv_type=Conv2D)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(24, 5, 1, x, conv_type=Conv2D)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(32, 5, 1, x, conv_type=Conv2D)
-        x = MaxPooling2D()(x)
+        x = self.conv_block(12, 5, 2, x, conv_type=Conv2D)
+        x = self.conv_block(24, 5, 2, x, conv_type=Conv2D)
+        x = self.conv_block(32, 5, 2, x, conv_type=Conv2D)
         x = self.conv_block(48, 3, 1, x, conv_type=Conv2D)
         x = self.conv_block(64, 3, 1, x, conv_type=Conv2D)
         # useless layer, just here to have a "end_fe" layer
