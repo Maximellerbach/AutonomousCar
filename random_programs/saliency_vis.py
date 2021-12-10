@@ -12,14 +12,14 @@ for gpu_instance in physical_devices:
     tensorflow.config.experimental.set_memory_growth(gpu_instance, True)
 
 base_path = os.path.expanduser("~") + "\\random_data"
-dos = f"{base_path}\\donkey\\"
+dos = f"{base_path}\\donkeycar\\20-11-21\\"
 Dataset = dataset_json.Dataset(["direction", "speed", "throttle"])
 input_components = []
 
 gdos = Dataset.load_dataset_sorted(dos, flat=True)
 np.random.shuffle(gdos)
 
-model = architectures.safe_load_model("test_model\\models\\working_epita3.h5", compile=False)
+model = architectures.safe_load_model("test_model\\models\\renault2_pretrained.h5", compile=False)
 # architectures.apply_predict_decorator(model)
 model.summary()
 

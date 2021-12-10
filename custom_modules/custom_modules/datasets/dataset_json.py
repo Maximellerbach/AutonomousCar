@@ -280,7 +280,8 @@ class Dataset:
         to_pred = [np.array(xbatch, dtype=np.float32) / 255]
 
         for i in input_components:
-            to_pred.append(np.float32([np.float32(tmp_array) for tmp_array in ybatch[i]]))
+            y = np.expand_dims(np.array(ybatch[i], dtype=np.float32), axis=0)
+            to_pred.append(y)
         return to_pred
 
     def load_annotation_img_string(self, img_path, cmp_structure=["direction", "time"]):

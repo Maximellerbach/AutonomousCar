@@ -388,7 +388,7 @@ class light_CNN:
         kernel_size,
         strides,
         x,
-        drop=True,
+        drop=False,
         conv_type=Conv2D,
         flatten=False,
         batchnorm=True,
@@ -417,7 +417,7 @@ class light_CNN:
             x = Flatten()(x)
         return x
 
-    def dense_block(self, n_neurones, x, drop=True, batchnorm=False, activation=None, **kwargs):
+    def dense_block(self, n_neurones, x, drop=False, batchnorm=True, activation=None, **kwargs):
         x = Dense(
             n_neurones,
             use_bias=self.use_bias,
@@ -449,33 +449,31 @@ class light_CNN:
         inputs.append(inp)
 
         x = Cropping2D(cropping=((20, 20), (0, 0)))(inp)
-        x = BatchNormalization(name="start_fe")(x)
-        x = self.conv_block(12, 3, 1, x, drop=True, conv_type=SeparableConv2D)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(24, 3, 1, x, drop=True, conv_type=SeparableConv2D)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(32, 3, 1, x, drop=True, conv_type=SeparableConv2D)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(48, 3, 1, x, drop=True, conv_type=SeparableConv2D)
-        x = MaxPooling2D()(x)
-        x = self.conv_block(16, 3, 1, x, drop=True, conv_type=SeparableConv2D)
+        # x = BatchNormalization(name="start_fe")(x)
+        x = Activation("linear", name="start_fe")(x)
+        x = self.conv_block(12, 5, 2, x, conv_type=Conv2D)
+        x = self.conv_block(24, 5, 2, x, conv_type=Conv2D)
+        x = self.conv_block(32, 5, 2, x, conv_type=Conv2D)
+        x = self.conv_block(48, 3, 2, x, conv_type=Conv2D)
+        x = self.conv_block(64, 3, 2, x, conv_type=Conv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation("linear", name="end_fe")(x)
 
-        y1 = self.conv_block(64, (1, 6), 1, x, drop=True,
-                             conv_type=Conv2D)
-        y = Concatenate()([Flatten()(y1), Flatten()(x)])
+        # y1 = self.conv_block(64, (2, 6), 1, x,
+        #                      conv_type=Conv2D)
+        # y = Concatenate()([Flatten()(y1), Flatten()(x)])
+        y = Flatten()(x)
 
         y = Dropout(self.drop_rate)(y)
 
-        y = self.dense_block(150, y, drop=True)
-        y = self.dense_block(75, y, drop=True)
+        y = self.dense_block(200, y)
+        y = self.dense_block(150, y)
 
         if "speed" in input_components_names:
             speed = Input((1,), name="speed")
             inputs.append(speed)
             y = Concatenate()([y, speed])
-            y = self.dense_block(50, y, drop=False)
+            y = self.dense_block(50, y)
 
         # y = self.dense_block(50, y, drop=False)
 
@@ -492,17 +490,14 @@ class light_CNN:
             y = Concatenate()([y, z])
 
         if "cte" in output_components_names:
-            z = self.dense_block(25, y, drop=False)
+            z = self.dense_block(25, y)
             z = Dense(1, use_bias=self.use_bias,
                       activation="tanh", name="cte")(z)
             outputs.append(z)
             y = Concatenate()([y, z])
 
         if "direction" in output_components_names:
-            z = self.dense_block(50, y, drop=False)
-            z = self.dense_block(25, z, drop=False)
-            z = self.dense_block(25, z, drop=False)
-            z = self.dense_block(25, z, drop=False, activation="softmax")
+            z = self.dense_block(50, y)
             z = Dense(1, use_bias=self.use_bias,
                       activation=self.last_act, name="direction")(z)
 
@@ -519,7 +514,7 @@ class light_CNN:
                 y = Concatenate()([y, z])
 
         if "throttle" in output_components_names:
-            y = self.dense_block(50, y, drop=False)
+            y = self.dense_block(50, y)
             z = Dense(1, use_bias=self.use_bias,
                       activation=self.last_act, name="throttle")(y)
             outputs.append(z)

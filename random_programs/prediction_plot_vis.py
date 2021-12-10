@@ -33,9 +33,9 @@ input_components = []
 # model_outputs = architectures.get_model_output_names(model)
 
 model1 = architectures.safe_load_model(
-    "test_model\\models\\working_renault.tflite", output_names=["direction"])
+    "test_model\\models\\test_renault.tflite", output_names=["direction", "throttle"])
 model2 = architectures.safe_load_model(
-    "test_model\\models\\working_epita3.tflite", output_names=["direction"])
+    "test_model\\models\\working_epita.tflite", output_names=["direction", "throttle"])
 
 gdos = Dataset.load_dos_sorted(dos)
 

@@ -1,88 +1,123 @@
-import controller
-
 import os
 import time
 
 import cv2
-from custom_modules import architectures, serial_command2
+from custom_modules import architectures, serial_command2, camera, memory
 from custom_modules.datasets import dataset_json
+
+import controller
+
+
+def get_key_by_name(dict, name):
+    for k in dict.keys():
+        if name in k:
+            return dict[k]
+    return None
+
 
 def deadzone(value, th, default=0):
     return value if abs(value) > th else default
 
 
-Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
-input_components = []
-
 dos_save = os.path.expanduser("~") + "/recorded/"
 if not os.path.isdir(dos_save):
     os.mkdir(dos_save)
 
-MAXTHROTTLE = 0.5
-th_steering = 0.05  # 5% threshold
-th_throttle = 0.06  # 6% threshold
+Dataset = dataset_json.Dataset(["direction", "speed", "throttle", "time"])
+input_components = []
+
+Memory = memory.Memory(Dataset, dos_save, queue_size=10)
 
 serialport = "/dev/ttyUSB0"
 os.system("sudo chmod 0666 {}".format(serialport))
-ser = serial_command2.start_serial(serialport)
+ser = serial_command2.control(serialport)
+
+MAXTHROTTLE = 0.5
+th_steering = 0.05  # 5% threshold
+th_throttle = 0.06  # 6% threshold
+wi = 160
+he = 120
 
 joy = controller.XboxOneJoystick()
 joy.init()
 assert joy.connected is True
 print("joy working")
 
+
+# cap = camera.usbWebcam(topcrop=0.2, botcrop=0.0)
 cap = cv2.VideoCapture(0)
-ret, img = cap.read()  # read the camera once to make sure it works
-assert ret is True
 print("cam working")
 
 basedir = os.path.dirname(os.path.abspath(__file__))
-model = architectures.TFLite(os.path.normpath(f"{basedir}/../test_model/models/auto_label6.tflite"), ["direction"])
 
+# model = architectures.safe_load_model(f"{basedir}/models/auto_label7.h5", compile=False)
+
+# Load TFLite model
+model = architectures.safe_load_model(f"{basedir}/../test_model/models/working_renault4.tflite", ["direction"])
+
+# checking if the controller is working properly
+joy_leftX = 0
+while joy_leftX <= 0.9:
+    joy_leftX = joy.axis_states["x"]
+    print(joy_leftX, end="\r")
+    time.sleep(0.01)
+
+while joy_leftX >= -0.9:
+    joy_leftX = joy.axis_states["x"]
+    print(joy_leftX, end="\r")
+    time.sleep(0.01)
+    
 print("Starting mainloop")
 
-while not joy.button_states["back"] and joy.connected:
-    try:
-        joy_steering = joy.axis_states["x"]
-        joy_throttle = joy.axis_states["rz"]
-        joy_brake = joy.axis_states["z"]
-        joy_button_a = joy.button_states["a"]
-        joy_button_x = joy.button_states["x"]
+Memory.run()
+ret = True
 
-        _, img = cap.read()
-        img = cv2.resize(img, (160, 120))
+while not joy.button_states["back"] and joy.connected and ret:
+    joy_steering = joy.axis_states["x"]
+    joy_throttle = joy.axis_states["rz"]
+    joy_brake = joy.axis_states["z"]
+    joy_button_a = joy.button_states["a"]
+    joy_button_x = joy.button_states["x"]
 
-        # annotation template with just what is needed for the prediction
-        annotation = {
-            "direction": deadzone(joy_steering, th_steering),
-            "speed": 0,
-            "throttle": deadzone(joy_throttle - joy_brake, th_throttle),
-            "time": time.time(),
-        }
+    st = time.time()
+    _, cam = cap.read()
+    img = cv2.resize(cam, (wi, he))
 
-        if joy_button_a or joy_button_x:
+    annotation = {}
+    annotation["direction"] = 0
+    annotation["speed"] = ser.GetSpeed()
+    annotation["throttle"] = 0.2
+    annotation["time"] = st
 
-            if not joy_button_x:
-                Dataset.save_img_and_annotation(img, annotation=annotation, dos=dos_save)
+    if joy_button_x or joy_button_a:  # Manual steering
+        annotation["direction"] = deadzone(joy_steering, th_steering)
+        annotation["throttle"] = deadzone(joy_throttle - joy_brake, th_throttle)
+        if not joy_button_x:  # Record
+            Memory.add(img, annotation)
 
-            ser.ChangeAll(annotation["direction"], annotation["throttle"])
+    else:  # Do the prediction
+        to_pred = Dataset.make_to_pred_annotations([img], [annotation], input_components)
 
-        else:
-            to_pred = Dataset.make_to_pred_annotations([img], [annotation], input_components)
+        prediction_dict, elapsed_time = model.predict(to_pred)
+        annotation["direction"] = prediction_dict["direction"]
+        # annotation["throttle"] = prediction_dict["throttle"]
 
-            predicted, dt = model.predict(to_pred)
-            print(predicted)
-            ser.ChangeAll(predicted["direction"], MAXTHROTTLE * joy_throttle)
+        dt = time.time() - st
+        print(prediction_dict, 1 / elapsed_time, 1 / dt)
 
-    except Exception as e:
-        print(e)
+    # apply direction and throttle
+    ser.ChangeAll(annotation["direction"], MAXTHROTTLE * annotation["throttle"])
 
-    except KeyboardInterrupt:
-        break
 
+Memory.stop()
 ser.ChangeAll(0, 0)
+cap.release()
 
 if not joy.connected:
     print("Lost connection with joystick")
+elif not ret:
+    print("Camera isn't working properly")
 else:
     print("Terminated")
+
+joy.connected = False

@@ -114,9 +114,9 @@ def add_random_shadow(image, label):
 
     sign = np.random.choice([True, False])
     if sign:
-        random_bright = 1 + 0.5 * np.random.uniform()
+        random_bright = 1 + 0.3 * np.random.uniform()
     else:
-        random_bright = 1 - 0.5 * np.random.uniform()
+        random_bright = 1 - 0.3 * np.random.uniform()
 
     cond1 = shadow_mask == 1
     cond0 = shadow_mask == 0
@@ -130,6 +130,10 @@ def add_random_shadow(image, label):
     image_hls = np.array(image_hls, dtype=np.uint8)
     new_image = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
     return new_image, label
+
+
+def add_blur(image, label):
+    return cv2.blur(image, (2, 2)), label
 
 
 def night_effect(img, label, vmin=150, vmax=230):

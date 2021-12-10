@@ -16,6 +16,7 @@ class image_generator(Sequence):
         batch_size,
         input_components,
         output_components,
+        weight_output=False,
         sequence=False,
         seq_batchsize=64,
         flip=True,
@@ -37,6 +38,7 @@ class image_generator(Sequence):
         self.datalen = datalen
         self.sequence = sequence
         self.frc = frc
+        self.weight_output = weight_output
         self.weight_acc = self.Dataset.get_component(0).weight_acc
         self.shape = shape
 
@@ -80,10 +82,11 @@ class image_generator(Sequence):
                 ybatch,
                 proportion=self.proportion,
                 functions=(
+                    imaugm.add_blur,
                     imaugm.add_random_shadow,
                     imaugm.add_rdm_noise,
                     imaugm.rescut,
-                    imaugm.inverse_color,
+                    # imaugm.inverse_color,
                     # imaugm.night_effect,
                 ),
             )
@@ -111,9 +114,11 @@ class image_generator(Sequence):
             with self.file_writer.as_default():
                 tf.summary.image("Training data", X[0], step=0, max_outputs=self.batch_size)
 
-        weight = imaugm.get_weight(Y[0], self.frc[0], acc=self.weight_acc)
-
-        return X, Y, weight
+        if self.weight_output:
+            weight = imaugm.get_weight(Y[0], self.frc[0], acc=self.weight_acc)
+            return X, Y, weight
+        else:
+            return X, Y
 
     def __len__(self):
         return int(self.datalen // self.batch_size)
