@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # use the home path as root directory for data paths
     base_path = os.path.expanduser("~") + "\\random_data"
     train_path = f"{base_path}\\donkeycar\\**\\"
-    test_path = f"{base_path}\\donkeycar\\20-11-21\\1\\"
+    test_path = f"{base_path}\\donkeycar\\11-12-21\\1\\"
     dosdir = True
     testdosdir = False
     simTest = False
