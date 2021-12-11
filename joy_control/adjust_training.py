@@ -86,7 +86,7 @@ while not joy.button_states["back"] and joy.connected and ret:
     annotation = {}
     annotation["direction"] = 0
     annotation["speed"] = ser.GetSpeed()
-    annotation["throttle"] = 0.2
+    annotation["throttle"] = 0.25
     annotation["time"] = st
 
     if joy_button_x or joy_button_a:  # Manual steering
