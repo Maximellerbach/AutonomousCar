@@ -16,6 +16,7 @@ class image_generator(Sequence):
         batch_size,
         input_components,
         output_components,
+        delay=0,
         weight_output=False,
         sequence=False,
         seq_batchsize=64,
@@ -41,6 +42,8 @@ class image_generator(Sequence):
         self.weight_output = weight_output
         self.weight_acc = self.Dataset.get_component(0).weight_acc
         self.shape = shape
+        self.y_length = len(self.Dataset.get_label_structure_name())
+        self.delay = delay
 
         # components information
         self.input_components = input_components
@@ -61,9 +64,7 @@ class image_generator(Sequence):
     def __data_generation(self):
         batchfiles = np.random.choice(self.gdos, size=self.batch_size)
         xbatch = []
-        ybatch = []
-        for _ in range(len(self.Dataset.get_label_structure_name())):
-            ybatch.append([])
+        ybatch = [[] for _ in range(self.y_length)]
 
         for path in batchfiles:
             try:
@@ -71,10 +72,10 @@ class image_generator(Sequence):
                 if img.shape != self.shape:
                     img = cv2.resize(img, (self.shape[1], self.shape[0]))
                 xbatch.append(img)
-                for i in range(len(annotation)):
-                    ybatch[i].append(annotation[i])
-            except:
-                print(path)
+                for i, element in enumerate(annotation):
+                    ybatch[i].append(element)
+            except Exception as e:
+                print(path, e)
 
         if self.augm:
             xbatch, ybatch = imaugm.generate_functions_replace(
@@ -93,16 +94,15 @@ class image_generator(Sequence):
 
         if self.flip:
             xflip, yflip = imaugm.generate_horizontal_flip(
-                self.Dataset, self.names2index, self.flipable_components, xbatch, ybatch, proportion=1
-            )
+                self.Dataset, self.names2index, self.flipable_components, xbatch, ybatch, proportion=1)
 
             xbatch = np.concatenate((xbatch, xflip))
             ybatch = np.concatenate((ybatch, yflip), axis=1)
 
-        xbatch = (np.array(xbatch) / 255).astype(np.float32)
+        xbatch = np.array(xbatch) / 255.0  # Normalize the data
         ybatch = np.array(ybatch)
 
-        X = [xbatch]
+        X = [xbatch]  # image is by default in the X
         for i in self.input_components:
             X.append(np.float32(ybatch[i]))
 

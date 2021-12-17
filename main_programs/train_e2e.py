@@ -25,8 +25,8 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\pretrained_renault.h5"
-    save_path = "test_model\\models\\test2_renault.h5"
+    load_path = "test_model\\models\\test3_renault.h5"
+    save_path = "test_model\\models\\test3_renault.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     e2e_trainer.build_classifier(
         architectures.light_CNN,
-        load=True,
+        load=False,
         use_bias=False,
         drop_rate=0.2,
         prune=0.0,
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         use_tensorboard=False,
         use_plateau_lr=False,
         verbose=True,
-        epochs=5,
+        epochs=10,
         batch_size=32,
         show_distr=False,
     )

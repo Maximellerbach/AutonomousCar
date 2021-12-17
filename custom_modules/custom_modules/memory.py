@@ -7,8 +7,10 @@ from .datasets.dataset_json import Dataset
 
 
 class Memory:
+    """Memory class to save images and annotations using a thread and a queue.
+    """
     def __init__(self, dataset: Dataset, dos_save, queue_size=50, sleep_time=0.001):
-        """"Memory class to save images and annotations using a thread and a queue"
+        """Init of the Memory class.
 
         Args:
             dataset (Dataset): Dataset class
@@ -43,7 +45,7 @@ class Memory:
         return
 
     def remove(self, index=0):
-        """Remove the tuple of image and annotation in the queue at a given index
+        """Remove the tuple of image and annotation in the queue at a given index.
 
         Args:
             index (int, optional): index. Defaults to 0.
@@ -57,6 +59,7 @@ class Memory:
             del self.memory[index]
 
     def loop(self):
+        """Main loop for the memory class."""
         while(self.running):
             if len(self.memory):
                 self.saving = True

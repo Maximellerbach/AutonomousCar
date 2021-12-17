@@ -219,7 +219,6 @@ def generate_functions_replace(
 
     # same function as above, just replace images instead of adding more
     for f in functions:
-
         indexes = np.random.choice([True, False], len(X), p=[proportion, 1 - proportion])
         for index in range(len(X)):
             if indexes[index]:
