@@ -453,7 +453,7 @@ class light_CNN:
         x = self.conv_block(12, 5, 2, x, conv_type=Conv2D)
         x = self.conv_block(24, 5, 2, x, conv_type=Conv2D)
         x = self.conv_block(32, 5, 2, x, conv_type=Conv2D)
-        x = self.conv_block(48, 3, 1, x, conv_type=Conv2D)
+        x = self.conv_block(48, 3, 2, x, conv_type=Conv2D)
         x = self.conv_block(64, 3, 1, x, conv_type=Conv2D)
         # useless layer, just here to have a "end_fe" layer
         x = Activation("linear", name="end_fe")(x)

@@ -25,8 +25,8 @@ if __name__ == "__main__":
     input_components = []
     output_components = [0]
 
-    load_path = "test_model\\models\\test3_renault.h5"
-    save_path = "test_model\\models\\test3_renault.h5"
+    load_path = "test_model\\models\\dummy.h5"
+    save_path = "test_model\\models\\dummy.h5"
 
     e2e_trainer = e2e.End2EndTrainer(
         load_path=load_path,
