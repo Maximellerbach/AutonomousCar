@@ -63,14 +63,17 @@ class PrivateAPIClient(SDClient):
 
     def on_colliding_cone(self, json_packet):
         car_name = json_packet["car_name"]
+        penalty = json_packet.get("penalty", 1)
+        
 
         if car_name in self.raceSummary:
-            self.raceSummary[car_name]["penalties"] += 1
+
+            self.raceSummary[car_name]["penalties"] += penalty
             if "lapTimes" in self.raceSummary[car_name] and len(self.raceSummary[car_name]["lapTimes"]) < 3:
                 self.raceSummary[car_name]["total3Time"] += 1
         else:
             self.raceSummary[car_name] = {}
-            self.raceSummary[car_name]["penalties"] = 1
+            self.raceSummary[car_name]["penalties"] = penalty
             self.raceSummary[car_name]["total3Time"] = 1
 
     def on_reset(self):
